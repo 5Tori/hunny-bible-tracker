@@ -438,6 +438,489 @@ class BibleBooksCompanion extends UpdateCompanion<BibleBook> {
   }
 }
 
+class $LocalUsersTable extends LocalUsers
+    with TableInfo<$LocalUsersTable, LocalUser> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LocalUsersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+      'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+      'type', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('guest'));
+  static const VerificationMeta _authUserIdMeta =
+      const VerificationMeta('authUserId');
+  @override
+  late final GeneratedColumn<String> authUserId = GeneratedColumn<String>(
+      'auth_user_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _syncStatusMeta =
+      const VerificationMeta('syncStatus');
+  @override
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+      'sync_status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('local_only'));
+  static const VerificationMeta _serverIdMeta =
+      const VerificationMeta('serverId');
+  @override
+  late final GeneratedColumn<String> serverId = GeneratedColumn<String>(
+      'server_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _lastSyncedAtMeta =
+      const VerificationMeta('lastSyncedAt');
+  @override
+  late final GeneratedColumn<DateTime> lastSyncedAt = GeneratedColumn<DateTime>(
+      'last_synced_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _clientRevisionMeta =
+      const VerificationMeta('clientRevision');
+  @override
+  late final GeneratedColumn<int> clientRevision = GeneratedColumn<int>(
+      'client_revision', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, false,
+      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        type,
+        authUserId,
+        syncStatus,
+        serverId,
+        lastSyncedAt,
+        clientRevision,
+        createdAt,
+        updatedAt
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'local_users';
+  @override
+  VerificationContext validateIntegrity(Insertable<LocalUser> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+    }
+    if (data.containsKey('auth_user_id')) {
+      context.handle(
+          _authUserIdMeta,
+          authUserId.isAcceptableOrUnknown(
+              data['auth_user_id']!, _authUserIdMeta));
+    }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+          _syncStatusMeta,
+          syncStatus.isAcceptableOrUnknown(
+              data['sync_status']!, _syncStatusMeta));
+    }
+    if (data.containsKey('server_id')) {
+      context.handle(_serverIdMeta,
+          serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta));
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+          _lastSyncedAtMeta,
+          lastSyncedAt.isAcceptableOrUnknown(
+              data['last_synced_at']!, _lastSyncedAtMeta));
+    }
+    if (data.containsKey('client_revision')) {
+      context.handle(
+          _clientRevisionMeta,
+          clientRevision.isAcceptableOrUnknown(
+              data['client_revision']!, _clientRevisionMeta));
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    } else if (isInserting) {
+      context.missing(_updatedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LocalUser map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocalUser(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      type: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
+      authUserId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}auth_user_id']),
+      syncStatus: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sync_status'])!,
+      serverId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}server_id']),
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_synced_at']),
+      clientRevision: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}client_revision'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+    );
+  }
+
+  @override
+  $LocalUsersTable createAlias(String alias) {
+    return $LocalUsersTable(attachedDatabase, alias);
+  }
+}
+
+class LocalUser extends DataClass implements Insertable<LocalUser> {
+  final String id;
+  final String type;
+  final String? authUserId;
+  final String syncStatus;
+
+  /// Server-side profile / identity row id after sync (`docs/SYNC_PLAN.md`).
+  final String? serverId;
+  final DateTime? lastSyncedAt;
+  final int clientRevision;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const LocalUser(
+      {required this.id,
+      required this.type,
+      this.authUserId,
+      required this.syncStatus,
+      this.serverId,
+      this.lastSyncedAt,
+      required this.clientRevision,
+      required this.createdAt,
+      required this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['type'] = Variable<String>(type);
+    if (!nullToAbsent || authUserId != null) {
+      map['auth_user_id'] = Variable<String>(authUserId);
+    }
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || serverId != null) {
+      map['server_id'] = Variable<String>(serverId);
+    }
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt);
+    }
+    map['client_revision'] = Variable<int>(clientRevision);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  LocalUsersCompanion toCompanion(bool nullToAbsent) {
+    return LocalUsersCompanion(
+      id: Value(id),
+      type: Value(type),
+      authUserId: authUserId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(authUserId),
+      syncStatus: Value(syncStatus),
+      serverId: serverId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverId),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
+      clientRevision: Value(clientRevision),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory LocalUser.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LocalUser(
+      id: serializer.fromJson<String>(json['id']),
+      type: serializer.fromJson<String>(json['type']),
+      authUserId: serializer.fromJson<String?>(json['authUserId']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      serverId: serializer.fromJson<String?>(json['serverId']),
+      lastSyncedAt: serializer.fromJson<DateTime?>(json['lastSyncedAt']),
+      clientRevision: serializer.fromJson<int>(json['clientRevision']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'type': serializer.toJson<String>(type),
+      'authUserId': serializer.toJson<String?>(authUserId),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'serverId': serializer.toJson<String?>(serverId),
+      'lastSyncedAt': serializer.toJson<DateTime?>(lastSyncedAt),
+      'clientRevision': serializer.toJson<int>(clientRevision),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  LocalUser copyWith(
+          {String? id,
+          String? type,
+          Value<String?> authUserId = const Value.absent(),
+          String? syncStatus,
+          Value<String?> serverId = const Value.absent(),
+          Value<DateTime?> lastSyncedAt = const Value.absent(),
+          int? clientRevision,
+          DateTime? createdAt,
+          DateTime? updatedAt}) =>
+      LocalUser(
+        id: id ?? this.id,
+        type: type ?? this.type,
+        authUserId: authUserId.present ? authUserId.value : this.authUserId,
+        syncStatus: syncStatus ?? this.syncStatus,
+        serverId: serverId.present ? serverId.value : this.serverId,
+        lastSyncedAt:
+            lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+        clientRevision: clientRevision ?? this.clientRevision,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt ?? this.updatedAt,
+      );
+  LocalUser copyWithCompanion(LocalUsersCompanion data) {
+    return LocalUser(
+      id: data.id.present ? data.id.value : this.id,
+      type: data.type.present ? data.type.value : this.type,
+      authUserId:
+          data.authUserId.present ? data.authUserId.value : this.authUserId,
+      syncStatus:
+          data.syncStatus.present ? data.syncStatus.value : this.syncStatus,
+      serverId: data.serverId.present ? data.serverId.value : this.serverId,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+      clientRevision: data.clientRevision.present
+          ? data.clientRevision.value
+          : this.clientRevision,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalUser(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('authUserId: $authUserId, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('serverId: $serverId, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('clientRevision: $clientRevision, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, type, authUserId, syncStatus, serverId,
+      lastSyncedAt, clientRevision, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LocalUser &&
+          other.id == this.id &&
+          other.type == this.type &&
+          other.authUserId == this.authUserId &&
+          other.syncStatus == this.syncStatus &&
+          other.serverId == this.serverId &&
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.clientRevision == this.clientRevision &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class LocalUsersCompanion extends UpdateCompanion<LocalUser> {
+  final Value<String> id;
+  final Value<String> type;
+  final Value<String?> authUserId;
+  final Value<String> syncStatus;
+  final Value<String?> serverId;
+  final Value<DateTime?> lastSyncedAt;
+  final Value<int> clientRevision;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const LocalUsersCompanion({
+    this.id = const Value.absent(),
+    this.type = const Value.absent(),
+    this.authUserId = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.clientRevision = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LocalUsersCompanion.insert({
+    required String id,
+    this.type = const Value.absent(),
+    this.authUserId = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.clientRevision = const Value.absent(),
+    required DateTime createdAt,
+    required DateTime updatedAt,
+    this.rowid = const Value.absent(),
+  })  : id = Value(id),
+        createdAt = Value(createdAt),
+        updatedAt = Value(updatedAt);
+  static Insertable<LocalUser> custom({
+    Expression<String>? id,
+    Expression<String>? type,
+    Expression<String>? authUserId,
+    Expression<String>? syncStatus,
+    Expression<String>? serverId,
+    Expression<DateTime>? lastSyncedAt,
+    Expression<int>? clientRevision,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (type != null) 'type': type,
+      if (authUserId != null) 'auth_user_id': authUserId,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (serverId != null) 'server_id': serverId,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (clientRevision != null) 'client_revision': clientRevision,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LocalUsersCompanion copyWith(
+      {Value<String>? id,
+      Value<String>? type,
+      Value<String?>? authUserId,
+      Value<String>? syncStatus,
+      Value<String?>? serverId,
+      Value<DateTime?>? lastSyncedAt,
+      Value<int>? clientRevision,
+      Value<DateTime>? createdAt,
+      Value<DateTime>? updatedAt,
+      Value<int>? rowid}) {
+    return LocalUsersCompanion(
+      id: id ?? this.id,
+      type: type ?? this.type,
+      authUserId: authUserId ?? this.authUserId,
+      syncStatus: syncStatus ?? this.syncStatus,
+      serverId: serverId ?? this.serverId,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      clientRevision: clientRevision ?? this.clientRevision,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (authUserId.present) {
+      map['auth_user_id'] = Variable<String>(authUserId.value);
+    }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (serverId.present) {
+      map['server_id'] = Variable<String>(serverId.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt.value);
+    }
+    if (clientRevision.present) {
+      map['client_revision'] = Variable<int>(clientRevision.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalUsersCompanion(')
+          ..write('id: $id, ')
+          ..write('type: $type, ')
+          ..write('authUserId: $authUserId, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('serverId: $serverId, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('clientRevision: $clientRevision, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ReadingPlanTemplatesTable extends ReadingPlanTemplates
     with TableInfo<$ReadingPlanTemplatesTable, ReadingPlanTemplate> {
   @override
@@ -887,6 +1370,12 @@ class $UserReadingPlansTable extends UserReadingPlans
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
       'id', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _localUserIdMeta =
+      const VerificationMeta('localUserId');
+  @override
+  late final GeneratedColumn<String> localUserId = GeneratedColumn<String>(
+      'local_user_id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _templateKeyMeta =
       const VerificationMeta('templateKey');
   @override
@@ -898,6 +1387,25 @@ class $UserReadingPlansTable extends UserReadingPlans
   late final GeneratedColumn<String> title = GeneratedColumn<String>(
       'title', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+      'status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('active'));
+  static const VerificationMeta _startedAtMeta =
+      const VerificationMeta('startedAt');
+  @override
+  late final GeneratedColumn<DateTime> startedAt = GeneratedColumn<DateTime>(
+      'started_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _completedAtMeta =
+      const VerificationMeta('completedAt');
+  @override
+  late final GeneratedColumn<DateTime> completedAt = GeneratedColumn<DateTime>(
+      'completed_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
   static const VerificationMeta _isActiveMeta =
       const VerificationMeta('isActive');
   @override
@@ -940,17 +1448,44 @@ class $UserReadingPlansTable extends UserReadingPlans
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('local_only'));
+  static const VerificationMeta _serverIdMeta =
+      const VerificationMeta('serverId');
+  @override
+  late final GeneratedColumn<String> serverId = GeneratedColumn<String>(
+      'server_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _lastSyncedAtMeta =
+      const VerificationMeta('lastSyncedAt');
+  @override
+  late final GeneratedColumn<DateTime> lastSyncedAt = GeneratedColumn<DateTime>(
+      'last_synced_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _clientRevisionMeta =
+      const VerificationMeta('clientRevision');
+  @override
+  late final GeneratedColumn<int> clientRevision = GeneratedColumn<int>(
+      'client_revision', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   @override
   List<GeneratedColumn> get $columns => [
         id,
+        localUserId,
         templateKey,
         title,
+        status,
+        startedAt,
+        completedAt,
         isActive,
         lastOpenedBookKey,
         createdAt,
         updatedAt,
         deletedAt,
-        syncStatus
+        syncStatus,
+        serverId,
+        lastSyncedAt,
+        clientRevision
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -967,6 +1502,14 @@ class $UserReadingPlansTable extends UserReadingPlans
     } else if (isInserting) {
       context.missing(_idMeta);
     }
+    if (data.containsKey('local_user_id')) {
+      context.handle(
+          _localUserIdMeta,
+          localUserId.isAcceptableOrUnknown(
+              data['local_user_id']!, _localUserIdMeta));
+    } else if (isInserting) {
+      context.missing(_localUserIdMeta);
+    }
     if (data.containsKey('template_key')) {
       context.handle(
           _templateKeyMeta,
@@ -980,6 +1523,20 @@ class $UserReadingPlansTable extends UserReadingPlans
           _titleMeta, title.isAcceptableOrUnknown(data['title']!, _titleMeta));
     } else if (isInserting) {
       context.missing(_titleMeta);
+    }
+    if (data.containsKey('status')) {
+      context.handle(_statusMeta,
+          status.isAcceptableOrUnknown(data['status']!, _statusMeta));
+    }
+    if (data.containsKey('started_at')) {
+      context.handle(_startedAtMeta,
+          startedAt.isAcceptableOrUnknown(data['started_at']!, _startedAtMeta));
+    }
+    if (data.containsKey('completed_at')) {
+      context.handle(
+          _completedAtMeta,
+          completedAt.isAcceptableOrUnknown(
+              data['completed_at']!, _completedAtMeta));
     }
     if (data.containsKey('is_active')) {
       context.handle(_isActiveMeta,
@@ -1013,6 +1570,22 @@ class $UserReadingPlansTable extends UserReadingPlans
           syncStatus.isAcceptableOrUnknown(
               data['sync_status']!, _syncStatusMeta));
     }
+    if (data.containsKey('server_id')) {
+      context.handle(_serverIdMeta,
+          serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta));
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+          _lastSyncedAtMeta,
+          lastSyncedAt.isAcceptableOrUnknown(
+              data['last_synced_at']!, _lastSyncedAtMeta));
+    }
+    if (data.containsKey('client_revision')) {
+      context.handle(
+          _clientRevisionMeta,
+          clientRevision.isAcceptableOrUnknown(
+              data['client_revision']!, _clientRevisionMeta));
+    }
     return context;
   }
 
@@ -1024,10 +1597,18 @@ class $UserReadingPlansTable extends UserReadingPlans
     return UserReadingPlan(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      localUserId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}local_user_id'])!,
       templateKey: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}template_key'])!,
       title: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}title'])!,
+      status: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}status'])!,
+      startedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}started_at']),
+      completedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}completed_at']),
       isActive: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_active'])!,
       lastOpenedBookKey: attachedDatabase.typeMapping.read(
@@ -1040,6 +1621,12 @@ class $UserReadingPlansTable extends UserReadingPlans
           .read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at']),
       syncStatus: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}sync_status'])!,
+      serverId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}server_id']),
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_synced_at']),
+      clientRevision: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}client_revision'])!,
     );
   }
 
@@ -1051,30 +1638,52 @@ class $UserReadingPlansTable extends UserReadingPlans
 
 class UserReadingPlan extends DataClass implements Insertable<UserReadingPlan> {
   final String id;
+  final String localUserId;
   final String templateKey;
   final String title;
+  final String status;
+  final DateTime? startedAt;
+  final DateTime? completedAt;
   final bool isActive;
   final String? lastOpenedBookKey;
   final DateTime createdAt;
   final DateTime updatedAt;
   final DateTime? deletedAt;
   final String syncStatus;
+  final String? serverId;
+  final DateTime? lastSyncedAt;
+  final int clientRevision;
   const UserReadingPlan(
       {required this.id,
+      required this.localUserId,
       required this.templateKey,
       required this.title,
+      required this.status,
+      this.startedAt,
+      this.completedAt,
       required this.isActive,
       this.lastOpenedBookKey,
       required this.createdAt,
       required this.updatedAt,
       this.deletedAt,
-      required this.syncStatus});
+      required this.syncStatus,
+      this.serverId,
+      this.lastSyncedAt,
+      required this.clientRevision});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
+    map['local_user_id'] = Variable<String>(localUserId);
     map['template_key'] = Variable<String>(templateKey);
     map['title'] = Variable<String>(title);
+    map['status'] = Variable<String>(status);
+    if (!nullToAbsent || startedAt != null) {
+      map['started_at'] = Variable<DateTime>(startedAt);
+    }
+    if (!nullToAbsent || completedAt != null) {
+      map['completed_at'] = Variable<DateTime>(completedAt);
+    }
     map['is_active'] = Variable<bool>(isActive);
     if (!nullToAbsent || lastOpenedBookKey != null) {
       map['last_opened_book_key'] = Variable<String>(lastOpenedBookKey);
@@ -1085,14 +1694,29 @@ class UserReadingPlan extends DataClass implements Insertable<UserReadingPlan> {
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
     map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || serverId != null) {
+      map['server_id'] = Variable<String>(serverId);
+    }
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt);
+    }
+    map['client_revision'] = Variable<int>(clientRevision);
     return map;
   }
 
   UserReadingPlansCompanion toCompanion(bool nullToAbsent) {
     return UserReadingPlansCompanion(
       id: Value(id),
+      localUserId: Value(localUserId),
       templateKey: Value(templateKey),
       title: Value(title),
+      status: Value(status),
+      startedAt: startedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(startedAt),
+      completedAt: completedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(completedAt),
       isActive: Value(isActive),
       lastOpenedBookKey: lastOpenedBookKey == null && nullToAbsent
           ? const Value.absent()
@@ -1103,6 +1727,13 @@ class UserReadingPlan extends DataClass implements Insertable<UserReadingPlan> {
           ? const Value.absent()
           : Value(deletedAt),
       syncStatus: Value(syncStatus),
+      serverId: serverId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverId),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
+      clientRevision: Value(clientRevision),
     );
   }
 
@@ -1111,8 +1742,12 @@ class UserReadingPlan extends DataClass implements Insertable<UserReadingPlan> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return UserReadingPlan(
       id: serializer.fromJson<String>(json['id']),
+      localUserId: serializer.fromJson<String>(json['localUserId']),
       templateKey: serializer.fromJson<String>(json['templateKey']),
       title: serializer.fromJson<String>(json['title']),
+      status: serializer.fromJson<String>(json['status']),
+      startedAt: serializer.fromJson<DateTime?>(json['startedAt']),
+      completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
       isActive: serializer.fromJson<bool>(json['isActive']),
       lastOpenedBookKey:
           serializer.fromJson<String?>(json['lastOpenedBookKey']),
@@ -1120,6 +1755,9 @@ class UserReadingPlan extends DataClass implements Insertable<UserReadingPlan> {
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      serverId: serializer.fromJson<String?>(json['serverId']),
+      lastSyncedAt: serializer.fromJson<DateTime?>(json['lastSyncedAt']),
+      clientRevision: serializer.fromJson<int>(json['clientRevision']),
     );
   }
   @override
@@ -1127,31 +1765,49 @@ class UserReadingPlan extends DataClass implements Insertable<UserReadingPlan> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
+      'localUserId': serializer.toJson<String>(localUserId),
       'templateKey': serializer.toJson<String>(templateKey),
       'title': serializer.toJson<String>(title),
+      'status': serializer.toJson<String>(status),
+      'startedAt': serializer.toJson<DateTime?>(startedAt),
+      'completedAt': serializer.toJson<DateTime?>(completedAt),
       'isActive': serializer.toJson<bool>(isActive),
       'lastOpenedBookKey': serializer.toJson<String?>(lastOpenedBookKey),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'syncStatus': serializer.toJson<String>(syncStatus),
+      'serverId': serializer.toJson<String?>(serverId),
+      'lastSyncedAt': serializer.toJson<DateTime?>(lastSyncedAt),
+      'clientRevision': serializer.toJson<int>(clientRevision),
     };
   }
 
   UserReadingPlan copyWith(
           {String? id,
+          String? localUserId,
           String? templateKey,
           String? title,
+          String? status,
+          Value<DateTime?> startedAt = const Value.absent(),
+          Value<DateTime?> completedAt = const Value.absent(),
           bool? isActive,
           Value<String?> lastOpenedBookKey = const Value.absent(),
           DateTime? createdAt,
           DateTime? updatedAt,
           Value<DateTime?> deletedAt = const Value.absent(),
-          String? syncStatus}) =>
+          String? syncStatus,
+          Value<String?> serverId = const Value.absent(),
+          Value<DateTime?> lastSyncedAt = const Value.absent(),
+          int? clientRevision}) =>
       UserReadingPlan(
         id: id ?? this.id,
+        localUserId: localUserId ?? this.localUserId,
         templateKey: templateKey ?? this.templateKey,
         title: title ?? this.title,
+        status: status ?? this.status,
+        startedAt: startedAt.present ? startedAt.value : this.startedAt,
+        completedAt: completedAt.present ? completedAt.value : this.completedAt,
         isActive: isActive ?? this.isActive,
         lastOpenedBookKey: lastOpenedBookKey.present
             ? lastOpenedBookKey.value
@@ -1160,13 +1816,23 @@ class UserReadingPlan extends DataClass implements Insertable<UserReadingPlan> {
         updatedAt: updatedAt ?? this.updatedAt,
         deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
         syncStatus: syncStatus ?? this.syncStatus,
+        serverId: serverId.present ? serverId.value : this.serverId,
+        lastSyncedAt:
+            lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+        clientRevision: clientRevision ?? this.clientRevision,
       );
   UserReadingPlan copyWithCompanion(UserReadingPlansCompanion data) {
     return UserReadingPlan(
       id: data.id.present ? data.id.value : this.id,
+      localUserId:
+          data.localUserId.present ? data.localUserId.value : this.localUserId,
       templateKey:
           data.templateKey.present ? data.templateKey.value : this.templateKey,
       title: data.title.present ? data.title.value : this.title,
+      status: data.status.present ? data.status.value : this.status,
+      startedAt: data.startedAt.present ? data.startedAt.value : this.startedAt,
+      completedAt:
+          data.completedAt.present ? data.completedAt.value : this.completedAt,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
       lastOpenedBookKey: data.lastOpenedBookKey.present
           ? data.lastOpenedBookKey.value
@@ -1176,6 +1842,13 @@ class UserReadingPlan extends DataClass implements Insertable<UserReadingPlan> {
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       syncStatus:
           data.syncStatus.present ? data.syncStatus.value : this.syncStatus,
+      serverId: data.serverId.present ? data.serverId.value : this.serverId,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+      clientRevision: data.clientRevision.present
+          ? data.clientRevision.value
+          : this.clientRevision,
     );
   }
 
@@ -1183,122 +1856,201 @@ class UserReadingPlan extends DataClass implements Insertable<UserReadingPlan> {
   String toString() {
     return (StringBuffer('UserReadingPlan(')
           ..write('id: $id, ')
+          ..write('localUserId: $localUserId, ')
           ..write('templateKey: $templateKey, ')
           ..write('title: $title, ')
+          ..write('status: $status, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('completedAt: $completedAt, ')
           ..write('isActive: $isActive, ')
           ..write('lastOpenedBookKey: $lastOpenedBookKey, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('syncStatus: $syncStatus')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('serverId: $serverId, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('clientRevision: $clientRevision')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, templateKey, title, isActive,
-      lastOpenedBookKey, createdAt, updatedAt, deletedAt, syncStatus);
+  int get hashCode => Object.hash(
+      id,
+      localUserId,
+      templateKey,
+      title,
+      status,
+      startedAt,
+      completedAt,
+      isActive,
+      lastOpenedBookKey,
+      createdAt,
+      updatedAt,
+      deletedAt,
+      syncStatus,
+      serverId,
+      lastSyncedAt,
+      clientRevision);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is UserReadingPlan &&
           other.id == this.id &&
+          other.localUserId == this.localUserId &&
           other.templateKey == this.templateKey &&
           other.title == this.title &&
+          other.status == this.status &&
+          other.startedAt == this.startedAt &&
+          other.completedAt == this.completedAt &&
           other.isActive == this.isActive &&
           other.lastOpenedBookKey == this.lastOpenedBookKey &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.syncStatus == this.syncStatus);
+          other.syncStatus == this.syncStatus &&
+          other.serverId == this.serverId &&
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.clientRevision == this.clientRevision);
 }
 
 class UserReadingPlansCompanion extends UpdateCompanion<UserReadingPlan> {
   final Value<String> id;
+  final Value<String> localUserId;
   final Value<String> templateKey;
   final Value<String> title;
+  final Value<String> status;
+  final Value<DateTime?> startedAt;
+  final Value<DateTime?> completedAt;
   final Value<bool> isActive;
   final Value<String?> lastOpenedBookKey;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
   final Value<String> syncStatus;
+  final Value<String?> serverId;
+  final Value<DateTime?> lastSyncedAt;
+  final Value<int> clientRevision;
   final Value<int> rowid;
   const UserReadingPlansCompanion({
     this.id = const Value.absent(),
+    this.localUserId = const Value.absent(),
     this.templateKey = const Value.absent(),
     this.title = const Value.absent(),
+    this.status = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.completedAt = const Value.absent(),
     this.isActive = const Value.absent(),
     this.lastOpenedBookKey = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.clientRevision = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   UserReadingPlansCompanion.insert({
     required String id,
+    required String localUserId,
     required String templateKey,
     required String title,
+    this.status = const Value.absent(),
+    this.startedAt = const Value.absent(),
+    this.completedAt = const Value.absent(),
     this.isActive = const Value.absent(),
     this.lastOpenedBookKey = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.clientRevision = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
+        localUserId = Value(localUserId),
         templateKey = Value(templateKey),
         title = Value(title),
         createdAt = Value(createdAt),
         updatedAt = Value(updatedAt);
   static Insertable<UserReadingPlan> custom({
     Expression<String>? id,
+    Expression<String>? localUserId,
     Expression<String>? templateKey,
     Expression<String>? title,
+    Expression<String>? status,
+    Expression<DateTime>? startedAt,
+    Expression<DateTime>? completedAt,
     Expression<bool>? isActive,
     Expression<String>? lastOpenedBookKey,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
     Expression<String>? syncStatus,
+    Expression<String>? serverId,
+    Expression<DateTime>? lastSyncedAt,
+    Expression<int>? clientRevision,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (localUserId != null) 'local_user_id': localUserId,
       if (templateKey != null) 'template_key': templateKey,
       if (title != null) 'title': title,
+      if (status != null) 'status': status,
+      if (startedAt != null) 'started_at': startedAt,
+      if (completedAt != null) 'completed_at': completedAt,
       if (isActive != null) 'is_active': isActive,
       if (lastOpenedBookKey != null) 'last_opened_book_key': lastOpenedBookKey,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (syncStatus != null) 'sync_status': syncStatus,
+      if (serverId != null) 'server_id': serverId,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (clientRevision != null) 'client_revision': clientRevision,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   UserReadingPlansCompanion copyWith(
       {Value<String>? id,
+      Value<String>? localUserId,
       Value<String>? templateKey,
       Value<String>? title,
+      Value<String>? status,
+      Value<DateTime?>? startedAt,
+      Value<DateTime?>? completedAt,
       Value<bool>? isActive,
       Value<String?>? lastOpenedBookKey,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<DateTime?>? deletedAt,
       Value<String>? syncStatus,
+      Value<String?>? serverId,
+      Value<DateTime?>? lastSyncedAt,
+      Value<int>? clientRevision,
       Value<int>? rowid}) {
     return UserReadingPlansCompanion(
       id: id ?? this.id,
+      localUserId: localUserId ?? this.localUserId,
       templateKey: templateKey ?? this.templateKey,
       title: title ?? this.title,
+      status: status ?? this.status,
+      startedAt: startedAt ?? this.startedAt,
+      completedAt: completedAt ?? this.completedAt,
       isActive: isActive ?? this.isActive,
       lastOpenedBookKey: lastOpenedBookKey ?? this.lastOpenedBookKey,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       syncStatus: syncStatus ?? this.syncStatus,
+      serverId: serverId ?? this.serverId,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      clientRevision: clientRevision ?? this.clientRevision,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1309,11 +2061,23 @@ class UserReadingPlansCompanion extends UpdateCompanion<UserReadingPlan> {
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
+    if (localUserId.present) {
+      map['local_user_id'] = Variable<String>(localUserId.value);
+    }
     if (templateKey.present) {
       map['template_key'] = Variable<String>(templateKey.value);
     }
     if (title.present) {
       map['title'] = Variable<String>(title.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (startedAt.present) {
+      map['started_at'] = Variable<DateTime>(startedAt.value);
+    }
+    if (completedAt.present) {
+      map['completed_at'] = Variable<DateTime>(completedAt.value);
     }
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
@@ -1333,6 +2097,15 @@ class UserReadingPlansCompanion extends UpdateCompanion<UserReadingPlan> {
     if (syncStatus.present) {
       map['sync_status'] = Variable<String>(syncStatus.value);
     }
+    if (serverId.present) {
+      map['server_id'] = Variable<String>(serverId.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt.value);
+    }
+    if (clientRevision.present) {
+      map['client_revision'] = Variable<int>(clientRevision.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1343,14 +2116,21 @@ class UserReadingPlansCompanion extends UpdateCompanion<UserReadingPlan> {
   String toString() {
     return (StringBuffer('UserReadingPlansCompanion(')
           ..write('id: $id, ')
+          ..write('localUserId: $localUserId, ')
           ..write('templateKey: $templateKey, ')
           ..write('title: $title, ')
+          ..write('status: $status, ')
+          ..write('startedAt: $startedAt, ')
+          ..write('completedAt: $completedAt, ')
           ..write('isActive: $isActive, ')
           ..write('lastOpenedBookKey: $lastOpenedBookKey, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('syncStatus: $syncStatus, ')
+          ..write('serverId: $serverId, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('clientRevision: $clientRevision, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1397,9 +2177,47 @@ class $PlanScopeChaptersTable extends PlanScopeChapters
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
       'created_at', aliasedName, false,
       type: DriftSqlType.dateTime, requiredDuringInsert: true);
+  static const VerificationMeta _syncStatusMeta =
+      const VerificationMeta('syncStatus');
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, planId, bookKey, chapterNumber, orderIndex, createdAt];
+  late final GeneratedColumn<String> syncStatus = GeneratedColumn<String>(
+      'sync_status', aliasedName, false,
+      type: DriftSqlType.string,
+      requiredDuringInsert: false,
+      defaultValue: const Constant('local_only'));
+  static const VerificationMeta _serverIdMeta =
+      const VerificationMeta('serverId');
+  @override
+  late final GeneratedColumn<String> serverId = GeneratedColumn<String>(
+      'server_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _lastSyncedAtMeta =
+      const VerificationMeta('lastSyncedAt');
+  @override
+  late final GeneratedColumn<DateTime> lastSyncedAt = GeneratedColumn<DateTime>(
+      'last_synced_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _clientRevisionMeta =
+      const VerificationMeta('clientRevision');
+  @override
+  late final GeneratedColumn<int> clientRevision = GeneratedColumn<int>(
+      'client_revision', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
+  @override
+  List<GeneratedColumn> get $columns => [
+        id,
+        planId,
+        bookKey,
+        chapterNumber,
+        orderIndex,
+        createdAt,
+        syncStatus,
+        serverId,
+        lastSyncedAt,
+        clientRevision
+      ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1449,6 +2267,28 @@ class $PlanScopeChaptersTable extends PlanScopeChapters
     } else if (isInserting) {
       context.missing(_createdAtMeta);
     }
+    if (data.containsKey('sync_status')) {
+      context.handle(
+          _syncStatusMeta,
+          syncStatus.isAcceptableOrUnknown(
+              data['sync_status']!, _syncStatusMeta));
+    }
+    if (data.containsKey('server_id')) {
+      context.handle(_serverIdMeta,
+          serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta));
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+          _lastSyncedAtMeta,
+          lastSyncedAt.isAcceptableOrUnknown(
+              data['last_synced_at']!, _lastSyncedAtMeta));
+    }
+    if (data.containsKey('client_revision')) {
+      context.handle(
+          _clientRevisionMeta,
+          clientRevision.isAcceptableOrUnknown(
+              data['client_revision']!, _clientRevisionMeta));
+    }
     return context;
   }
 
@@ -1474,6 +2314,14 @@ class $PlanScopeChaptersTable extends PlanScopeChapters
           .read(DriftSqlType.int, data['${effectivePrefix}order_index'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      syncStatus: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sync_status'])!,
+      serverId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}server_id']),
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_synced_at']),
+      clientRevision: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}client_revision'])!,
     );
   }
 
@@ -1491,13 +2339,21 @@ class PlanScopeChapter extends DataClass
   final int chapterNumber;
   final int orderIndex;
   final DateTime createdAt;
+  final String syncStatus;
+  final String? serverId;
+  final DateTime? lastSyncedAt;
+  final int clientRevision;
   const PlanScopeChapter(
       {required this.id,
       required this.planId,
       required this.bookKey,
       required this.chapterNumber,
       required this.orderIndex,
-      required this.createdAt});
+      required this.createdAt,
+      required this.syncStatus,
+      this.serverId,
+      this.lastSyncedAt,
+      required this.clientRevision});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1507,6 +2363,14 @@ class PlanScopeChapter extends DataClass
     map['chapter_number'] = Variable<int>(chapterNumber);
     map['order_index'] = Variable<int>(orderIndex);
     map['created_at'] = Variable<DateTime>(createdAt);
+    map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || serverId != null) {
+      map['server_id'] = Variable<String>(serverId);
+    }
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt);
+    }
+    map['client_revision'] = Variable<int>(clientRevision);
     return map;
   }
 
@@ -1518,6 +2382,14 @@ class PlanScopeChapter extends DataClass
       chapterNumber: Value(chapterNumber),
       orderIndex: Value(orderIndex),
       createdAt: Value(createdAt),
+      syncStatus: Value(syncStatus),
+      serverId: serverId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverId),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
+      clientRevision: Value(clientRevision),
     );
   }
 
@@ -1531,6 +2403,10 @@ class PlanScopeChapter extends DataClass
       chapterNumber: serializer.fromJson<int>(json['chapterNumber']),
       orderIndex: serializer.fromJson<int>(json['orderIndex']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      serverId: serializer.fromJson<String?>(json['serverId']),
+      lastSyncedAt: serializer.fromJson<DateTime?>(json['lastSyncedAt']),
+      clientRevision: serializer.fromJson<int>(json['clientRevision']),
     );
   }
   @override
@@ -1543,6 +2419,10 @@ class PlanScopeChapter extends DataClass
       'chapterNumber': serializer.toJson<int>(chapterNumber),
       'orderIndex': serializer.toJson<int>(orderIndex),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'syncStatus': serializer.toJson<String>(syncStatus),
+      'serverId': serializer.toJson<String?>(serverId),
+      'lastSyncedAt': serializer.toJson<DateTime?>(lastSyncedAt),
+      'clientRevision': serializer.toJson<int>(clientRevision),
     };
   }
 
@@ -1552,7 +2432,11 @@ class PlanScopeChapter extends DataClass
           String? bookKey,
           int? chapterNumber,
           int? orderIndex,
-          DateTime? createdAt}) =>
+          DateTime? createdAt,
+          String? syncStatus,
+          Value<String?> serverId = const Value.absent(),
+          Value<DateTime?> lastSyncedAt = const Value.absent(),
+          int? clientRevision}) =>
       PlanScopeChapter(
         id: id ?? this.id,
         planId: planId ?? this.planId,
@@ -1560,6 +2444,11 @@ class PlanScopeChapter extends DataClass
         chapterNumber: chapterNumber ?? this.chapterNumber,
         orderIndex: orderIndex ?? this.orderIndex,
         createdAt: createdAt ?? this.createdAt,
+        syncStatus: syncStatus ?? this.syncStatus,
+        serverId: serverId.present ? serverId.value : this.serverId,
+        lastSyncedAt:
+            lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+        clientRevision: clientRevision ?? this.clientRevision,
       );
   PlanScopeChapter copyWithCompanion(PlanScopeChaptersCompanion data) {
     return PlanScopeChapter(
@@ -1572,6 +2461,15 @@ class PlanScopeChapter extends DataClass
       orderIndex:
           data.orderIndex.present ? data.orderIndex.value : this.orderIndex,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      syncStatus:
+          data.syncStatus.present ? data.syncStatus.value : this.syncStatus,
+      serverId: data.serverId.present ? data.serverId.value : this.serverId,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+      clientRevision: data.clientRevision.present
+          ? data.clientRevision.value
+          : this.clientRevision,
     );
   }
 
@@ -1583,14 +2481,27 @@ class PlanScopeChapter extends DataClass
           ..write('bookKey: $bookKey, ')
           ..write('chapterNumber: $chapterNumber, ')
           ..write('orderIndex: $orderIndex, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('serverId: $serverId, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('clientRevision: $clientRevision')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, planId, bookKey, chapterNumber, orderIndex, createdAt);
+  int get hashCode => Object.hash(
+      id,
+      planId,
+      bookKey,
+      chapterNumber,
+      orderIndex,
+      createdAt,
+      syncStatus,
+      serverId,
+      lastSyncedAt,
+      clientRevision);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1600,7 +2511,11 @@ class PlanScopeChapter extends DataClass
           other.bookKey == this.bookKey &&
           other.chapterNumber == this.chapterNumber &&
           other.orderIndex == this.orderIndex &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.syncStatus == this.syncStatus &&
+          other.serverId == this.serverId &&
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.clientRevision == this.clientRevision);
 }
 
 class PlanScopeChaptersCompanion extends UpdateCompanion<PlanScopeChapter> {
@@ -1610,6 +2525,10 @@ class PlanScopeChaptersCompanion extends UpdateCompanion<PlanScopeChapter> {
   final Value<int> chapterNumber;
   final Value<int> orderIndex;
   final Value<DateTime> createdAt;
+  final Value<String> syncStatus;
+  final Value<String?> serverId;
+  final Value<DateTime?> lastSyncedAt;
+  final Value<int> clientRevision;
   final Value<int> rowid;
   const PlanScopeChaptersCompanion({
     this.id = const Value.absent(),
@@ -1618,6 +2537,10 @@ class PlanScopeChaptersCompanion extends UpdateCompanion<PlanScopeChapter> {
     this.chapterNumber = const Value.absent(),
     this.orderIndex = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.syncStatus = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.clientRevision = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   PlanScopeChaptersCompanion.insert({
@@ -1627,6 +2550,10 @@ class PlanScopeChaptersCompanion extends UpdateCompanion<PlanScopeChapter> {
     required int chapterNumber,
     required int orderIndex,
     required DateTime createdAt,
+    this.syncStatus = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.clientRevision = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
         planId = Value(planId),
@@ -1641,6 +2568,10 @@ class PlanScopeChaptersCompanion extends UpdateCompanion<PlanScopeChapter> {
     Expression<int>? chapterNumber,
     Expression<int>? orderIndex,
     Expression<DateTime>? createdAt,
+    Expression<String>? syncStatus,
+    Expression<String>? serverId,
+    Expression<DateTime>? lastSyncedAt,
+    Expression<int>? clientRevision,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1650,6 +2581,10 @@ class PlanScopeChaptersCompanion extends UpdateCompanion<PlanScopeChapter> {
       if (chapterNumber != null) 'chapter_number': chapterNumber,
       if (orderIndex != null) 'order_index': orderIndex,
       if (createdAt != null) 'created_at': createdAt,
+      if (syncStatus != null) 'sync_status': syncStatus,
+      if (serverId != null) 'server_id': serverId,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (clientRevision != null) 'client_revision': clientRevision,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1661,6 +2596,10 @@ class PlanScopeChaptersCompanion extends UpdateCompanion<PlanScopeChapter> {
       Value<int>? chapterNumber,
       Value<int>? orderIndex,
       Value<DateTime>? createdAt,
+      Value<String>? syncStatus,
+      Value<String?>? serverId,
+      Value<DateTime?>? lastSyncedAt,
+      Value<int>? clientRevision,
       Value<int>? rowid}) {
     return PlanScopeChaptersCompanion(
       id: id ?? this.id,
@@ -1669,6 +2608,10 @@ class PlanScopeChaptersCompanion extends UpdateCompanion<PlanScopeChapter> {
       chapterNumber: chapterNumber ?? this.chapterNumber,
       orderIndex: orderIndex ?? this.orderIndex,
       createdAt: createdAt ?? this.createdAt,
+      syncStatus: syncStatus ?? this.syncStatus,
+      serverId: serverId ?? this.serverId,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      clientRevision: clientRevision ?? this.clientRevision,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1694,6 +2637,18 @@ class PlanScopeChaptersCompanion extends UpdateCompanion<PlanScopeChapter> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (syncStatus.present) {
+      map['sync_status'] = Variable<String>(syncStatus.value);
+    }
+    if (serverId.present) {
+      map['server_id'] = Variable<String>(serverId.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt.value);
+    }
+    if (clientRevision.present) {
+      map['client_revision'] = Variable<int>(clientRevision.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1709,6 +2664,10 @@ class PlanScopeChaptersCompanion extends UpdateCompanion<PlanScopeChapter> {
           ..write('chapterNumber: $chapterNumber, ')
           ..write('orderIndex: $orderIndex, ')
           ..write('createdAt: $createdAt, ')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('serverId: $serverId, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('clientRevision: $clientRevision, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1725,6 +2684,12 @@ class $ChapterProgressEntriesTable extends ChapterProgressEntries
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
       'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _localUserIdMeta =
+      const VerificationMeta('localUserId');
+  @override
+  late final GeneratedColumn<String> localUserId = GeneratedColumn<String>(
+      'local_user_id', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _planIdMeta = const VerificationMeta('planId');
   @override
@@ -1779,9 +2744,30 @@ class $ChapterProgressEntriesTable extends ChapterProgressEntries
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('local_only'));
+  static const VerificationMeta _serverIdMeta =
+      const VerificationMeta('serverId');
+  @override
+  late final GeneratedColumn<String> serverId = GeneratedColumn<String>(
+      'server_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _lastSyncedAtMeta =
+      const VerificationMeta('lastSyncedAt');
+  @override
+  late final GeneratedColumn<DateTime> lastSyncedAt = GeneratedColumn<DateTime>(
+      'last_synced_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _clientRevisionMeta =
+      const VerificationMeta('clientRevision');
+  @override
+  late final GeneratedColumn<int> clientRevision = GeneratedColumn<int>(
+      'client_revision', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   @override
   List<GeneratedColumn> get $columns => [
         id,
+        localUserId,
         planId,
         bookKey,
         chapterNumber,
@@ -1789,7 +2775,10 @@ class $ChapterProgressEntriesTable extends ChapterProgressEntries
         completedAt,
         updatedAt,
         deletedAt,
-        syncStatus
+        syncStatus,
+        serverId,
+        lastSyncedAt,
+        clientRevision
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1806,6 +2795,14 @@ class $ChapterProgressEntriesTable extends ChapterProgressEntries
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
       context.missing(_idMeta);
+    }
+    if (data.containsKey('local_user_id')) {
+      context.handle(
+          _localUserIdMeta,
+          localUserId.isAcceptableOrUnknown(
+              data['local_user_id']!, _localUserIdMeta));
+    } else if (isInserting) {
+      context.missing(_localUserIdMeta);
     }
     if (data.containsKey('plan_id')) {
       context.handle(_planIdMeta,
@@ -1855,6 +2852,22 @@ class $ChapterProgressEntriesTable extends ChapterProgressEntries
           syncStatus.isAcceptableOrUnknown(
               data['sync_status']!, _syncStatusMeta));
     }
+    if (data.containsKey('server_id')) {
+      context.handle(_serverIdMeta,
+          serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta));
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+          _lastSyncedAtMeta,
+          lastSyncedAt.isAcceptableOrUnknown(
+              data['last_synced_at']!, _lastSyncedAtMeta));
+    }
+    if (data.containsKey('client_revision')) {
+      context.handle(
+          _clientRevisionMeta,
+          clientRevision.isAcceptableOrUnknown(
+              data['client_revision']!, _clientRevisionMeta));
+    }
     return context;
   }
 
@@ -1870,6 +2883,8 @@ class $ChapterProgressEntriesTable extends ChapterProgressEntries
     return ChapterProgressEntry(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      localUserId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}local_user_id'])!,
       planId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}plan_id'])!,
       bookKey: attachedDatabase.typeMapping
@@ -1886,6 +2901,12 @@ class $ChapterProgressEntriesTable extends ChapterProgressEntries
           .read(DriftSqlType.dateTime, data['${effectivePrefix}deleted_at']),
       syncStatus: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}sync_status'])!,
+      serverId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}server_id']),
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_synced_at']),
+      clientRevision: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}client_revision'])!,
     );
   }
 
@@ -1898,6 +2919,7 @@ class $ChapterProgressEntriesTable extends ChapterProgressEntries
 class ChapterProgressEntry extends DataClass
     implements Insertable<ChapterProgressEntry> {
   final String id;
+  final String localUserId;
   final String planId;
   final String bookKey;
   final int chapterNumber;
@@ -1906,8 +2928,12 @@ class ChapterProgressEntry extends DataClass
   final DateTime updatedAt;
   final DateTime? deletedAt;
   final String syncStatus;
+  final String? serverId;
+  final DateTime? lastSyncedAt;
+  final int clientRevision;
   const ChapterProgressEntry(
       {required this.id,
+      required this.localUserId,
       required this.planId,
       required this.bookKey,
       required this.chapterNumber,
@@ -1915,11 +2941,15 @@ class ChapterProgressEntry extends DataClass
       this.completedAt,
       required this.updatedAt,
       this.deletedAt,
-      required this.syncStatus});
+      required this.syncStatus,
+      this.serverId,
+      this.lastSyncedAt,
+      required this.clientRevision});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
+    map['local_user_id'] = Variable<String>(localUserId);
     map['plan_id'] = Variable<String>(planId);
     map['book_key'] = Variable<String>(bookKey);
     map['chapter_number'] = Variable<int>(chapterNumber);
@@ -1932,12 +2962,20 @@ class ChapterProgressEntry extends DataClass
       map['deleted_at'] = Variable<DateTime>(deletedAt);
     }
     map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || serverId != null) {
+      map['server_id'] = Variable<String>(serverId);
+    }
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt);
+    }
+    map['client_revision'] = Variable<int>(clientRevision);
     return map;
   }
 
   ChapterProgressEntriesCompanion toCompanion(bool nullToAbsent) {
     return ChapterProgressEntriesCompanion(
       id: Value(id),
+      localUserId: Value(localUserId),
       planId: Value(planId),
       bookKey: Value(bookKey),
       chapterNumber: Value(chapterNumber),
@@ -1950,6 +2988,13 @@ class ChapterProgressEntry extends DataClass
           ? const Value.absent()
           : Value(deletedAt),
       syncStatus: Value(syncStatus),
+      serverId: serverId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverId),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
+      clientRevision: Value(clientRevision),
     );
   }
 
@@ -1958,6 +3003,7 @@ class ChapterProgressEntry extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ChapterProgressEntry(
       id: serializer.fromJson<String>(json['id']),
+      localUserId: serializer.fromJson<String>(json['localUserId']),
       planId: serializer.fromJson<String>(json['planId']),
       bookKey: serializer.fromJson<String>(json['bookKey']),
       chapterNumber: serializer.fromJson<int>(json['chapterNumber']),
@@ -1966,6 +3012,9 @@ class ChapterProgressEntry extends DataClass
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       deletedAt: serializer.fromJson<DateTime?>(json['deletedAt']),
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      serverId: serializer.fromJson<String?>(json['serverId']),
+      lastSyncedAt: serializer.fromJson<DateTime?>(json['lastSyncedAt']),
+      clientRevision: serializer.fromJson<int>(json['clientRevision']),
     );
   }
   @override
@@ -1973,6 +3022,7 @@ class ChapterProgressEntry extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
+      'localUserId': serializer.toJson<String>(localUserId),
       'planId': serializer.toJson<String>(planId),
       'bookKey': serializer.toJson<String>(bookKey),
       'chapterNumber': serializer.toJson<int>(chapterNumber),
@@ -1981,11 +3031,15 @@ class ChapterProgressEntry extends DataClass
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'deletedAt': serializer.toJson<DateTime?>(deletedAt),
       'syncStatus': serializer.toJson<String>(syncStatus),
+      'serverId': serializer.toJson<String?>(serverId),
+      'lastSyncedAt': serializer.toJson<DateTime?>(lastSyncedAt),
+      'clientRevision': serializer.toJson<int>(clientRevision),
     };
   }
 
   ChapterProgressEntry copyWith(
           {String? id,
+          String? localUserId,
           String? planId,
           String? bookKey,
           int? chapterNumber,
@@ -1993,9 +3047,13 @@ class ChapterProgressEntry extends DataClass
           Value<DateTime?> completedAt = const Value.absent(),
           DateTime? updatedAt,
           Value<DateTime?> deletedAt = const Value.absent(),
-          String? syncStatus}) =>
+          String? syncStatus,
+          Value<String?> serverId = const Value.absent(),
+          Value<DateTime?> lastSyncedAt = const Value.absent(),
+          int? clientRevision}) =>
       ChapterProgressEntry(
         id: id ?? this.id,
+        localUserId: localUserId ?? this.localUserId,
         planId: planId ?? this.planId,
         bookKey: bookKey ?? this.bookKey,
         chapterNumber: chapterNumber ?? this.chapterNumber,
@@ -2004,10 +3062,16 @@ class ChapterProgressEntry extends DataClass
         updatedAt: updatedAt ?? this.updatedAt,
         deletedAt: deletedAt.present ? deletedAt.value : this.deletedAt,
         syncStatus: syncStatus ?? this.syncStatus,
+        serverId: serverId.present ? serverId.value : this.serverId,
+        lastSyncedAt:
+            lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+        clientRevision: clientRevision ?? this.clientRevision,
       );
   ChapterProgressEntry copyWithCompanion(ChapterProgressEntriesCompanion data) {
     return ChapterProgressEntry(
       id: data.id.present ? data.id.value : this.id,
+      localUserId:
+          data.localUserId.present ? data.localUserId.value : this.localUserId,
       planId: data.planId.present ? data.planId.value : this.planId,
       bookKey: data.bookKey.present ? data.bookKey.value : this.bookKey,
       chapterNumber: data.chapterNumber.present
@@ -2021,6 +3085,13 @@ class ChapterProgressEntry extends DataClass
       deletedAt: data.deletedAt.present ? data.deletedAt.value : this.deletedAt,
       syncStatus:
           data.syncStatus.present ? data.syncStatus.value : this.syncStatus,
+      serverId: data.serverId.present ? data.serverId.value : this.serverId,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+      clientRevision: data.clientRevision.present
+          ? data.clientRevision.value
+          : this.clientRevision,
     );
   }
 
@@ -2028,6 +3099,7 @@ class ChapterProgressEntry extends DataClass
   String toString() {
     return (StringBuffer('ChapterProgressEntry(')
           ..write('id: $id, ')
+          ..write('localUserId: $localUserId, ')
           ..write('planId: $planId, ')
           ..write('bookKey: $bookKey, ')
           ..write('chapterNumber: $chapterNumber, ')
@@ -2035,19 +3107,35 @@ class ChapterProgressEntry extends DataClass
           ..write('completedAt: $completedAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
-          ..write('syncStatus: $syncStatus')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('serverId: $serverId, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('clientRevision: $clientRevision')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, planId, bookKey, chapterNumber,
-      isCompleted, completedAt, updatedAt, deletedAt, syncStatus);
+  int get hashCode => Object.hash(
+      id,
+      localUserId,
+      planId,
+      bookKey,
+      chapterNumber,
+      isCompleted,
+      completedAt,
+      updatedAt,
+      deletedAt,
+      syncStatus,
+      serverId,
+      lastSyncedAt,
+      clientRevision);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ChapterProgressEntry &&
           other.id == this.id &&
+          other.localUserId == this.localUserId &&
           other.planId == this.planId &&
           other.bookKey == this.bookKey &&
           other.chapterNumber == this.chapterNumber &&
@@ -2055,12 +3143,16 @@ class ChapterProgressEntry extends DataClass
           other.completedAt == this.completedAt &&
           other.updatedAt == this.updatedAt &&
           other.deletedAt == this.deletedAt &&
-          other.syncStatus == this.syncStatus);
+          other.syncStatus == this.syncStatus &&
+          other.serverId == this.serverId &&
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.clientRevision == this.clientRevision);
 }
 
 class ChapterProgressEntriesCompanion
     extends UpdateCompanion<ChapterProgressEntry> {
   final Value<String> id;
+  final Value<String> localUserId;
   final Value<String> planId;
   final Value<String> bookKey;
   final Value<int> chapterNumber;
@@ -2069,9 +3161,13 @@ class ChapterProgressEntriesCompanion
   final Value<DateTime> updatedAt;
   final Value<DateTime?> deletedAt;
   final Value<String> syncStatus;
+  final Value<String?> serverId;
+  final Value<DateTime?> lastSyncedAt;
+  final Value<int> clientRevision;
   final Value<int> rowid;
   const ChapterProgressEntriesCompanion({
     this.id = const Value.absent(),
+    this.localUserId = const Value.absent(),
     this.planId = const Value.absent(),
     this.bookKey = const Value.absent(),
     this.chapterNumber = const Value.absent(),
@@ -2080,10 +3176,14 @@ class ChapterProgressEntriesCompanion
     this.updatedAt = const Value.absent(),
     this.deletedAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.clientRevision = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ChapterProgressEntriesCompanion.insert({
     required String id,
+    required String localUserId,
     required String planId,
     required String bookKey,
     required int chapterNumber,
@@ -2092,14 +3192,19 @@ class ChapterProgressEntriesCompanion
     required DateTime updatedAt,
     this.deletedAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.clientRevision = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
+        localUserId = Value(localUserId),
         planId = Value(planId),
         bookKey = Value(bookKey),
         chapterNumber = Value(chapterNumber),
         updatedAt = Value(updatedAt);
   static Insertable<ChapterProgressEntry> custom({
     Expression<String>? id,
+    Expression<String>? localUserId,
     Expression<String>? planId,
     Expression<String>? bookKey,
     Expression<int>? chapterNumber,
@@ -2108,10 +3213,14 @@ class ChapterProgressEntriesCompanion
     Expression<DateTime>? updatedAt,
     Expression<DateTime>? deletedAt,
     Expression<String>? syncStatus,
+    Expression<String>? serverId,
+    Expression<DateTime>? lastSyncedAt,
+    Expression<int>? clientRevision,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (localUserId != null) 'local_user_id': localUserId,
       if (planId != null) 'plan_id': planId,
       if (bookKey != null) 'book_key': bookKey,
       if (chapterNumber != null) 'chapter_number': chapterNumber,
@@ -2120,12 +3229,16 @@ class ChapterProgressEntriesCompanion
       if (updatedAt != null) 'updated_at': updatedAt,
       if (deletedAt != null) 'deleted_at': deletedAt,
       if (syncStatus != null) 'sync_status': syncStatus,
+      if (serverId != null) 'server_id': serverId,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (clientRevision != null) 'client_revision': clientRevision,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   ChapterProgressEntriesCompanion copyWith(
       {Value<String>? id,
+      Value<String>? localUserId,
       Value<String>? planId,
       Value<String>? bookKey,
       Value<int>? chapterNumber,
@@ -2134,9 +3247,13 @@ class ChapterProgressEntriesCompanion
       Value<DateTime>? updatedAt,
       Value<DateTime?>? deletedAt,
       Value<String>? syncStatus,
+      Value<String?>? serverId,
+      Value<DateTime?>? lastSyncedAt,
+      Value<int>? clientRevision,
       Value<int>? rowid}) {
     return ChapterProgressEntriesCompanion(
       id: id ?? this.id,
+      localUserId: localUserId ?? this.localUserId,
       planId: planId ?? this.planId,
       bookKey: bookKey ?? this.bookKey,
       chapterNumber: chapterNumber ?? this.chapterNumber,
@@ -2145,6 +3262,9 @@ class ChapterProgressEntriesCompanion
       updatedAt: updatedAt ?? this.updatedAt,
       deletedAt: deletedAt ?? this.deletedAt,
       syncStatus: syncStatus ?? this.syncStatus,
+      serverId: serverId ?? this.serverId,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      clientRevision: clientRevision ?? this.clientRevision,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2154,6 +3274,9 @@ class ChapterProgressEntriesCompanion
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<String>(id.value);
+    }
+    if (localUserId.present) {
+      map['local_user_id'] = Variable<String>(localUserId.value);
     }
     if (planId.present) {
       map['plan_id'] = Variable<String>(planId.value);
@@ -2179,6 +3302,15 @@ class ChapterProgressEntriesCompanion
     if (syncStatus.present) {
       map['sync_status'] = Variable<String>(syncStatus.value);
     }
+    if (serverId.present) {
+      map['server_id'] = Variable<String>(serverId.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt.value);
+    }
+    if (clientRevision.present) {
+      map['client_revision'] = Variable<int>(clientRevision.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2189,6 +3321,7 @@ class ChapterProgressEntriesCompanion
   String toString() {
     return (StringBuffer('ChapterProgressEntriesCompanion(')
           ..write('id: $id, ')
+          ..write('localUserId: $localUserId, ')
           ..write('planId: $planId, ')
           ..write('bookKey: $bookKey, ')
           ..write('chapterNumber: $chapterNumber, ')
@@ -2197,6 +3330,9 @@ class ChapterProgressEntriesCompanion
           ..write('updatedAt: $updatedAt, ')
           ..write('deletedAt: $deletedAt, ')
           ..write('syncStatus: $syncStatus, ')
+          ..write('serverId: $serverId, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('clientRevision: $clientRevision, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2213,6 +3349,12 @@ class $ReadingActivitiesTable extends ReadingActivities
   @override
   late final GeneratedColumn<String> id = GeneratedColumn<String>(
       'id', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _localUserIdMeta =
+      const VerificationMeta('localUserId');
+  @override
+  late final GeneratedColumn<String> localUserId = GeneratedColumn<String>(
+      'local_user_id', aliasedName, false,
       type: DriftSqlType.string, requiredDuringInsert: true);
   static const VerificationMeta _planIdMeta = const VerificationMeta('planId');
   @override
@@ -2268,9 +3410,30 @@ class $ReadingActivitiesTable extends ReadingActivities
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('local_only'));
+  static const VerificationMeta _serverIdMeta =
+      const VerificationMeta('serverId');
+  @override
+  late final GeneratedColumn<String> serverId = GeneratedColumn<String>(
+      'server_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _lastSyncedAtMeta =
+      const VerificationMeta('lastSyncedAt');
+  @override
+  late final GeneratedColumn<DateTime> lastSyncedAt = GeneratedColumn<DateTime>(
+      'last_synced_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _clientRevisionMeta =
+      const VerificationMeta('clientRevision');
+  @override
+  late final GeneratedColumn<int> clientRevision = GeneratedColumn<int>(
+      'client_revision', aliasedName, false,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultValue: const Constant(0));
   @override
   List<GeneratedColumn> get $columns => [
         id,
+        localUserId,
         planId,
         bookKey,
         chapterNumber,
@@ -2279,7 +3442,10 @@ class $ReadingActivitiesTable extends ReadingActivities
         timezone,
         happenedAt,
         createdAt,
-        syncStatus
+        syncStatus,
+        serverId,
+        lastSyncedAt,
+        clientRevision
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2295,6 +3461,14 @@ class $ReadingActivitiesTable extends ReadingActivities
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
       context.missing(_idMeta);
+    }
+    if (data.containsKey('local_user_id')) {
+      context.handle(
+          _localUserIdMeta,
+          localUserId.isAcceptableOrUnknown(
+              data['local_user_id']!, _localUserIdMeta));
+    } else if (isInserting) {
+      context.missing(_localUserIdMeta);
     }
     if (data.containsKey('plan_id')) {
       context.handle(_planIdMeta,
@@ -2356,17 +3530,39 @@ class $ReadingActivitiesTable extends ReadingActivities
           syncStatus.isAcceptableOrUnknown(
               data['sync_status']!, _syncStatusMeta));
     }
+    if (data.containsKey('server_id')) {
+      context.handle(_serverIdMeta,
+          serverId.isAcceptableOrUnknown(data['server_id']!, _serverIdMeta));
+    }
+    if (data.containsKey('last_synced_at')) {
+      context.handle(
+          _lastSyncedAtMeta,
+          lastSyncedAt.isAcceptableOrUnknown(
+              data['last_synced_at']!, _lastSyncedAtMeta));
+    }
+    if (data.containsKey('client_revision')) {
+      context.handle(
+          _clientRevisionMeta,
+          clientRevision.isAcceptableOrUnknown(
+              data['client_revision']!, _clientRevisionMeta));
+    }
     return context;
   }
 
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+        {localUserId, planId, bookKey, chapterNumber, activityDate, action},
+      ];
+  @override
   ReadingActivity map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ReadingActivity(
       id: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}id'])!,
+      localUserId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}local_user_id'])!,
       planId: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}plan_id'])!,
       bookKey: attachedDatabase.typeMapping
@@ -2385,6 +3581,12 @@ class $ReadingActivitiesTable extends ReadingActivities
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       syncStatus: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}sync_status'])!,
+      serverId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}server_id']),
+      lastSyncedAt: attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime, data['${effectivePrefix}last_synced_at']),
+      clientRevision: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}client_revision'])!,
     );
   }
 
@@ -2396,6 +3598,7 @@ class $ReadingActivitiesTable extends ReadingActivities
 
 class ReadingActivity extends DataClass implements Insertable<ReadingActivity> {
   final String id;
+  final String localUserId;
   final String planId;
   final String bookKey;
   final int chapterNumber;
@@ -2405,8 +3608,12 @@ class ReadingActivity extends DataClass implements Insertable<ReadingActivity> {
   final DateTime happenedAt;
   final DateTime createdAt;
   final String syncStatus;
+  final String? serverId;
+  final DateTime? lastSyncedAt;
+  final int clientRevision;
   const ReadingActivity(
       {required this.id,
+      required this.localUserId,
       required this.planId,
       required this.bookKey,
       required this.chapterNumber,
@@ -2415,11 +3622,15 @@ class ReadingActivity extends DataClass implements Insertable<ReadingActivity> {
       required this.timezone,
       required this.happenedAt,
       required this.createdAt,
-      required this.syncStatus});
+      required this.syncStatus,
+      this.serverId,
+      this.lastSyncedAt,
+      required this.clientRevision});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
+    map['local_user_id'] = Variable<String>(localUserId);
     map['plan_id'] = Variable<String>(planId);
     map['book_key'] = Variable<String>(bookKey);
     map['chapter_number'] = Variable<int>(chapterNumber);
@@ -2429,12 +3640,20 @@ class ReadingActivity extends DataClass implements Insertable<ReadingActivity> {
     map['happened_at'] = Variable<DateTime>(happenedAt);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['sync_status'] = Variable<String>(syncStatus);
+    if (!nullToAbsent || serverId != null) {
+      map['server_id'] = Variable<String>(serverId);
+    }
+    if (!nullToAbsent || lastSyncedAt != null) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt);
+    }
+    map['client_revision'] = Variable<int>(clientRevision);
     return map;
   }
 
   ReadingActivitiesCompanion toCompanion(bool nullToAbsent) {
     return ReadingActivitiesCompanion(
       id: Value(id),
+      localUserId: Value(localUserId),
       planId: Value(planId),
       bookKey: Value(bookKey),
       chapterNumber: Value(chapterNumber),
@@ -2444,6 +3663,13 @@ class ReadingActivity extends DataClass implements Insertable<ReadingActivity> {
       happenedAt: Value(happenedAt),
       createdAt: Value(createdAt),
       syncStatus: Value(syncStatus),
+      serverId: serverId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(serverId),
+      lastSyncedAt: lastSyncedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastSyncedAt),
+      clientRevision: Value(clientRevision),
     );
   }
 
@@ -2452,6 +3678,7 @@ class ReadingActivity extends DataClass implements Insertable<ReadingActivity> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ReadingActivity(
       id: serializer.fromJson<String>(json['id']),
+      localUserId: serializer.fromJson<String>(json['localUserId']),
       planId: serializer.fromJson<String>(json['planId']),
       bookKey: serializer.fromJson<String>(json['bookKey']),
       chapterNumber: serializer.fromJson<int>(json['chapterNumber']),
@@ -2461,6 +3688,9 @@ class ReadingActivity extends DataClass implements Insertable<ReadingActivity> {
       happenedAt: serializer.fromJson<DateTime>(json['happenedAt']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       syncStatus: serializer.fromJson<String>(json['syncStatus']),
+      serverId: serializer.fromJson<String?>(json['serverId']),
+      lastSyncedAt: serializer.fromJson<DateTime?>(json['lastSyncedAt']),
+      clientRevision: serializer.fromJson<int>(json['clientRevision']),
     );
   }
   @override
@@ -2468,6 +3698,7 @@ class ReadingActivity extends DataClass implements Insertable<ReadingActivity> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
+      'localUserId': serializer.toJson<String>(localUserId),
       'planId': serializer.toJson<String>(planId),
       'bookKey': serializer.toJson<String>(bookKey),
       'chapterNumber': serializer.toJson<int>(chapterNumber),
@@ -2477,11 +3708,15 @@ class ReadingActivity extends DataClass implements Insertable<ReadingActivity> {
       'happenedAt': serializer.toJson<DateTime>(happenedAt),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'syncStatus': serializer.toJson<String>(syncStatus),
+      'serverId': serializer.toJson<String?>(serverId),
+      'lastSyncedAt': serializer.toJson<DateTime?>(lastSyncedAt),
+      'clientRevision': serializer.toJson<int>(clientRevision),
     };
   }
 
   ReadingActivity copyWith(
           {String? id,
+          String? localUserId,
           String? planId,
           String? bookKey,
           int? chapterNumber,
@@ -2490,9 +3725,13 @@ class ReadingActivity extends DataClass implements Insertable<ReadingActivity> {
           String? timezone,
           DateTime? happenedAt,
           DateTime? createdAt,
-          String? syncStatus}) =>
+          String? syncStatus,
+          Value<String?> serverId = const Value.absent(),
+          Value<DateTime?> lastSyncedAt = const Value.absent(),
+          int? clientRevision}) =>
       ReadingActivity(
         id: id ?? this.id,
+        localUserId: localUserId ?? this.localUserId,
         planId: planId ?? this.planId,
         bookKey: bookKey ?? this.bookKey,
         chapterNumber: chapterNumber ?? this.chapterNumber,
@@ -2502,10 +3741,16 @@ class ReadingActivity extends DataClass implements Insertable<ReadingActivity> {
         happenedAt: happenedAt ?? this.happenedAt,
         createdAt: createdAt ?? this.createdAt,
         syncStatus: syncStatus ?? this.syncStatus,
+        serverId: serverId.present ? serverId.value : this.serverId,
+        lastSyncedAt:
+            lastSyncedAt.present ? lastSyncedAt.value : this.lastSyncedAt,
+        clientRevision: clientRevision ?? this.clientRevision,
       );
   ReadingActivity copyWithCompanion(ReadingActivitiesCompanion data) {
     return ReadingActivity(
       id: data.id.present ? data.id.value : this.id,
+      localUserId:
+          data.localUserId.present ? data.localUserId.value : this.localUserId,
       planId: data.planId.present ? data.planId.value : this.planId,
       bookKey: data.bookKey.present ? data.bookKey.value : this.bookKey,
       chapterNumber: data.chapterNumber.present
@@ -2521,6 +3766,13 @@ class ReadingActivity extends DataClass implements Insertable<ReadingActivity> {
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       syncStatus:
           data.syncStatus.present ? data.syncStatus.value : this.syncStatus,
+      serverId: data.serverId.present ? data.serverId.value : this.serverId,
+      lastSyncedAt: data.lastSyncedAt.present
+          ? data.lastSyncedAt.value
+          : this.lastSyncedAt,
+      clientRevision: data.clientRevision.present
+          ? data.clientRevision.value
+          : this.clientRevision,
     );
   }
 
@@ -2528,6 +3780,7 @@ class ReadingActivity extends DataClass implements Insertable<ReadingActivity> {
   String toString() {
     return (StringBuffer('ReadingActivity(')
           ..write('id: $id, ')
+          ..write('localUserId: $localUserId, ')
           ..write('planId: $planId, ')
           ..write('bookKey: $bookKey, ')
           ..write('chapterNumber: $chapterNumber, ')
@@ -2536,19 +3789,36 @@ class ReadingActivity extends DataClass implements Insertable<ReadingActivity> {
           ..write('timezone: $timezone, ')
           ..write('happenedAt: $happenedAt, ')
           ..write('createdAt: $createdAt, ')
-          ..write('syncStatus: $syncStatus')
+          ..write('syncStatus: $syncStatus, ')
+          ..write('serverId: $serverId, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('clientRevision: $clientRevision')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, planId, bookKey, chapterNumber, action,
-      activityDate, timezone, happenedAt, createdAt, syncStatus);
+  int get hashCode => Object.hash(
+      id,
+      localUserId,
+      planId,
+      bookKey,
+      chapterNumber,
+      action,
+      activityDate,
+      timezone,
+      happenedAt,
+      createdAt,
+      syncStatus,
+      serverId,
+      lastSyncedAt,
+      clientRevision);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ReadingActivity &&
           other.id == this.id &&
+          other.localUserId == this.localUserId &&
           other.planId == this.planId &&
           other.bookKey == this.bookKey &&
           other.chapterNumber == this.chapterNumber &&
@@ -2557,11 +3827,15 @@ class ReadingActivity extends DataClass implements Insertable<ReadingActivity> {
           other.timezone == this.timezone &&
           other.happenedAt == this.happenedAt &&
           other.createdAt == this.createdAt &&
-          other.syncStatus == this.syncStatus);
+          other.syncStatus == this.syncStatus &&
+          other.serverId == this.serverId &&
+          other.lastSyncedAt == this.lastSyncedAt &&
+          other.clientRevision == this.clientRevision);
 }
 
 class ReadingActivitiesCompanion extends UpdateCompanion<ReadingActivity> {
   final Value<String> id;
+  final Value<String> localUserId;
   final Value<String> planId;
   final Value<String> bookKey;
   final Value<int> chapterNumber;
@@ -2571,9 +3845,13 @@ class ReadingActivitiesCompanion extends UpdateCompanion<ReadingActivity> {
   final Value<DateTime> happenedAt;
   final Value<DateTime> createdAt;
   final Value<String> syncStatus;
+  final Value<String?> serverId;
+  final Value<DateTime?> lastSyncedAt;
+  final Value<int> clientRevision;
   final Value<int> rowid;
   const ReadingActivitiesCompanion({
     this.id = const Value.absent(),
+    this.localUserId = const Value.absent(),
     this.planId = const Value.absent(),
     this.bookKey = const Value.absent(),
     this.chapterNumber = const Value.absent(),
@@ -2583,10 +3861,14 @@ class ReadingActivitiesCompanion extends UpdateCompanion<ReadingActivity> {
     this.happenedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.syncStatus = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.clientRevision = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ReadingActivitiesCompanion.insert({
     required String id,
+    required String localUserId,
     required String planId,
     required String bookKey,
     required int chapterNumber,
@@ -2596,8 +3878,12 @@ class ReadingActivitiesCompanion extends UpdateCompanion<ReadingActivity> {
     required DateTime happenedAt,
     required DateTime createdAt,
     this.syncStatus = const Value.absent(),
+    this.serverId = const Value.absent(),
+    this.lastSyncedAt = const Value.absent(),
+    this.clientRevision = const Value.absent(),
     this.rowid = const Value.absent(),
   })  : id = Value(id),
+        localUserId = Value(localUserId),
         planId = Value(planId),
         bookKey = Value(bookKey),
         chapterNumber = Value(chapterNumber),
@@ -2608,6 +3894,7 @@ class ReadingActivitiesCompanion extends UpdateCompanion<ReadingActivity> {
         createdAt = Value(createdAt);
   static Insertable<ReadingActivity> custom({
     Expression<String>? id,
+    Expression<String>? localUserId,
     Expression<String>? planId,
     Expression<String>? bookKey,
     Expression<int>? chapterNumber,
@@ -2617,10 +3904,14 @@ class ReadingActivitiesCompanion extends UpdateCompanion<ReadingActivity> {
     Expression<DateTime>? happenedAt,
     Expression<DateTime>? createdAt,
     Expression<String>? syncStatus,
+    Expression<String>? serverId,
+    Expression<DateTime>? lastSyncedAt,
+    Expression<int>? clientRevision,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (localUserId != null) 'local_user_id': localUserId,
       if (planId != null) 'plan_id': planId,
       if (bookKey != null) 'book_key': bookKey,
       if (chapterNumber != null) 'chapter_number': chapterNumber,
@@ -2630,12 +3921,16 @@ class ReadingActivitiesCompanion extends UpdateCompanion<ReadingActivity> {
       if (happenedAt != null) 'happened_at': happenedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (syncStatus != null) 'sync_status': syncStatus,
+      if (serverId != null) 'server_id': serverId,
+      if (lastSyncedAt != null) 'last_synced_at': lastSyncedAt,
+      if (clientRevision != null) 'client_revision': clientRevision,
       if (rowid != null) 'rowid': rowid,
     });
   }
 
   ReadingActivitiesCompanion copyWith(
       {Value<String>? id,
+      Value<String>? localUserId,
       Value<String>? planId,
       Value<String>? bookKey,
       Value<int>? chapterNumber,
@@ -2645,9 +3940,13 @@ class ReadingActivitiesCompanion extends UpdateCompanion<ReadingActivity> {
       Value<DateTime>? happenedAt,
       Value<DateTime>? createdAt,
       Value<String>? syncStatus,
+      Value<String?>? serverId,
+      Value<DateTime?>? lastSyncedAt,
+      Value<int>? clientRevision,
       Value<int>? rowid}) {
     return ReadingActivitiesCompanion(
       id: id ?? this.id,
+      localUserId: localUserId ?? this.localUserId,
       planId: planId ?? this.planId,
       bookKey: bookKey ?? this.bookKey,
       chapterNumber: chapterNumber ?? this.chapterNumber,
@@ -2657,6 +3956,9 @@ class ReadingActivitiesCompanion extends UpdateCompanion<ReadingActivity> {
       happenedAt: happenedAt ?? this.happenedAt,
       createdAt: createdAt ?? this.createdAt,
       syncStatus: syncStatus ?? this.syncStatus,
+      serverId: serverId ?? this.serverId,
+      lastSyncedAt: lastSyncedAt ?? this.lastSyncedAt,
+      clientRevision: clientRevision ?? this.clientRevision,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2666,6 +3968,9 @@ class ReadingActivitiesCompanion extends UpdateCompanion<ReadingActivity> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<String>(id.value);
+    }
+    if (localUserId.present) {
+      map['local_user_id'] = Variable<String>(localUserId.value);
     }
     if (planId.present) {
       map['plan_id'] = Variable<String>(planId.value);
@@ -2694,6 +3999,15 @@ class ReadingActivitiesCompanion extends UpdateCompanion<ReadingActivity> {
     if (syncStatus.present) {
       map['sync_status'] = Variable<String>(syncStatus.value);
     }
+    if (serverId.present) {
+      map['server_id'] = Variable<String>(serverId.value);
+    }
+    if (lastSyncedAt.present) {
+      map['last_synced_at'] = Variable<DateTime>(lastSyncedAt.value);
+    }
+    if (clientRevision.present) {
+      map['client_revision'] = Variable<int>(clientRevision.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2704,6 +4018,7 @@ class ReadingActivitiesCompanion extends UpdateCompanion<ReadingActivity> {
   String toString() {
     return (StringBuffer('ReadingActivitiesCompanion(')
           ..write('id: $id, ')
+          ..write('localUserId: $localUserId, ')
           ..write('planId: $planId, ')
           ..write('bookKey: $bookKey, ')
           ..write('chapterNumber: $chapterNumber, ')
@@ -2713,6 +4028,9 @@ class ReadingActivitiesCompanion extends UpdateCompanion<ReadingActivity> {
           ..write('happenedAt: $happenedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('syncStatus: $syncStatus, ')
+          ..write('serverId: $serverId, ')
+          ..write('lastSyncedAt: $lastSyncedAt, ')
+          ..write('clientRevision: $clientRevision, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2952,6 +4270,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $BibleBooksTable bibleBooks = $BibleBooksTable(this);
+  late final $LocalUsersTable localUsers = $LocalUsersTable(this);
   late final $ReadingPlanTemplatesTable readingPlanTemplates =
       $ReadingPlanTemplatesTable(this);
   late final $UserReadingPlansTable userReadingPlans =
@@ -2969,6 +4288,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
         bibleBooks,
+        localUsers,
         readingPlanTemplates,
         userReadingPlans,
         planScopeChapters,
@@ -3184,6 +4504,234 @@ typedef $$BibleBooksTableProcessedTableManager = ProcessedTableManager<
     $$BibleBooksTableUpdateCompanionBuilder,
     (BibleBook, BaseReferences<_$AppDatabase, $BibleBooksTable, BibleBook>),
     BibleBook,
+    PrefetchHooks Function()>;
+typedef $$LocalUsersTableCreateCompanionBuilder = LocalUsersCompanion Function({
+  required String id,
+  Value<String> type,
+  Value<String?> authUserId,
+  Value<String> syncStatus,
+  Value<String?> serverId,
+  Value<DateTime?> lastSyncedAt,
+  Value<int> clientRevision,
+  required DateTime createdAt,
+  required DateTime updatedAt,
+  Value<int> rowid,
+});
+typedef $$LocalUsersTableUpdateCompanionBuilder = LocalUsersCompanion Function({
+  Value<String> id,
+  Value<String> type,
+  Value<String?> authUserId,
+  Value<String> syncStatus,
+  Value<String?> serverId,
+  Value<DateTime?> lastSyncedAt,
+  Value<int> clientRevision,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<int> rowid,
+});
+
+class $$LocalUsersTableFilterComposer
+    extends Composer<_$AppDatabase, $LocalUsersTable> {
+  $$LocalUsersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get authUserId => $composableBuilder(
+      column: $table.authUserId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get serverId => $composableBuilder(
+      column: $table.serverId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get clientRevision => $composableBuilder(
+      column: $table.clientRevision,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$LocalUsersTableOrderingComposer
+    extends Composer<_$AppDatabase, $LocalUsersTable> {
+  $$LocalUsersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get type => $composableBuilder(
+      column: $table.type, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get authUserId => $composableBuilder(
+      column: $table.authUserId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get serverId => $composableBuilder(
+      column: $table.serverId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get clientRevision => $composableBuilder(
+      column: $table.clientRevision,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$LocalUsersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LocalUsersTable> {
+  $$LocalUsersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get authUserId => $composableBuilder(
+      column: $table.authUserId, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => column);
+
+  GeneratedColumn<String> get serverId =>
+      $composableBuilder(column: $table.serverId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get clientRevision => $composableBuilder(
+      column: $table.clientRevision, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$LocalUsersTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $LocalUsersTable,
+    LocalUser,
+    $$LocalUsersTableFilterComposer,
+    $$LocalUsersTableOrderingComposer,
+    $$LocalUsersTableAnnotationComposer,
+    $$LocalUsersTableCreateCompanionBuilder,
+    $$LocalUsersTableUpdateCompanionBuilder,
+    (LocalUser, BaseReferences<_$AppDatabase, $LocalUsersTable, LocalUser>),
+    LocalUser,
+    PrefetchHooks Function()> {
+  $$LocalUsersTableTableManager(_$AppDatabase db, $LocalUsersTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LocalUsersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LocalUsersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LocalUsersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> id = const Value.absent(),
+            Value<String> type = const Value.absent(),
+            Value<String?> authUserId = const Value.absent(),
+            Value<String> syncStatus = const Value.absent(),
+            Value<String?> serverId = const Value.absent(),
+            Value<DateTime?> lastSyncedAt = const Value.absent(),
+            Value<int> clientRevision = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime> updatedAt = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              LocalUsersCompanion(
+            id: id,
+            type: type,
+            authUserId: authUserId,
+            syncStatus: syncStatus,
+            serverId: serverId,
+            lastSyncedAt: lastSyncedAt,
+            clientRevision: clientRevision,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String id,
+            Value<String> type = const Value.absent(),
+            Value<String?> authUserId = const Value.absent(),
+            Value<String> syncStatus = const Value.absent(),
+            Value<String?> serverId = const Value.absent(),
+            Value<DateTime?> lastSyncedAt = const Value.absent(),
+            Value<int> clientRevision = const Value.absent(),
+            required DateTime createdAt,
+            required DateTime updatedAt,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              LocalUsersCompanion.insert(
+            id: id,
+            type: type,
+            authUserId: authUserId,
+            syncStatus: syncStatus,
+            serverId: serverId,
+            lastSyncedAt: lastSyncedAt,
+            clientRevision: clientRevision,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$LocalUsersTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $LocalUsersTable,
+    LocalUser,
+    $$LocalUsersTableFilterComposer,
+    $$LocalUsersTableOrderingComposer,
+    $$LocalUsersTableAnnotationComposer,
+    $$LocalUsersTableCreateCompanionBuilder,
+    $$LocalUsersTableUpdateCompanionBuilder,
+    (LocalUser, BaseReferences<_$AppDatabase, $LocalUsersTable, LocalUser>),
+    LocalUser,
     PrefetchHooks Function()>;
 typedef $$ReadingPlanTemplatesTableCreateCompanionBuilder
     = ReadingPlanTemplatesCompanion Function({
@@ -3412,27 +4960,41 @@ typedef $$ReadingPlanTemplatesTableProcessedTableManager
 typedef $$UserReadingPlansTableCreateCompanionBuilder
     = UserReadingPlansCompanion Function({
   required String id,
+  required String localUserId,
   required String templateKey,
   required String title,
+  Value<String> status,
+  Value<DateTime?> startedAt,
+  Value<DateTime?> completedAt,
   Value<bool> isActive,
   Value<String?> lastOpenedBookKey,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<DateTime?> deletedAt,
   Value<String> syncStatus,
+  Value<String?> serverId,
+  Value<DateTime?> lastSyncedAt,
+  Value<int> clientRevision,
   Value<int> rowid,
 });
 typedef $$UserReadingPlansTableUpdateCompanionBuilder
     = UserReadingPlansCompanion Function({
   Value<String> id,
+  Value<String> localUserId,
   Value<String> templateKey,
   Value<String> title,
+  Value<String> status,
+  Value<DateTime?> startedAt,
+  Value<DateTime?> completedAt,
   Value<bool> isActive,
   Value<String?> lastOpenedBookKey,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<DateTime?> deletedAt,
   Value<String> syncStatus,
+  Value<String?> serverId,
+  Value<DateTime?> lastSyncedAt,
+  Value<int> clientRevision,
   Value<int> rowid,
 });
 
@@ -3448,11 +5010,23 @@ class $$UserReadingPlansTableFilterComposer
   ColumnFilters<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
 
+  ColumnFilters<String> get localUserId => $composableBuilder(
+      column: $table.localUserId, builder: (column) => ColumnFilters(column));
+
   ColumnFilters<String> get templateKey => $composableBuilder(
       column: $table.templateKey, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get title => $composableBuilder(
       column: $table.title, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get startedAt => $composableBuilder(
+      column: $table.startedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<bool> get isActive => $composableBuilder(
       column: $table.isActive, builder: (column) => ColumnFilters(column));
@@ -3472,6 +5046,16 @@ class $$UserReadingPlansTableFilterComposer
 
   ColumnFilters<String> get syncStatus => $composableBuilder(
       column: $table.syncStatus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get serverId => $composableBuilder(
+      column: $table.serverId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get clientRevision => $composableBuilder(
+      column: $table.clientRevision,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$UserReadingPlansTableOrderingComposer
@@ -3486,11 +5070,23 @@ class $$UserReadingPlansTableOrderingComposer
   ColumnOrderings<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<String> get localUserId => $composableBuilder(
+      column: $table.localUserId, builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<String> get templateKey => $composableBuilder(
       column: $table.templateKey, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get title => $composableBuilder(
       column: $table.title, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get status => $composableBuilder(
+      column: $table.status, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get startedAt => $composableBuilder(
+      column: $table.startedAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<bool> get isActive => $composableBuilder(
       column: $table.isActive, builder: (column) => ColumnOrderings(column));
@@ -3510,6 +5106,17 @@ class $$UserReadingPlansTableOrderingComposer
 
   ColumnOrderings<String> get syncStatus => $composableBuilder(
       column: $table.syncStatus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get serverId => $composableBuilder(
+      column: $table.serverId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get clientRevision => $composableBuilder(
+      column: $table.clientRevision,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$UserReadingPlansTableAnnotationComposer
@@ -3524,11 +5131,23 @@ class $$UserReadingPlansTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
+  GeneratedColumn<String> get localUserId => $composableBuilder(
+      column: $table.localUserId, builder: (column) => column);
+
   GeneratedColumn<String> get templateKey => $composableBuilder(
       column: $table.templateKey, builder: (column) => column);
 
   GeneratedColumn<String> get title =>
       $composableBuilder(column: $table.title, builder: (column) => column);
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get startedAt =>
+      $composableBuilder(column: $table.startedAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get completedAt => $composableBuilder(
+      column: $table.completedAt, builder: (column) => column);
 
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
@@ -3547,6 +5166,15 @@ class $$UserReadingPlansTableAnnotationComposer
 
   GeneratedColumn<String> get syncStatus => $composableBuilder(
       column: $table.syncStatus, builder: (column) => column);
+
+  GeneratedColumn<String> get serverId =>
+      $composableBuilder(column: $table.serverId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get clientRevision => $composableBuilder(
+      column: $table.clientRevision, builder: (column) => column);
 }
 
 class $$UserReadingPlansTableTableManager extends RootTableManager<
@@ -3577,50 +5205,78 @@ class $$UserReadingPlansTableTableManager extends RootTableManager<
               $$UserReadingPlansTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback: ({
             Value<String> id = const Value.absent(),
+            Value<String> localUserId = const Value.absent(),
             Value<String> templateKey = const Value.absent(),
             Value<String> title = const Value.absent(),
+            Value<String> status = const Value.absent(),
+            Value<DateTime?> startedAt = const Value.absent(),
+            Value<DateTime?> completedAt = const Value.absent(),
             Value<bool> isActive = const Value.absent(),
             Value<String?> lastOpenedBookKey = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<DateTime?> deletedAt = const Value.absent(),
             Value<String> syncStatus = const Value.absent(),
+            Value<String?> serverId = const Value.absent(),
+            Value<DateTime?> lastSyncedAt = const Value.absent(),
+            Value<int> clientRevision = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               UserReadingPlansCompanion(
             id: id,
+            localUserId: localUserId,
             templateKey: templateKey,
             title: title,
+            status: status,
+            startedAt: startedAt,
+            completedAt: completedAt,
             isActive: isActive,
             lastOpenedBookKey: lastOpenedBookKey,
             createdAt: createdAt,
             updatedAt: updatedAt,
             deletedAt: deletedAt,
             syncStatus: syncStatus,
+            serverId: serverId,
+            lastSyncedAt: lastSyncedAt,
+            clientRevision: clientRevision,
             rowid: rowid,
           ),
           createCompanionCallback: ({
             required String id,
+            required String localUserId,
             required String templateKey,
             required String title,
+            Value<String> status = const Value.absent(),
+            Value<DateTime?> startedAt = const Value.absent(),
+            Value<DateTime?> completedAt = const Value.absent(),
             Value<bool> isActive = const Value.absent(),
             Value<String?> lastOpenedBookKey = const Value.absent(),
             required DateTime createdAt,
             required DateTime updatedAt,
             Value<DateTime?> deletedAt = const Value.absent(),
             Value<String> syncStatus = const Value.absent(),
+            Value<String?> serverId = const Value.absent(),
+            Value<DateTime?> lastSyncedAt = const Value.absent(),
+            Value<int> clientRevision = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               UserReadingPlansCompanion.insert(
             id: id,
+            localUserId: localUserId,
             templateKey: templateKey,
             title: title,
+            status: status,
+            startedAt: startedAt,
+            completedAt: completedAt,
             isActive: isActive,
             lastOpenedBookKey: lastOpenedBookKey,
             createdAt: createdAt,
             updatedAt: updatedAt,
             deletedAt: deletedAt,
             syncStatus: syncStatus,
+            serverId: serverId,
+            lastSyncedAt: lastSyncedAt,
+            clientRevision: clientRevision,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -3653,6 +5309,10 @@ typedef $$PlanScopeChaptersTableCreateCompanionBuilder
   required int chapterNumber,
   required int orderIndex,
   required DateTime createdAt,
+  Value<String> syncStatus,
+  Value<String?> serverId,
+  Value<DateTime?> lastSyncedAt,
+  Value<int> clientRevision,
   Value<int> rowid,
 });
 typedef $$PlanScopeChaptersTableUpdateCompanionBuilder
@@ -3663,6 +5323,10 @@ typedef $$PlanScopeChaptersTableUpdateCompanionBuilder
   Value<int> chapterNumber,
   Value<int> orderIndex,
   Value<DateTime> createdAt,
+  Value<String> syncStatus,
+  Value<String?> serverId,
+  Value<DateTime?> lastSyncedAt,
+  Value<int> clientRevision,
   Value<int> rowid,
 });
 
@@ -3692,6 +5356,19 @@ class $$PlanScopeChaptersTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get serverId => $composableBuilder(
+      column: $table.serverId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get clientRevision => $composableBuilder(
+      column: $table.clientRevision,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$PlanScopeChaptersTableOrderingComposer
@@ -3721,6 +5398,20 @@ class $$PlanScopeChaptersTableOrderingComposer
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get serverId => $composableBuilder(
+      column: $table.serverId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get clientRevision => $composableBuilder(
+      column: $table.clientRevision,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$PlanScopeChaptersTableAnnotationComposer
@@ -3749,6 +5440,18 @@ class $$PlanScopeChaptersTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get syncStatus => $composableBuilder(
+      column: $table.syncStatus, builder: (column) => column);
+
+  GeneratedColumn<String> get serverId =>
+      $composableBuilder(column: $table.serverId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get clientRevision => $composableBuilder(
+      column: $table.clientRevision, builder: (column) => column);
 }
 
 class $$PlanScopeChaptersTableTableManager extends RootTableManager<
@@ -3785,6 +5488,10 @@ class $$PlanScopeChaptersTableTableManager extends RootTableManager<
             Value<int> chapterNumber = const Value.absent(),
             Value<int> orderIndex = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
+            Value<String> syncStatus = const Value.absent(),
+            Value<String?> serverId = const Value.absent(),
+            Value<DateTime?> lastSyncedAt = const Value.absent(),
+            Value<int> clientRevision = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               PlanScopeChaptersCompanion(
@@ -3794,6 +5501,10 @@ class $$PlanScopeChaptersTableTableManager extends RootTableManager<
             chapterNumber: chapterNumber,
             orderIndex: orderIndex,
             createdAt: createdAt,
+            syncStatus: syncStatus,
+            serverId: serverId,
+            lastSyncedAt: lastSyncedAt,
+            clientRevision: clientRevision,
             rowid: rowid,
           ),
           createCompanionCallback: ({
@@ -3803,6 +5514,10 @@ class $$PlanScopeChaptersTableTableManager extends RootTableManager<
             required int chapterNumber,
             required int orderIndex,
             required DateTime createdAt,
+            Value<String> syncStatus = const Value.absent(),
+            Value<String?> serverId = const Value.absent(),
+            Value<DateTime?> lastSyncedAt = const Value.absent(),
+            Value<int> clientRevision = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               PlanScopeChaptersCompanion.insert(
@@ -3812,6 +5527,10 @@ class $$PlanScopeChaptersTableTableManager extends RootTableManager<
             chapterNumber: chapterNumber,
             orderIndex: orderIndex,
             createdAt: createdAt,
+            syncStatus: syncStatus,
+            serverId: serverId,
+            lastSyncedAt: lastSyncedAt,
+            clientRevision: clientRevision,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -3839,6 +5558,7 @@ typedef $$PlanScopeChaptersTableProcessedTableManager = ProcessedTableManager<
 typedef $$ChapterProgressEntriesTableCreateCompanionBuilder
     = ChapterProgressEntriesCompanion Function({
   required String id,
+  required String localUserId,
   required String planId,
   required String bookKey,
   required int chapterNumber,
@@ -3847,11 +5567,15 @@ typedef $$ChapterProgressEntriesTableCreateCompanionBuilder
   required DateTime updatedAt,
   Value<DateTime?> deletedAt,
   Value<String> syncStatus,
+  Value<String?> serverId,
+  Value<DateTime?> lastSyncedAt,
+  Value<int> clientRevision,
   Value<int> rowid,
 });
 typedef $$ChapterProgressEntriesTableUpdateCompanionBuilder
     = ChapterProgressEntriesCompanion Function({
   Value<String> id,
+  Value<String> localUserId,
   Value<String> planId,
   Value<String> bookKey,
   Value<int> chapterNumber,
@@ -3860,6 +5584,9 @@ typedef $$ChapterProgressEntriesTableUpdateCompanionBuilder
   Value<DateTime> updatedAt,
   Value<DateTime?> deletedAt,
   Value<String> syncStatus,
+  Value<String?> serverId,
+  Value<DateTime?> lastSyncedAt,
+  Value<int> clientRevision,
   Value<int> rowid,
 });
 
@@ -3874,6 +5601,9 @@ class $$ChapterProgressEntriesTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get localUserId => $composableBuilder(
+      column: $table.localUserId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get planId => $composableBuilder(
       column: $table.planId, builder: (column) => ColumnFilters(column));
@@ -3898,6 +5628,16 @@ class $$ChapterProgressEntriesTableFilterComposer
 
   ColumnFilters<String> get syncStatus => $composableBuilder(
       column: $table.syncStatus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get serverId => $composableBuilder(
+      column: $table.serverId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get clientRevision => $composableBuilder(
+      column: $table.clientRevision,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$ChapterProgressEntriesTableOrderingComposer
@@ -3911,6 +5651,9 @@ class $$ChapterProgressEntriesTableOrderingComposer
   });
   ColumnOrderings<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get localUserId => $composableBuilder(
+      column: $table.localUserId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get planId => $composableBuilder(
       column: $table.planId, builder: (column) => ColumnOrderings(column));
@@ -3936,6 +5679,17 @@ class $$ChapterProgressEntriesTableOrderingComposer
 
   ColumnOrderings<String> get syncStatus => $composableBuilder(
       column: $table.syncStatus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get serverId => $composableBuilder(
+      column: $table.serverId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get clientRevision => $composableBuilder(
+      column: $table.clientRevision,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$ChapterProgressEntriesTableAnnotationComposer
@@ -3949,6 +5703,9 @@ class $$ChapterProgressEntriesTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get localUserId => $composableBuilder(
+      column: $table.localUserId, builder: (column) => column);
 
   GeneratedColumn<String> get planId =>
       $composableBuilder(column: $table.planId, builder: (column) => column);
@@ -3973,6 +5730,15 @@ class $$ChapterProgressEntriesTableAnnotationComposer
 
   GeneratedColumn<String> get syncStatus => $composableBuilder(
       column: $table.syncStatus, builder: (column) => column);
+
+  GeneratedColumn<String> get serverId =>
+      $composableBuilder(column: $table.serverId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get clientRevision => $composableBuilder(
+      column: $table.clientRevision, builder: (column) => column);
 }
 
 class $$ChapterProgressEntriesTableTableManager extends RootTableManager<
@@ -4007,6 +5773,7 @@ class $$ChapterProgressEntriesTableTableManager extends RootTableManager<
                   $db: db, $table: table),
           updateCompanionCallback: ({
             Value<String> id = const Value.absent(),
+            Value<String> localUserId = const Value.absent(),
             Value<String> planId = const Value.absent(),
             Value<String> bookKey = const Value.absent(),
             Value<int> chapterNumber = const Value.absent(),
@@ -4015,10 +5782,14 @@ class $$ChapterProgressEntriesTableTableManager extends RootTableManager<
             Value<DateTime> updatedAt = const Value.absent(),
             Value<DateTime?> deletedAt = const Value.absent(),
             Value<String> syncStatus = const Value.absent(),
+            Value<String?> serverId = const Value.absent(),
+            Value<DateTime?> lastSyncedAt = const Value.absent(),
+            Value<int> clientRevision = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ChapterProgressEntriesCompanion(
             id: id,
+            localUserId: localUserId,
             planId: planId,
             bookKey: bookKey,
             chapterNumber: chapterNumber,
@@ -4027,10 +5798,14 @@ class $$ChapterProgressEntriesTableTableManager extends RootTableManager<
             updatedAt: updatedAt,
             deletedAt: deletedAt,
             syncStatus: syncStatus,
+            serverId: serverId,
+            lastSyncedAt: lastSyncedAt,
+            clientRevision: clientRevision,
             rowid: rowid,
           ),
           createCompanionCallback: ({
             required String id,
+            required String localUserId,
             required String planId,
             required String bookKey,
             required int chapterNumber,
@@ -4039,10 +5814,14 @@ class $$ChapterProgressEntriesTableTableManager extends RootTableManager<
             required DateTime updatedAt,
             Value<DateTime?> deletedAt = const Value.absent(),
             Value<String> syncStatus = const Value.absent(),
+            Value<String?> serverId = const Value.absent(),
+            Value<DateTime?> lastSyncedAt = const Value.absent(),
+            Value<int> clientRevision = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ChapterProgressEntriesCompanion.insert(
             id: id,
+            localUserId: localUserId,
             planId: planId,
             bookKey: bookKey,
             chapterNumber: chapterNumber,
@@ -4051,6 +5830,9 @@ class $$ChapterProgressEntriesTableTableManager extends RootTableManager<
             updatedAt: updatedAt,
             deletedAt: deletedAt,
             syncStatus: syncStatus,
+            serverId: serverId,
+            lastSyncedAt: lastSyncedAt,
+            clientRevision: clientRevision,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -4080,6 +5862,7 @@ typedef $$ChapterProgressEntriesTableProcessedTableManager
 typedef $$ReadingActivitiesTableCreateCompanionBuilder
     = ReadingActivitiesCompanion Function({
   required String id,
+  required String localUserId,
   required String planId,
   required String bookKey,
   required int chapterNumber,
@@ -4089,11 +5872,15 @@ typedef $$ReadingActivitiesTableCreateCompanionBuilder
   required DateTime happenedAt,
   required DateTime createdAt,
   Value<String> syncStatus,
+  Value<String?> serverId,
+  Value<DateTime?> lastSyncedAt,
+  Value<int> clientRevision,
   Value<int> rowid,
 });
 typedef $$ReadingActivitiesTableUpdateCompanionBuilder
     = ReadingActivitiesCompanion Function({
   Value<String> id,
+  Value<String> localUserId,
   Value<String> planId,
   Value<String> bookKey,
   Value<int> chapterNumber,
@@ -4103,6 +5890,9 @@ typedef $$ReadingActivitiesTableUpdateCompanionBuilder
   Value<DateTime> happenedAt,
   Value<DateTime> createdAt,
   Value<String> syncStatus,
+  Value<String?> serverId,
+  Value<DateTime?> lastSyncedAt,
+  Value<int> clientRevision,
   Value<int> rowid,
 });
 
@@ -4117,6 +5907,9 @@ class $$ReadingActivitiesTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get localUserId => $composableBuilder(
+      column: $table.localUserId, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<String> get planId => $composableBuilder(
       column: $table.planId, builder: (column) => ColumnFilters(column));
@@ -4144,6 +5937,16 @@ class $$ReadingActivitiesTableFilterComposer
 
   ColumnFilters<String> get syncStatus => $composableBuilder(
       column: $table.syncStatus, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get serverId => $composableBuilder(
+      column: $table.serverId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get clientRevision => $composableBuilder(
+      column: $table.clientRevision,
+      builder: (column) => ColumnFilters(column));
 }
 
 class $$ReadingActivitiesTableOrderingComposer
@@ -4157,6 +5960,9 @@ class $$ReadingActivitiesTableOrderingComposer
   });
   ColumnOrderings<String> get id => $composableBuilder(
       column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get localUserId => $composableBuilder(
+      column: $table.localUserId, builder: (column) => ColumnOrderings(column));
 
   ColumnOrderings<String> get planId => $composableBuilder(
       column: $table.planId, builder: (column) => ColumnOrderings(column));
@@ -4186,6 +5992,17 @@ class $$ReadingActivitiesTableOrderingComposer
 
   ColumnOrderings<String> get syncStatus => $composableBuilder(
       column: $table.syncStatus, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get serverId => $composableBuilder(
+      column: $table.serverId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get clientRevision => $composableBuilder(
+      column: $table.clientRevision,
+      builder: (column) => ColumnOrderings(column));
 }
 
 class $$ReadingActivitiesTableAnnotationComposer
@@ -4199,6 +6016,9 @@ class $$ReadingActivitiesTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get localUserId => $composableBuilder(
+      column: $table.localUserId, builder: (column) => column);
 
   GeneratedColumn<String> get planId =>
       $composableBuilder(column: $table.planId, builder: (column) => column);
@@ -4226,6 +6046,15 @@ class $$ReadingActivitiesTableAnnotationComposer
 
   GeneratedColumn<String> get syncStatus => $composableBuilder(
       column: $table.syncStatus, builder: (column) => column);
+
+  GeneratedColumn<String> get serverId =>
+      $composableBuilder(column: $table.serverId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastSyncedAt => $composableBuilder(
+      column: $table.lastSyncedAt, builder: (column) => column);
+
+  GeneratedColumn<int> get clientRevision => $composableBuilder(
+      column: $table.clientRevision, builder: (column) => column);
 }
 
 class $$ReadingActivitiesTableTableManager extends RootTableManager<
@@ -4257,6 +6086,7 @@ class $$ReadingActivitiesTableTableManager extends RootTableManager<
                   $db: db, $table: table),
           updateCompanionCallback: ({
             Value<String> id = const Value.absent(),
+            Value<String> localUserId = const Value.absent(),
             Value<String> planId = const Value.absent(),
             Value<String> bookKey = const Value.absent(),
             Value<int> chapterNumber = const Value.absent(),
@@ -4266,10 +6096,14 @@ class $$ReadingActivitiesTableTableManager extends RootTableManager<
             Value<DateTime> happenedAt = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<String> syncStatus = const Value.absent(),
+            Value<String?> serverId = const Value.absent(),
+            Value<DateTime?> lastSyncedAt = const Value.absent(),
+            Value<int> clientRevision = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ReadingActivitiesCompanion(
             id: id,
+            localUserId: localUserId,
             planId: planId,
             bookKey: bookKey,
             chapterNumber: chapterNumber,
@@ -4279,10 +6113,14 @@ class $$ReadingActivitiesTableTableManager extends RootTableManager<
             happenedAt: happenedAt,
             createdAt: createdAt,
             syncStatus: syncStatus,
+            serverId: serverId,
+            lastSyncedAt: lastSyncedAt,
+            clientRevision: clientRevision,
             rowid: rowid,
           ),
           createCompanionCallback: ({
             required String id,
+            required String localUserId,
             required String planId,
             required String bookKey,
             required int chapterNumber,
@@ -4292,10 +6130,14 @@ class $$ReadingActivitiesTableTableManager extends RootTableManager<
             required DateTime happenedAt,
             required DateTime createdAt,
             Value<String> syncStatus = const Value.absent(),
+            Value<String?> serverId = const Value.absent(),
+            Value<DateTime?> lastSyncedAt = const Value.absent(),
+            Value<int> clientRevision = const Value.absent(),
             Value<int> rowid = const Value.absent(),
           }) =>
               ReadingActivitiesCompanion.insert(
             id: id,
+            localUserId: localUserId,
             planId: planId,
             bookKey: bookKey,
             chapterNumber: chapterNumber,
@@ -4305,6 +6147,9 @@ class $$ReadingActivitiesTableTableManager extends RootTableManager<
             happenedAt: happenedAt,
             createdAt: createdAt,
             syncStatus: syncStatus,
+            serverId: serverId,
+            lastSyncedAt: lastSyncedAt,
+            clientRevision: clientRevision,
             rowid: rowid,
           ),
           withReferenceMapper: (p0) => p0
@@ -4472,6 +6317,8 @@ class $AppDatabaseManager {
   $AppDatabaseManager(this._db);
   $$BibleBooksTableTableManager get bibleBooks =>
       $$BibleBooksTableTableManager(_db, _db.bibleBooks);
+  $$LocalUsersTableTableManager get localUsers =>
+      $$LocalUsersTableTableManager(_db, _db.localUsers);
   $$ReadingPlanTemplatesTableTableManager get readingPlanTemplates =>
       $$ReadingPlanTemplatesTableTableManager(_db, _db.readingPlanTemplates);
   $$UserReadingPlansTableTableManager get userReadingPlans =>

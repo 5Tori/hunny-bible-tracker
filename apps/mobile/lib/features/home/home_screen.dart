@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../read/data/read_repository.dart';
 import '../read/domain/read_models.dart';
+import '../read/widgets/current_plan_progress_panel.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({
@@ -15,11 +17,11 @@ class HomeScreen extends StatefulWidget {
   final VoidCallback onReadTap;
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<HomeScreen> createState() => HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  OverviewStats? _stats;
+class HomeScreenState extends State<HomeScreen> {
+  ReadingOverview? _readingOverview;
   ReadingPlanView? _plan;
 
   @override
@@ -28,110 +30,202 @@ class _HomeScreenState extends State<HomeScreen> {
     _load();
   }
 
+  Future<void> refresh() => _load();
+
   Future<void> _load() async {
     final plan = await widget.readRepository.getActivePlan();
-    final stats = await widget.readRepository.getOverviewStats(plan.id);
+    final overview = await widget.readRepository.getReadingOverview(plan.id);
     if (!mounted) return;
     setState(() {
       _plan = plan;
-      _stats = stats;
+      _readingOverview = overview;
     });
+  }
+
+  String _greeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
   }
 
   @override
   Widget build(BuildContext context) {
-    final stats = _stats;
-    final progress = stats == null ? 0.0 : stats.progress;
+    final overview = _readingOverview;
+    final now = DateTime.now();
+    final dateLabel =
+        DateFormat('EEEE · MMM d').format(now).toUpperCase();
 
     return SafeArea(
       child: RefreshIndicator(
         onRefresh: _load,
         child: ListView(
-          padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           children: [
-            Text(
-              'Hunny Bible Tracker',
-              style: Theme.of(context).textTheme.titleLarge,
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        dateLabel,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              letterSpacing: 0.5,
+                              color: AppTheme.mutedInk,
+                            ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _greeting(),
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                    ],
+                  ),
+                ),
+                CircleAvatar(
+                  radius: 18,
+                  backgroundColor: AppTheme.ink,
+                  child: Text(
+                    'B',
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          color: Colors.white,
+                        ),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 24),
-            _PlaceholderCard(
-              title: 'Today\'s message',
-              body:
-                  'A daily verse and image will appear here after online content is connected.',
-              icon: Icons.wb_sunny_outlined,
-            ),
-            const SizedBox(height: 16),
-            Card(
-              child: Padding(
+            const SizedBox(height: 28),
+
+            // Verse of the Day
+            _SectionLabel(title: 'VERSE OF THE DAY'),
+            const SizedBox(height: 12),
+            Container(
+              width: double.infinity,
+              height: 200,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                image: const DecorationImage(
+                  image: NetworkImage(
+                    'https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=600&q=80',
+                  ),
+                  fit: BoxFit.cover,
+                ),
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Colors.black.withOpacity(0.7),
+                    ],
+                  ),
+                ),
                 padding: const EdgeInsets.all(20),
+                alignment: Alignment.bottomLeft,
                 child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Overview', style: Theme.of(context).textTheme.titleMedium),
-                    const SizedBox(height: 8),
                     Text(
-                      _plan?.title ?? 'Whole Bible',
-                      style: Theme.of(context).textTheme.headlineMedium,
-                    ),
-                    const SizedBox(height: 16),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(999),
-                      child: LinearProgressIndicator(
-                        minHeight: 10,
-                        value: progress,
-                        backgroundColor: AppTheme.softSurface,
-                        valueColor: const AlwaysStoppedAnimation(AppTheme.accentYellow),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _Stat(
-                            value:
-                                '${stats?.completedChapters ?? 0}/${stats?.totalChapters ?? 0}',
-                            label: 'chapters',
+                      '"Be still, and know that I am God."',
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w600,
                           ),
-                        ),
-                        Expanded(
-                          child: _Stat(
-                            value: '${stats?.currentStreak ?? 0}',
-                            label: 'day streak',
-                          ),
-                        ),
-                        Expanded(
-                          child: _Stat(
-                            value: stats == null
-                                ? '0.0'
-                                : stats.averageChaptersPerReadingDay.toStringAsFixed(1),
-                            label: 'avg/day',
-                          ),
-                        ),
-                      ],
                     ),
-                    const SizedBox(height: 18),
-                    SizedBox(
-                      width: double.infinity,
-                      child: FilledButton(
-                        onPressed: widget.onReadTap,
-                        style: FilledButton.styleFrom(
-                          backgroundColor: AppTheme.ink,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                        child: const Text('Continue reading'),
-                      ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'PSALM 46:10',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: Colors.white70,
+                            letterSpacing: 0.5,
+                          ),
                     ),
                   ],
                 ),
               ),
             ),
-            const SizedBox(height: 16),
-            const _PlaceholderCard(
-              title: 'Curated contents',
-              body:
-                  'Popular videos, images, and guided content will be added in a later phase.',
-              icon: Icons.play_circle_outline,
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                _IconLabel(icon: Icons.favorite_border, label: '1.2k'),
+                const SizedBox(width: 16),
+                _IconLabel(icon: Icons.bookmark_border, label: 'Save'),
+                const Spacer(),
+                const Icon(Icons.share_outlined, size: 18, color: AppTheme.mutedInk),
+              ],
+            ),
+            const SizedBox(height: 32),
+
+            // Progress
+            Row(
+              children: [
+                _SectionLabel(title: 'PROGRESS'),
+                const Spacer(),
+                GestureDetector(
+                  onTap: widget.onReadTap,
+                  child: Text(
+                    'Read ›',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppTheme.ink,
+                        ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            CurrentPlanProgressPanel(
+              overview: overview,
+              planTitle: _plan?.title ?? 'Bible in a Year',
+              showContinueReading: true,
+              onContinueReading: widget.onReadTap,
+            ),
+            const SizedBox(height: 32),
+
+            // Featured Content
+            Row(
+              children: [
+                _SectionLabel(title: 'FEATURED CONTENT'),
+                const Spacer(),
+                Text(
+                  'All ›',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.ink,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 160,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                children: const [
+                  _FeaturedCard(
+                    type: 'VIDEO',
+                    title: 'Sermon on the Mount',
+                    duration: '12 min',
+                  ),
+                  SizedBox(width: 12),
+                  _FeaturedCard(
+                    type: 'READ',
+                    title: 'Finding peace in chaos',
+                    duration: '5 min read',
+                  ),
+                  SizedBox(width: 12),
+                  _FeaturedCard(
+                    type: 'AUDIO',
+                    title: 'Morning devotional',
+                    duration: '8 min',
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -140,65 +234,107 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class _Stat extends StatelessWidget {
-  const _Stat({required this.value, required this.label});
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel({required this.title});
+  final String title;
 
-  final String value;
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      title,
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            letterSpacing: 1.0,
+            fontWeight: FontWeight.w700,
+            color: AppTheme.mutedInk,
+          ),
+    );
+  }
+}
+
+class _IconLabel extends StatelessWidget {
+  const _IconLabel({required this.icon, required this.label});
+  final IconData icon;
   final String label;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    return Row(
       children: [
-        Text(value, style: Theme.of(context).textTheme.titleLarge),
-        const SizedBox(height: 4),
-        Text(label, style: Theme.of(context).textTheme.bodyMedium),
+        Icon(icon, size: 18, color: AppTheme.mutedInk),
+        const SizedBox(width: 4),
+        Text(label, style: Theme.of(context).textTheme.bodySmall),
       ],
     );
   }
 }
 
-class _PlaceholderCard extends StatelessWidget {
-  const _PlaceholderCard({
+class _FeaturedCard extends StatelessWidget {
+  const _FeaturedCard({
+    required this.type,
     required this.title,
-    required this.body,
-    required this.icon,
+    required this.duration,
   });
-
+  final String type;
   final String title;
-  final String body;
-  final IconData icon;
+  final String duration;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: AppTheme.softSurface,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Icon(icon, color: AppTheme.ink),
+    return Container(
+      width: 150,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+            decoration: BoxDecoration(
+              color: AppTheme.ink,
+              borderRadius: BorderRadius.circular(4),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: Theme.of(context).textTheme.titleMedium),
-                  const SizedBox(height: 4),
-                  Text(body, style: Theme.of(context).textTheme.bodyMedium),
-                ],
-              ),
+            child: Text(
+              type,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.white,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
             ),
-          ],
-        ),
+          ),
+          const Spacer(),
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: AppTheme.accentYellow,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: const Icon(Icons.play_arrow, size: 18, color: AppTheme.ink),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            title,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            style: Theme.of(context)
+                .textTheme
+                .bodyMedium
+                ?.copyWith(fontWeight: FontWeight.w600, color: AppTheme.ink),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            duration,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.mutedInk,
+                ),
+          ),
+        ],
       ),
     );
   }

@@ -18,31 +18,32 @@ class BookCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      borderRadius: BorderRadius.circular(22),
+      borderRadius: BorderRadius.circular(3),
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 160),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: isSelected ? AppTheme.softSurface : Colors.white,
-          borderRadius: BorderRadius.circular(22),
+          borderRadius: BorderRadius.circular(3),
           border: Border.all(
             color: isSelected ? AppTheme.ink : AppTheme.border,
-            width: isSelected ? 2 : 1,
+            width: isSelected ? 1.5 : 1,
           ),
         ),
         child: SizedBox(
-          height: 80, // Fixed height to prevent overflow
+          height: 80,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              const Spacer(),
               Text(
                 '${book.completedCount}/${book.chapterCount}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppTheme.ink,
                     ),
               ),
-              const Spacer(),
+              const SizedBox(height: 2),
               FittedBox(
                 alignment: Alignment.centerLeft,
                 fit: BoxFit.scaleDown,
@@ -50,17 +51,17 @@ class BookCard extends StatelessWidget {
                   book.shortName,
                   maxLines: 1,
                   style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                        fontSize: 28, // Reduced font size
+                        fontSize: 28,
                         letterSpacing: -1.4,
                       ),
                 ),
               ),
-              const SizedBox(height: 2), // Reduced spacing
+              const SizedBox(height: 2),
               Text(
                 book.displayName,
                 overflow: TextOverflow.ellipsis,
-                maxLines: 1, // Limit to 1 line
-                style: Theme.of(context).textTheme.bodySmall?.copyWith( // Smaller text
+                maxLines: 1,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
                       color: AppTheme.ink,
                     ),
               ),

@@ -21,21 +21,25 @@ class ChapterGrid extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 8,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 8,
+        mainAxisSpacing: 6,
+        crossAxisSpacing: 6,
         childAspectRatio: 1,
       ),
       itemBuilder: (context, index) {
         final chapter = chapters[index];
         return InkWell(
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(3),
           onTap: () => onChapterTap(chapter),
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 140),
             alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: chapter.isCompleted ? AppTheme.accentYellow : Colors.white,
-              shape: BoxShape.circle,
+              color: chapter.isCompleted
+                  ? (chapter.completedToday
+                      ? AppTheme.accentYellowLight
+                      : AppTheme.accentYellowDark)
+                  : Colors.white,
+              borderRadius: BorderRadius.circular(3),
               border: Border.all(
                 color: chapter.isCompleted ? AppTheme.ink : AppTheme.border,
               ),
