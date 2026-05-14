@@ -23,7 +23,7 @@ Android package name과 iOS Bundle ID는 앱의 실제 배포 식별자와 일�
 현재 개발 기본값:
 
 ```text
-Android applicationId: com.example.hunny_bible_tracker
+Android applicationId: com.hunnybibletracker.app
 iOS Bundle ID: com.example.hunnyBibleTracker
 ```
 

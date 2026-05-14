@@ -33,8 +33,10 @@ class HomeScreenState extends State<HomeScreen> {
   Future<void> refresh() => _load();
 
   Future<void> _load() async {
-    final plan = await widget.readRepository.getActivePlan();
-    final overview = await widget.readRepository.getReadingOverview(plan.id);
+    final plan = await widget.readRepository.getCurrentPlan();
+    final overview = plan == null
+        ? null
+        : await widget.readRepository.getReadingOverview(plan.id);
     if (!mounted) return;
     setState(() {
       _plan = plan;
@@ -181,7 +183,7 @@ class HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 12),
             CurrentPlanProgressPanel(
               overview: overview,
-              planTitle: _plan?.title ?? 'Bible in a Year',
+              planTitle: _plan?.title ?? 'No current plan',
               showContinueReading: true,
               onContinueReading: widget.onReadTap,
             ),

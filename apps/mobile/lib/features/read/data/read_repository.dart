@@ -29,56 +29,97 @@ class ReadRepository {
     });
   }
 
-  Future<ReadingPlanView> getActivePlan() async {
+  Future<ReadingPlanView?> getCurrentPlan() async {
     final plan = await (db.select(db.userReadingPlans)
-          ..where((tbl) => tbl.isActive.equals(true) & tbl.archivedAt.isNull())
+          ..where(
+            (tbl) =>
+                tbl.isActive.equals(true) &
+                tbl.archivedAt.isNull() &
+                tbl.status.isIn(['active', 'completion_ready']),
+          )
           ..orderBy([(tbl) => OrderingTerm.desc(tbl.updatedAt)])
           ..limit(1))
         .getSingleOrNull();
 
-    if (plan == null) {
-      await _createDefaultUserPlanIfNeeded();
-      return getActivePlan();
-    }
+    if (plan != null) return _toReadingPlanView(plan);
 
-    return ReadingPlanView(
-      id: plan.id,
-      title: plan.title,
-      templateId: plan.templateId,
-      lastOpenedSectionId: plan.lastOpenedSectionId,
-      lastOpenedBookKey: plan.lastOpenedBookKey,
-    );
+    final fallback = await (db.select(db.userReadingPlans)
+          ..where(
+            (tbl) =>
+                tbl.archivedAt.isNull() &
+                tbl.status.isIn(['active', 'completion_ready']),
+          )
+          ..orderBy([(tbl) => OrderingTerm.desc(tbl.updatedAt)])
+          ..limit(1))
+        .getSingleOrNull();
+
+    if (fallback == null) return null;
+    await switchToPlan(fallback.id);
+    return _toReadingPlanView(fallback);
   }
 
-  Future<List<ReadingPlanView>> getAllPlans() async {
+  Future<ReadingPlanView> getActivePlan() async {
+    final plan = await getCurrentPlan();
+    if (plan != null) return plan;
+
+    final anyPlan =
+        await (db.select(db.userReadingPlans)..limit(1)).getSingleOrNull();
+    if (anyPlan != null) {
+      throw StateError('No current reading plan');
+    }
+    await _createDefaultUserPlanIfNeeded();
+    return getActivePlan();
+  }
+
+  Future<List<ReadingPlanView>> getAllCurrentPlans() async {
     final plans = await (db.select(db.userReadingPlans)
-          ..where((tbl) => tbl.archivedAt.isNull())
+          ..where(
+            (tbl) =>
+                tbl.archivedAt.isNull() &
+                tbl.status.isIn(['active', 'completion_ready']),
+          )
           ..orderBy([(tbl) => OrderingTerm.desc(tbl.updatedAt)]))
         .get();
 
-    return plans
-        .map(
-          (plan) => ReadingPlanView(
-            id: plan.id,
-            title: plan.title,
-            templateId: plan.templateId,
-            lastOpenedSectionId: plan.lastOpenedSectionId,
-            lastOpenedBookKey: plan.lastOpenedBookKey,
-          ),
-        )
-        .toList();
+    return plans.map(_toReadingPlanView).toList();
   }
 
-  Future<List<ReadingPlanSummary>> getPlanSummaries() async {
-    final plans = await getAllPlans();
+  Future<List<ReadingPlanView>> getCompletedPlans() async {
+    final plans = await (db.select(db.userReadingPlans)
+          ..where((tbl) => tbl.status.equals('completed'))
+          ..orderBy([(tbl) => OrderingTerm.desc(tbl.completedAt)]))
+        .get();
+
+    return plans.map(_toReadingPlanView).toList();
+  }
+
+  Future<List<ReadingPlanSummary>> getCurrentPlanSummaries() async {
+    final plans = await getAllCurrentPlans();
+    return _summariesForPlans(plans);
+  }
+
+  Future<List<ReadingPlanSummary>> getCompletedPlanSummaries() async {
+    final plans = await getCompletedPlans();
+    return _summariesForPlans(plans);
+  }
+
+  Future<List<ReadingPlanSummary>> _summariesForPlans(
+    List<ReadingPlanView> plans,
+  ) async {
     final summaries = <ReadingPlanSummary>[];
     for (final plan in plans) {
       final stats = await getPlanProgressStats(plan.id);
+      final event = await (db.select(db.planCompletionEvents)
+            ..where((tbl) => tbl.userPlanId.equals(plan.id))
+            ..limit(1))
+          .getSingleOrNull();
       summaries.add(
         ReadingPlanSummary(
           plan: plan,
           completedChapters: stats.completedChapters,
           totalChapters: stats.totalChapters,
+          completedAt: event?.completedAt,
+          completionNumber: event?.completionNumber,
         ),
       );
     }
@@ -87,7 +128,12 @@ class ReadRepository {
 
   Future<void> switchToPlan(String planId) async {
     final exists = await (db.select(db.userReadingPlans)
-          ..where((tbl) => tbl.id.equals(planId) & tbl.archivedAt.isNull())
+          ..where(
+            (tbl) =>
+                tbl.id.equals(planId) &
+                tbl.archivedAt.isNull() &
+                tbl.status.isIn(['active', 'completion_ready']),
+          )
           ..limit(1))
         .getSingleOrNull();
     if (exists == null) return;
@@ -119,10 +165,23 @@ class ReadRepository {
           ..orderBy([(tbl) => OrderingTerm.asc(tbl.title)]))
         .get();
     final added = await db.select(db.userReadingPlans).get();
-    final addedTemplateIds = added
-        .where((plan) => plan.archivedAt == null)
+    final inProgressTemplateIds = added
+        .where(
+          (plan) =>
+              plan.archivedAt == null &&
+              (plan.status == 'active' || plan.status == 'completion_ready'),
+        )
         .map((plan) => plan.templateId)
         .toSet();
+    final localUserId = await _activeLocalUserId();
+    final completionEvents = await (db.select(db.planCompletionEvents)
+          ..where((tbl) => tbl.localUserId.equals(localUserId)))
+        .get();
+    final completionCountByTemplateId = <String, int>{};
+    for (final event in completionEvents) {
+      completionCountByTemplateId[event.templateId] =
+          (completionCountByTemplateId[event.templateId] ?? 0) + 1;
+    }
 
     return rows
         .map(
@@ -135,7 +194,8 @@ class ReadRepository {
             estimatedMinutes: row.estimatedMinutes,
             totalChapters: row.totalChapters,
             coverImageUrl: row.coverImageUrl,
-            isAdded: addedTemplateIds.contains(row.id),
+            isInProgress: inProgressTemplateIds.contains(row.id),
+            completionCount: completionCountByTemplateId[row.id] ?? 0,
           ),
         )
         .toList();
@@ -472,6 +532,7 @@ class ReadRepository {
           .write(
         UserReadingPlansCompanion(
           status: const Value('completed'),
+          isActive: const Value(false),
           completedAt: Value(now),
           updatedAt: Value(now),
           syncStatus: const Value('pending'),
@@ -479,6 +540,17 @@ class ReadRepository {
         ),
       );
     });
+  }
+
+  ReadingPlanView _toReadingPlanView(UserReadingPlan plan) {
+    return ReadingPlanView(
+      id: plan.id,
+      title: plan.title,
+      templateId: plan.templateId,
+      status: plan.status,
+      lastOpenedSectionId: plan.lastOpenedSectionId,
+      lastOpenedBookKey: plan.lastOpenedBookKey,
+    );
   }
 
   Future<ChapterToggleResult> _markPlanCompletionReadyIfNeeded(

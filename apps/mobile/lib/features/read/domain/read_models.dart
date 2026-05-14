@@ -59,6 +59,7 @@ class ReadingPlanView {
     required this.id,
     required this.title,
     required this.templateId,
+    required this.status,
     required this.lastOpenedSectionId,
     required this.lastOpenedBookKey,
   });
@@ -66,6 +67,7 @@ class ReadingPlanView {
   final String id;
   final String title;
   final String templateId;
+  final String status;
   final String? lastOpenedSectionId;
   final String? lastOpenedBookKey;
 }
@@ -75,16 +77,27 @@ class ReadingPlanSummary {
     required this.plan,
     required this.completedChapters,
     required this.totalChapters,
+    required this.completedAt,
+    required this.completionNumber,
   });
 
   final ReadingPlanView plan;
   final int completedChapters;
   final int totalChapters;
+  final DateTime? completedAt;
+  final int? completionNumber;
 
   double get progress =>
       totalChapters == 0 ? 0 : completedChapters / totalChapters;
 
   String get progressLabel => '${(progress * 100).round()}%';
+
+  String get completionLabel {
+    final count = completionNumber ?? 0;
+    if (count <= 0) return '';
+    if (count == 1) return 'Completed once';
+    return 'Completed $count times';
+  }
 }
 
 class ChapterToggleResult {
@@ -133,7 +146,8 @@ class ReadingPlanTemplateView {
     required this.estimatedMinutes,
     required this.totalChapters,
     required this.coverImageUrl,
-    required this.isAdded,
+    required this.isInProgress,
+    required this.completionCount,
   });
 
   final String templateKey;
@@ -144,13 +158,20 @@ class ReadingPlanTemplateView {
   final int? estimatedMinutes;
   final int totalChapters;
   final String? coverImageUrl;
-  final bool isAdded;
+  final bool isInProgress;
+  final int completionCount;
 
   String get planTypeLabel => planType
       .split('_')
       .where((part) => part.isNotEmpty)
       .map((part) => part.toUpperCase())
       .join(' ');
+
+  String get completionLabel {
+    if (completionCount <= 0) return '';
+    if (completionCount == 1) return 'Completed once';
+    return 'Completed $completionCount times';
+  }
 }
 
 /// Chapters and averages scoped to one plan (`plan_id`).
