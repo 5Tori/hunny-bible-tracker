@@ -24,7 +24,7 @@ class LocalUsers extends Table {
   TextColumn get syncStatus =>
       text().withDefault(const Constant('local_only'))();
 
-  /// Server-side profile / identity row id after sync (`docs/SYNC_PLAN.md`).
+  /// Server-side profile / identity row id after sync (`docs/SYNC_STRATEGY.md`).
   TextColumn get serverId => text().nullable()();
   DateTimeColumn get lastSyncedAt => dateTime().nullable()();
   IntColumn get clientRevision => integer().withDefault(const Constant(0))();
@@ -226,7 +226,7 @@ class ReadingActivities extends Table {
   @override
   Set<Column> get primaryKey => {id};
 
-  /// Idempotent "complete" per calendar day (`docs/PROGRESS_AND_ACTIVITY_PLAN.md` §5.2).
+  /// Idempotent "complete" per calendar day (`docs/DATA_MODEL.md`).
   @override
   List<Set<Column>> get uniqueKeys => [
         {localUserId, userPlanId, bookKey, chapterNumber, activityDate, action},
@@ -265,7 +265,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 1;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(

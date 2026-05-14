@@ -58,19 +58,6 @@ class ReadRepository {
     return _toReadingPlanView(fallback);
   }
 
-  Future<ReadingPlanView> getActivePlan() async {
-    final plan = await getCurrentPlan();
-    if (plan != null) return plan;
-
-    final anyPlan =
-        await (db.select(db.userReadingPlans)..limit(1)).getSingleOrNull();
-    if (anyPlan != null) {
-      throw StateError('No current reading plan');
-    }
-    await _createDefaultUserPlanIfNeeded();
-    return getActivePlan();
-  }
-
   Future<List<ReadingPlanView>> getAllCurrentPlans() async {
     final plans = await (db.select(db.userReadingPlans)
           ..where(

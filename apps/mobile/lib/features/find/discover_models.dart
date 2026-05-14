@@ -1,4 +1,4 @@
-// Discover (ex–Find) domain models. Behaviour: docs/DISCOVER.md
+// Discover (ex-Find) domain models. Behavior: docs/PRODUCT_ROADMAP.md
 enum DiscoverLength {
   quick,
   medium,

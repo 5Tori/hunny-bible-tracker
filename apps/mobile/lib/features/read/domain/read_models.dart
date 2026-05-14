@@ -174,8 +174,8 @@ class ReadingPlanTemplateView {
   }
 }
 
-/// Chapters and averages scoped to one plan (`plan_id`).
-/// See `docs/PROGRESS_AND_ACTIVITY_PLAN.md` §7.
+/// Chapters and averages scoped to one user plan run (`user_plan_id`).
+/// See `docs/DATA_MODEL.md`.
 class PlanProgressStats {
   const PlanProgressStats({
     required this.completedChapters,

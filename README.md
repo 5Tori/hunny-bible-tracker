@@ -1,59 +1,58 @@
 # Hunny Bible Tracker
 
-Offline-first Bible reading tracker built with Flutter + Drift(SQLite), Firebase Auth, Next.js web/API routes, and Neon Postgres.
+Offline-first Bible reading tracker built with Flutter, Drift/SQLite, Firebase Auth, Next.js API routes, and Neon Postgres.
 
-## Current scope: v0.1
+The app does not store Bible text in v0.1. It stores book/chapter references, reading plans, chapter progress, activity logs, local settings, and account-link metadata.
 
-The initial implementation focuses on the **Read** tab:
+## Current Status
 
-- Bottom tabs: Home / Find / Read / List / Settings
-- Offline-first local SQLite persistence through Drift
-- Built-in Whole Bible plan
-- Chapter-level check/uncheck tracker
-- 3-column book grid
-- 8-column chapter grid
-- Book progress and total plan progress
-- Last opened book memory
-- Streak-ready reading activity log
-- Local settings for language/timezone/account
-- Firebase Auth account link
+The current product focus is the Read and Settings flow.
 
-The tracker does **not** store full Bible text. It stores book/chapter references and user progress.
+- Flutter mobile app for iOS and Android.
+- Offline-first local database through Drift/SQLite.
+- Firebase Auth for Google sign-in.
+- Neon Postgres is kept for server-side app data.
+- `apps/web` provides API routes for Firebase token verification and Neon `auth_users` upsert.
+- Read tab supports plan templates, section-based plans, current/completed plan lists, catalog browsing, plan completion, and starting a completed plan again.
+- Settings supports account sign-in/out, automatic timezone display, language placeholder, notifications placeholder, and Help & feedback UI.
 
-## Monorepo layout
+Remote progress sync is not implemented yet. The local schema is sync-ready, but server sync tables/API routes still need to be designed and built.
+
+## Monorepo Layout
 
 ```text
 apps/
   mobile/   Flutter app
-  web/      Next.js web app and API routes for Firebase token verification and future Neon sync
+  web/      Next.js web/API app
 
 docs/
-  FIREBASE_AUTH.md
-  PRODUCT_PLAN.md
-  SYNC_PLAN.md
+  ARCHITECTURE.md     Runtime structure and module map
+  DATA_MODEL.md       Local Drift schema, server schema status, plan lifecycle
+  AUTH_AND_API.md     Firebase Auth, Google Sign-In, API routes, deployment checklist
+  SYNC_STRATEGY.md    Future backup/sync design and conflict policy
+  PRODUCT_ROADMAP.md  Product state, UX model, and next implementation priorities
+  DEVELOPMENT.md      Local setup, run commands, builds, troubleshooting
 ```
 
-## Development Setup
+## Start Here
 
-### First-time setup
+For a new agent or developer:
+
+1. Read this README.
+2. Read `docs/ARCHITECTURE.md` for the system map.
+3. Read `docs/DATA_MODEL.md` before changing Read, plan, progress, or sync logic.
+4. Read `docs/AUTH_AND_API.md` before changing Firebase Auth, Google sign-in, or API routes.
+5. Use `docs/DEVELOPMENT.md` for local run/build commands.
+
+## Quick Setup
 
 ```bash
 cd apps/mobile
 flutter pub get
-dart run build_runner build
+flutter pub run build_runner build
 ```
 
-If native platform folders ever need to be regenerated, run Flutter create carefully and do **not** overwrite existing `lib/`, `assets/`, or `pubspec.yaml` files:
-
-```bash
-flutter create --platforms=ios,android --project-name hunny_bible_tracker .
-```
-
-### Firebase Define Files
-
-The app initializes Firebase from `--dart-define` values. Do not type them manually every time. Use define files instead.
-
-Create local files from the committed example:
+Create local dart-define files:
 
 ```bash
 cd apps/mobile
@@ -61,130 +60,60 @@ cp .env.example.json .env.ios.json
 cp .env.example.json .env.android.json
 ```
 
-Fill both files with values from Firebase Console / app settings.
+Fill both files with Firebase values. Use:
 
-Use different API base URLs per platform:
+- iOS simulator API URL: `http://127.0.0.1:3000`
+- Android emulator API URL: `http://10.0.2.2:3000`
 
-```json
-{
-  "HUNNY_API_BASE_URL": "http://127.0.0.1:3000"
-}
-```
-
-```json
-{
-  "HUNNY_API_BASE_URL": "http://10.0.2.2:3000"
-}
-```
-
-The first value is for `.env.ios.json`; the second is for `.env.android.json`. These local files are ignored by git:
+Run mobile:
 
 ```bash
-apps/mobile/.env*.json
-!apps/mobile/.env.example.json
+cd apps/mobile
+./scripts/run_ios.sh
+./scripts/run_android.sh
 ```
 
-### Optional Web/API Server
-
-The Flutter app can run without the server. If `HUNNY_API_BASE_URL` is set, sign-in will also try to upsert the Firebase user into Neon through API routes in `apps/web`.
-
-Run the web app:
+Run web/API:
 
 ```bash
 pnpm web:dev
 ```
 
-API environment is documented in `docs/FIREBASE_AUTH.md`.
-
-## Run on iOS Simulator
-
-Start a simulator:
-
-```bash
-open -a Simulator
-```
-
-List devices if needed:
-
-```bash
-xcrun simctl list devices available
-```
-
-Run on the booted iOS simulator:
+## Common Checks
 
 ```bash
 cd apps/mobile
-./scripts/run_ios.sh
+flutter analyze
+flutter test
+flutter build apk --debug
+flutter build ios --simulator --debug
 ```
-
-To target a specific simulator:
 
 ```bash
-./scripts/run_ios.sh -d <DEVICE_ID>
+pnpm web:build
 ```
 
-iOS native Google Sign-In also requires `apps/mobile/ios/Runner/Info.plist` to match `apps/mobile/ios/Runner/GoogleService-Info.plist`:
+## Current Data Boundary
 
-- `GIDClientID` = `CLIENT_ID`
-- `CFBundleURLTypes` scheme = `REVERSED_CLIENT_ID`
-
-## Run on Android Emulator
-
-Start an Android emulator from Android Studio Device Manager, or list/run devices from the CLI:
-
-```bash
-flutter emulators
-flutter emulators --launch <EMULATOR_ID>
-flutter devices
-```
-
-Run on the booted Android emulator:
-
-```bash
-cd apps/mobile
-./scripts/run_android.sh
-```
-
-To target a specific emulator:
-
-```bash
-./scripts/run_android.sh -d <DEVICE_ID>
-```
-
-Android emulator uses `10.0.2.2` to reach a server running on the host machine. Do not use `127.0.0.1` for the API from Android emulator unless the API is running inside the emulator.
-
-For Google Sign-In on Android, add the debug SHA-1 to Firebase Console:
-
-```bash
-cd apps/mobile/android
-./gradlew signingReport
-```
-
-Then add the `SHA1` under Firebase Console → Project settings → Android app → SHA certificate fingerprints.
-
-If Android build fails with an NDK error like `source.properties` missing, delete the broken local NDK folder and let Android Studio/Gradle reinstall it:
-
-```bash
-rm -rf /Users/dongwon/Library/Android/sdk/ndk/28.2.13676358
-```
-
-## Hot-reload key commands
-
-| Key | Action |
-|-----|--------|
-| `r` | Hot reload — applies code changes instantly |
-| `R` | Hot restart — full restart with state reset |
-| `d` | Detach — stop CLI but keep the app running |
-| `q` | Quit — terminate the app |
-
-## API Direction
-
-The server stack is:
+The mobile app writes locally first. It may call the API after Firebase login to upsert the server-side auth user, but chapter progress and reading activities are not synced remotely yet.
 
 ```text
-Next.js API
-Firebase Admin SDK
-Neon Postgres
+User action
+  -> Flutter UI
+  -> Drift/SQLite transaction
+  -> sync_status pending/local_only
+  -> future sync worker/API
 ```
 
-The mobile app should never connect to Neon directly. Sync should go through the API layer.
+The mobile app must not connect directly to Neon. Server access should go through `apps/web` API routes.
+
+## Important Implementation Notes
+
+- Local DB schema source: `apps/mobile/lib/core/database/app_database.dart`
+- Generated Drift file: `apps/mobile/lib/core/database/app_database.g.dart`
+- Read repository: `apps/mobile/lib/features/read/data/read_repository.dart`
+- Server schema file: `apps/web/db/schema.sql`
+- API routes: `apps/web/src/app/api`
+- Firebase define example: `apps/mobile/.env.example.json`
+
+`apps/web/db/schema.sql` currently has only the active auth schema as the reliable server schema. Full remote sync tables are intentionally deferred until sync implementation.

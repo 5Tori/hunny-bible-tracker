@@ -1,19 +1,34 @@
-# Hunny Bible Tracker Web
+# Hunny Bible Tracker Web/API
 
-Next.js web app and API routes for Firebase-authenticated Neon backup/sync.
+Next.js web app and API routes for Firebase-authenticated Neon user records.
 
-The mobile app is local-first. When `HUNNY_API_BASE_URL` is set, it sends
-Firebase ID tokens to the API routes so the server can upsert the user in Neon.
+Use the root README and docs as the source of truth:
 
-Planned endpoints:
+- `../../README.md`
+- `../../docs/ARCHITECTURE.md`
+- `../../docs/AUTH_AND_API.md`
+- `../../docs/SYNC_STRATEGY.md`
+- `../../docs/DEVELOPMENT.md`
+
+## Current API Routes
 
 ```text
 GET  /api/health
 POST /api/v1/auth/sync
 GET  /api/v1/me
-POST /api/sync/push
-GET  /api/sync/pull
-GET  /api/sync/status
-POST /api/backup/export
-POST /api/backup/restore
+```
+
+Reading progress sync routes are not implemented yet.
+
+## Common Commands
+
+```bash
+pnpm web:dev
+pnpm web:build
+```
+
+Server schema source:
+
+```text
+db/schema.sql
 ```

@@ -615,7 +615,7 @@ class LocalUser extends DataClass implements Insertable<LocalUser> {
   final String? authUserId;
   final String syncStatus;
 
-  /// Server-side profile / identity row id after sync (`docs/SYNC_PLAN.md`).
+  /// Server-side profile / identity row id after sync (`docs/SYNC_STRATEGY.md`).
   final String? serverId;
   final DateTime? lastSyncedAt;
   final int clientRevision;

@@ -1,32 +1,34 @@
 # Hunny Bible Tracker Mobile
 
-Flutter app for the offline-first tracker MVP.
+Flutter iOS/Android app for the offline-first Bible reading tracker.
 
-## Setup
+Use the root README and docs as the source of truth:
+
+- `../../README.md`
+- `../../docs/ARCHITECTURE.md`
+- `../../docs/DATA_MODEL.md`
+- `../../docs/AUTH_AND_API.md`
+- `../../docs/DEVELOPMENT.md`
+
+## Common Commands
 
 ```bash
-flutter create --platforms=ios,android --project-name hunny_bible_tracker .
 flutter pub get
-dart run build_runner build --delete-conflicting-outputs
-flutter run
+flutter pub run build_runner build
+./scripts/run_ios.sh
+./scripts/run_android.sh
+flutter analyze
+flutter test
 ```
 
-## Important generated file
+The local database schema source is:
 
-Drift generates this file:
+```text
+lib/core/database/app_database.dart
+```
+
+Generated Drift code is:
 
 ```text
 lib/core/database/app_database.g.dart
 ```
-
-It is intentionally not included in this zip. Generate it with build_runner.
-
-## Main implemented flow
-
-1. App starts in guest/offline mode.
-2. Local Bible metadata is seeded from `assets/data/bible_books.en.json`.
-3. A built-in Whole Bible plan is created.
-4. The Read tab shows books in a 3-column grid.
-5. Selecting a book opens chapters in an 8-column grid.
-6. Tapping a chapter toggles completion.
-7. Progress and reading activity are stored locally in SQLite.
