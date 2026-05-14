@@ -2,7 +2,9 @@
   "name": "hunny-bible-tracker-monorepo",
   "private": true,
   "version": "0.1.0",
+  "packageManager": "pnpm@10.17.1",
   "scripts": {
+    "build": "pnpm run web:build",
     "web:dev": "pnpm --dir apps/web dev",
     "web:build": "pnpm --dir apps/web build"
   }
