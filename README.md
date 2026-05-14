@@ -12,7 +12,7 @@ The current product focus is the Read and Settings flow.
 - Offline-first local database through Drift/SQLite.
 - Firebase Auth for Google sign-in.
 - Neon Postgres is kept for server-side app data.
-- `apps/web` provides API routes for Firebase token verification and Neon `auth_users` upsert.
+- `apps/web` provides API routes for Firebase token verification, Neon `auth_users` upsert, and an admin dashboard for plan template management.
 - Read tab supports plan templates, section-based plans, current/completed plan lists, catalog browsing, plan completion, and starting a completed plan again.
 - Settings supports account sign-in/out, automatic timezone display, language placeholder, notifications placeholder, and Help & feedback UI.
 

@@ -54,6 +54,8 @@ class PlanTemplates extends Table {
   TextColumn get primaryCharacter => text().nullable()();
   BoolColumn get isBuiltin => boolean().withDefault(const Constant(true))();
   BoolColumn get isPublished => boolean().withDefault(const Constant(true))();
+  IntColumn get featuredRank => integer().nullable()();
+  BoolColumn get browseVisible => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -265,10 +267,16 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) => m.createAll(),
+        onUpgrade: (Migrator m, int from, int to) async {
+          if (from < 2) {
+            await m.addColumn(planTemplates, planTemplates.featuredRank);
+            await m.addColumn(planTemplates, planTemplates.browseVisible);
+          }
+        },
       );
 }

@@ -83,12 +83,11 @@ Important columns:
 - `is_builtin`
 - `is_published`
 
-Current built-in templates:
+Template source:
 
-| Key | Title | Sections |
-| --- | --- | --- |
-| `bible_in_a_year` | Bible in a Year | Old Testament, New Testament |
-| `samuel_story` | Samuel Story | Before Samuel, Young Samuel, Samuel and Saul |
+- Plan templates are created and edited in the web admin dashboard.
+- Published templates are stored in Neon and served through `GET /api/v1/plans`.
+- Mobile caches the published template rows locally before Browse Plans / Add Plan flows.
 
 ### `plan_template_sections`
 

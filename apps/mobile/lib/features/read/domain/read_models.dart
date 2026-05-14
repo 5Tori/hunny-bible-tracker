@@ -100,6 +100,42 @@ class ReadingPlanSummary {
   }
 }
 
+class CompletedPlanSummary {
+  const CompletedPlanSummary({
+    required this.templateId,
+    required this.templateKey,
+    required this.title,
+    required this.completionCount,
+    required this.lastCompletedAt,
+    required this.totalChapters,
+    this.estimatedMinutes,
+  });
+
+  final String templateId;
+  final String templateKey;
+  final String title;
+  final int completionCount;
+  final DateTime? lastCompletedAt;
+  final int totalChapters;
+  final int? estimatedMinutes;
+
+  String get completionLabel {
+    if (completionCount <= 1) return 'Completed once';
+    return 'Completed $completionCount times';
+  }
+
+  /// Short label for optional catalog-style meta row (e.g. "About 2 hours").
+  String? get estimatedReadingLabel {
+    final minutes = estimatedMinutes;
+    if (minutes == null || minutes <= 0) return null;
+    if (minutes >= 60) {
+      final hours = (minutes / 60).round();
+      return hours == 1 ? 'About 1 hour' : 'About $hours hours';
+    }
+    return 'About $minutes min';
+  }
+}
+
 class ChapterToggleResult {
   const ChapterToggleResult({
     required this.changed,

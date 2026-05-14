@@ -76,7 +76,8 @@ Future sync should merge guest local data into the signed-in account rather than
 
 Plan templates are mostly source/catalog data.
 
-Initial sync can treat built-in templates as app-bundled seed data. Server-managed catalog work can come later.
+Published plan templates are server-managed in Neon and downloaded through `GET /api/v1/plans`.
+Mobile caches them locally in Drift so Browse Plans and user plan creation can work from the local snapshot.
 
 ### User plan runs
 

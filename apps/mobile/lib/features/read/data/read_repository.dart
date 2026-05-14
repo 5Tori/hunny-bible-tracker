@@ -8,12 +8,17 @@ import 'package:uuid/uuid.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/local_user_id.dart';
 import '../domain/read_models.dart';
+import 'plan_catalog_api_client.dart';
 
 class ReadRepository {
-  ReadRepository(this.db);
+  ReadRepository(
+    this.db, {
+    PlanCatalogApiClient? planCatalogApiClient,
+  }) : _planCatalogApiClient = planCatalogApiClient ?? PlanCatalogApiClient();
 
   final AppDatabase db;
   final Uuid _uuid = const Uuid();
+  final PlanCatalogApiClient _planCatalogApiClient;
 
   /// Shown after Firebase creates a new account from Google sign-in.
   static const kAppSettingInitialBackupPromptDone =
@@ -23,10 +28,23 @@ class ReadRepository {
     await db.transaction(() async {
       await _seedBibleBooksIfNeeded();
       await _ensureGuestLocalUser();
-      await _seedPlanTemplatesIfNeeded();
-      await _createDefaultUserPlanIfNeeded();
       await _seedDefaultSettingsIfNeeded();
     });
+    await refreshPlanTemplatesFromRemote(allowFailure: true);
+    await _createDefaultUserPlanIfNeeded();
+  }
+
+  Future<void> refreshPlanTemplatesFromRemote({
+    bool allowFailure = false,
+  }) async {
+    if (!_planCatalogApiClient.isConfigured) return;
+
+    try {
+      final plans = await _planCatalogApiClient.fetchPublishedPlans();
+      await _replacePlanTemplateCache(plans);
+    } catch (_) {
+      if (!allowFailure) rethrow;
+    }
   }
 
   Future<ReadingPlanView?> getCurrentPlan() async {
@@ -71,23 +89,77 @@ class ReadRepository {
     return plans.map(_toReadingPlanView).toList();
   }
 
-  Future<List<ReadingPlanView>> getCompletedPlans() async {
-    final plans = await (db.select(db.userReadingPlans)
-          ..where((tbl) => tbl.status.equals('completed'))
-          ..orderBy([(tbl) => OrderingTerm.desc(tbl.completedAt)]))
-        .get();
-
-    return plans.map(_toReadingPlanView).toList();
-  }
-
   Future<List<ReadingPlanSummary>> getCurrentPlanSummaries() async {
     final plans = await getAllCurrentPlans();
     return _summariesForPlans(plans);
   }
 
-  Future<List<ReadingPlanSummary>> getCompletedPlanSummaries() async {
-    final plans = await getCompletedPlans();
-    return _summariesForPlans(plans);
+  Future<List<CompletedPlanSummary>> getCompletedPlanSummaries() async {
+    final localUserId = await _activeLocalUserId();
+    final events = await (db.select(db.planCompletionEvents)
+          ..where((tbl) => tbl.localUserId.equals(localUserId))
+          ..orderBy([(tbl) => OrderingTerm.desc(tbl.completedAt)]))
+        .get();
+    if (events.isEmpty) return [];
+
+    final userPlanIds =
+        events.map((event) => event.userPlanId).toSet().toList();
+    final plans = await (db.select(db.userReadingPlans)
+          ..where((tbl) => tbl.id.isIn(userPlanIds)))
+        .get();
+    final plansById = {for (final plan in plans) plan.id: plan};
+
+    final templateIds =
+        events.map((event) => event.templateId).toSet().toList();
+    final templates = await (db.select(db.planTemplates)
+          ..where((tbl) => tbl.id.isIn(templateIds)))
+        .get();
+    final templatesById = {
+      for (final template in templates) template.id: template
+    };
+
+    final aggregates = <String, _CompletedPlanAggregate>{};
+    for (final event in events) {
+      final plan = plansById[event.userPlanId];
+      final template = templatesById[event.templateId];
+      final aggregate = aggregates.putIfAbsent(
+        event.templateId,
+        () => _CompletedPlanAggregate(
+          templateId: event.templateId,
+          templateKey: template?.templateKey ?? '',
+          title: plan?.title ?? template?.title ?? 'Reading Plan',
+          totalChapters: template?.totalChapters ?? 0,
+          estimatedMinutes: template?.estimatedMinutes,
+        ),
+      );
+      aggregate.completionCount += 1;
+      if (aggregate.lastCompletedAt == null ||
+          event.completedAt.isAfter(aggregate.lastCompletedAt!)) {
+        aggregate.lastCompletedAt = event.completedAt;
+        aggregate.title = plan?.title ?? template?.title ?? aggregate.title;
+      }
+    }
+
+    return aggregates.values
+        .map(
+          (aggregate) => CompletedPlanSummary(
+            templateId: aggregate.templateId,
+            templateKey: aggregate.templateKey,
+            title: aggregate.title,
+            completionCount: aggregate.completionCount,
+            lastCompletedAt: aggregate.lastCompletedAt,
+            totalChapters: aggregate.totalChapters,
+            estimatedMinutes: aggregate.estimatedMinutes,
+          ),
+        )
+        .toList()
+      ..sort((a, b) {
+        final aDate =
+            a.lastCompletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        final bDate =
+            b.lastCompletedAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+        return bDate.compareTo(aDate);
+      });
   }
 
   Future<List<ReadingPlanSummary>> _summariesForPlans(
@@ -148,8 +220,12 @@ class ReadRepository {
 
   Future<List<ReadingPlanTemplateView>> getPlanTemplatesForCatalog() async {
     final rows = await (db.select(db.planTemplates)
-          ..where((tbl) => tbl.isPublished.equals(true))
-          ..orderBy([(tbl) => OrderingTerm.asc(tbl.title)]))
+          ..where((tbl) =>
+              tbl.isPublished.equals(true) & tbl.browseVisible.equals(true))
+          ..orderBy([
+            (tbl) => OrderingTerm.asc(tbl.featuredRank, nulls: NullsOrder.last),
+            (tbl) => OrderingTerm.asc(tbl.title),
+          ]))
         .get();
     final added = await db.select(db.userReadingPlans).get();
     final inProgressTemplateIds = added
@@ -792,185 +868,89 @@ class ReadRepository {
     });
   }
 
-  Future<void> _seedPlanTemplatesIfNeeded() async {
-    final existing = await db.select(db.planTemplates).get();
-    if (existing.isNotEmpty) return;
+  Future<void> _replacePlanTemplateCache(
+    List<RemotePlanTemplate> plans,
+  ) async {
+    await db.transaction(() async {
+      await db.delete(db.planTemplateTags).go();
+      await db.delete(db.planTags).go();
+      await db.delete(db.planTemplateItems).go();
+      await db.delete(db.planTemplateSections).go();
+      await db.delete(db.planTemplates).go();
 
-    await _seedBibleInAYearTemplate();
-    await _seedSamuelStoryTemplate();
-  }
+      for (final plan in plans) {
+        await db.into(db.planTemplates).insert(
+              PlanTemplatesCompanion.insert(
+                id: plan.id,
+                templateKey: plan.templateKey,
+                title: plan.title,
+                subtitle: Value(plan.subtitle),
+                description: Value(plan.description),
+                shortDescription: Value(plan.shortDescription),
+                coverImageUrl: Value(plan.coverImageUrl),
+                planType: Value(plan.planType),
+                testamentScope: Value(plan.testamentScope),
+                difficulty: Value(plan.difficulty),
+                estimatedMinutes: Value(plan.estimatedMinutes),
+                estimatedDays: Value(plan.estimatedDays),
+                totalChapters: Value(plan.totalChapters),
+                primaryBookKey: Value(plan.primaryBookKey),
+                primaryCharacter: Value(plan.primaryCharacter),
+                isBuiltin: Value(plan.isBuiltin),
+                isPublished: Value(plan.isPublished),
+                featuredRank: Value(plan.featuredRank),
+                browseVisible: Value(plan.browseVisible),
+                createdAt: plan.createdAt,
+                updatedAt: plan.updatedAt,
+              ),
+            );
 
-  Future<void> _seedBibleInAYearTemplate() async {
-    final now = DateTime.now();
-    final templateId = _uuid.v4();
-    final oldSectionId = _uuid.v4();
-    final newSectionId = _uuid.v4();
-    final books = await (db.select(db.bibleBooks)
-          ..orderBy([(tbl) => OrderingTerm.asc(tbl.bookOrder)]))
-        .get();
+        for (final section in plan.sections) {
+          await db.into(db.planTemplateSections).insert(
+                PlanTemplateSectionsCompanion.insert(
+                  id: section.id,
+                  planTemplateId: plan.id,
+                  sectionKey: section.sectionKey,
+                  title: section.title,
+                  description: Value(section.description),
+                  orderIndex: section.orderIndex,
+                  createdAt: section.createdAt,
+                  updatedAt: section.updatedAt,
+                ),
+              );
 
-    await db.into(db.planTemplates).insert(
-          PlanTemplatesCompanion.insert(
-            id: templateId,
-            templateKey: 'bible_in_a_year',
-            title: 'Bible in a Year',
-            subtitle: const Value('Whole Bible'),
-            description: const Value(
-              'Track every chapter of the Bible across the Old and New Testament.',
-            ),
-            shortDescription:
-                const Value('Read the whole Bible chapter by chapter.'),
-            planType: const Value('canonical'),
-            testamentScope: const Value('whole_bible'),
-            estimatedMinutes: const Value(4756),
-            estimatedDays: const Value(365),
-            totalChapters: Value(
-              books.fold<int>(0, (sum, book) => sum + book.chapterCount),
-            ),
-            isBuiltin: const Value(true),
-            isPublished: const Value(true),
-            createdAt: now,
-            updatedAt: now,
-          ),
-        );
+          for (final item in section.items) {
+            await db.into(db.planTemplateItems).insert(
+                  PlanTemplateItemsCompanion.insert(
+                    id: item.id,
+                    sectionId: section.id,
+                    orderIndex: item.orderIndex,
+                    bookKey: item.bookKey,
+                    startChapter: item.startChapter,
+                    endChapter: item.endChapter,
+                  ),
+                );
+          }
+        }
 
-    await db.batch((batch) {
-      batch.insertAll(db.planTemplateSections, [
-        PlanTemplateSectionsCompanion.insert(
-          id: oldSectionId,
-          planTemplateId: templateId,
-          sectionKey: 'old_testament',
-          title: 'Old Testament',
-          orderIndex: 1,
-          createdAt: now,
-          updatedAt: now,
-        ),
-        PlanTemplateSectionsCompanion.insert(
-          id: newSectionId,
-          planTemplateId: templateId,
-          sectionKey: 'new_testament',
-          title: 'New Testament',
-          orderIndex: 2,
-          createdAt: now,
-          updatedAt: now,
-        ),
-      ]);
-
-      batch.insertAll(
-        db.planTemplateItems,
-        books.map((book) {
-          return PlanTemplateItemsCompanion.insert(
-            id: _uuid.v4(),
-            sectionId: book.testament == 'old' ? oldSectionId : newSectionId,
-            orderIndex: book.bookOrder,
-            bookKey: book.bookKey,
-            startChapter: 1,
-            endChapter: book.chapterCount,
-          );
-        }).toList(),
-      );
-    });
-  }
-
-  Future<void> _seedSamuelStoryTemplate() async {
-    final now = DateTime.now();
-    final templateId = _uuid.v4();
-    final beforeSamuelId = _uuid.v4();
-    final youngSamuelId = _uuid.v4();
-    final samuelAndSaulId = _uuid.v4();
-
-    await db.into(db.planTemplates).insert(
-          PlanTemplatesCompanion.insert(
-            id: templateId,
-            templateKey: 'samuel_story',
-            title: 'Samuel Story',
-            subtitle: const Value('Story Plan'),
-            description: const Value(
-              "From Samuel's birth to Israel's first king.",
-            ),
-            shortDescription: const Value(
-              "From Samuel's birth to Israel's first king.",
-            ),
-            planType: const Value('story'),
-            testamentScope: const Value('old_testament'),
-            difficulty: const Value('easy'),
-            estimatedMinutes: const Value(76),
-            estimatedDays: const Value(7),
-            totalChapters: const Value(19),
-            primaryBookKey: const Value('1_samuel'),
-            primaryCharacter: const Value('Samuel'),
-            isBuiltin: const Value(true),
-            isPublished: const Value(true),
-            createdAt: now,
-            updatedAt: now,
-          ),
-        );
-
-    await db.batch((batch) {
-      batch.insertAll(db.planTemplateSections, [
-        PlanTemplateSectionsCompanion.insert(
-          id: beforeSamuelId,
-          planTemplateId: templateId,
-          sectionKey: 'before_samuel',
-          title: 'Before Samuel',
-          orderIndex: 1,
-          createdAt: now,
-          updatedAt: now,
-        ),
-        PlanTemplateSectionsCompanion.insert(
-          id: youngSamuelId,
-          planTemplateId: templateId,
-          sectionKey: 'young_samuel',
-          title: 'Young Samuel',
-          orderIndex: 2,
-          createdAt: now,
-          updatedAt: now,
-        ),
-        PlanTemplateSectionsCompanion.insert(
-          id: samuelAndSaulId,
-          planTemplateId: templateId,
-          sectionKey: 'samuel_and_saul',
-          title: 'Samuel and Saul',
-          orderIndex: 3,
-          createdAt: now,
-          updatedAt: now,
-        ),
-      ]);
-
-      batch.insertAll(db.planTemplateItems, [
-        PlanTemplateItemsCompanion.insert(
-          id: _uuid.v4(),
-          sectionId: beforeSamuelId,
-          orderIndex: 1,
-          bookKey: 'ruth',
-          startChapter: 1,
-          endChapter: 4,
-        ),
-        PlanTemplateItemsCompanion.insert(
-          id: _uuid.v4(),
-          sectionId: beforeSamuelId,
-          orderIndex: 2,
-          bookKey: '1_samuel',
-          startChapter: 1,
-          endChapter: 2,
-        ),
-        PlanTemplateItemsCompanion.insert(
-          id: _uuid.v4(),
-          sectionId: youngSamuelId,
-          orderIndex: 1,
-          bookKey: '1_samuel',
-          startChapter: 3,
-          endChapter: 7,
-        ),
-        PlanTemplateItemsCompanion.insert(
-          id: _uuid.v4(),
-          sectionId: samuelAndSaulId,
-          orderIndex: 1,
-          bookKey: '1_samuel',
-          startChapter: 8,
-          endChapter: 15,
-        ),
-      ]);
+        for (final tag in plan.tags) {
+          await db.into(db.planTags).insertOnConflictUpdate(
+                PlanTagsCompanion.insert(
+                  id: tag.id,
+                  key: tag.key,
+                  name: tag.name,
+                  type: tag.type,
+                ),
+              );
+          await db.into(db.planTemplateTags).insert(
+                PlanTemplateTagsCompanion.insert(
+                  planTemplateId: plan.id,
+                  tagId: tag.id,
+                ),
+                mode: InsertMode.insertOrIgnore,
+              );
+        }
+      }
     });
   }
 
@@ -981,10 +961,17 @@ class ReadRepository {
         .getSingleOrNull();
     if (existing != null) return;
 
-    final template = await (db.select(db.planTemplates)
+    final preferred = await (db.select(db.planTemplates)
           ..where((tbl) => tbl.templateKey.equals('bible_in_a_year'))
           ..limit(1))
-        .getSingle();
+        .getSingleOrNull();
+    final template = preferred ??
+        await (db.select(db.planTemplates)
+              ..where((tbl) => tbl.isPublished.equals(true))
+              ..orderBy([(tbl) => OrderingTerm.asc(tbl.title)])
+              ..limit(1))
+            .getSingleOrNull();
+    if (template == null) return;
 
     await _createUserPlanFromTemplate(template);
   }
@@ -1202,4 +1189,22 @@ class _CompletionCounts {
 
   final int completed;
   final int total;
+}
+
+class _CompletedPlanAggregate {
+  _CompletedPlanAggregate({
+    required this.templateId,
+    required this.templateKey,
+    required this.title,
+    required this.totalChapters,
+    this.estimatedMinutes,
+  });
+
+  final String templateId;
+  final String templateKey;
+  String title;
+  int completionCount = 0;
+  DateTime? lastCompletedAt;
+  final int totalChapters;
+  final int? estimatedMinutes;
 }

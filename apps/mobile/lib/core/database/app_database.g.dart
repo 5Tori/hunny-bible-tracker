@@ -1049,6 +1049,22 @@ class $PlanTemplatesTable extends PlanTemplates
       defaultConstraints: GeneratedColumn.constraintIsAlways(
           'CHECK ("is_published" IN (0, 1))'),
       defaultValue: const Constant(true));
+  static const VerificationMeta _featuredRankMeta =
+      const VerificationMeta('featuredRank');
+  @override
+  late final GeneratedColumn<int> featuredRank = GeneratedColumn<int>(
+      'featured_rank', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _browseVisibleMeta =
+      const VerificationMeta('browseVisible');
+  @override
+  late final GeneratedColumn<bool> browseVisible = GeneratedColumn<bool>(
+      'browse_visible', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints: GeneratedColumn.constraintIsAlways(
+          'CHECK ("browse_visible" IN (0, 1))'),
+      defaultValue: const Constant(true));
   static const VerificationMeta _createdAtMeta =
       const VerificationMeta('createdAt');
   @override
@@ -1080,6 +1096,8 @@ class $PlanTemplatesTable extends PlanTemplates
         primaryCharacter,
         isBuiltin,
         isPublished,
+        featuredRank,
+        browseVisible,
         createdAt,
         updatedAt
       ];
@@ -1190,6 +1208,18 @@ class $PlanTemplatesTable extends PlanTemplates
           isPublished.isAcceptableOrUnknown(
               data['is_published']!, _isPublishedMeta));
     }
+    if (data.containsKey('featured_rank')) {
+      context.handle(
+          _featuredRankMeta,
+          featuredRank.isAcceptableOrUnknown(
+              data['featured_rank']!, _featuredRankMeta));
+    }
+    if (data.containsKey('browse_visible')) {
+      context.handle(
+          _browseVisibleMeta,
+          browseVisible.isAcceptableOrUnknown(
+              data['browse_visible']!, _browseVisibleMeta));
+    }
     if (data.containsKey('created_at')) {
       context.handle(_createdAtMeta,
           createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
@@ -1245,6 +1275,10 @@ class $PlanTemplatesTable extends PlanTemplates
           .read(DriftSqlType.bool, data['${effectivePrefix}is_builtin'])!,
       isPublished: attachedDatabase.typeMapping
           .read(DriftSqlType.bool, data['${effectivePrefix}is_published'])!,
+      featuredRank: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}featured_rank']),
+      browseVisible: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}browse_visible'])!,
       createdAt: attachedDatabase.typeMapping
           .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
       updatedAt: attachedDatabase.typeMapping
@@ -1276,6 +1310,8 @@ class PlanTemplate extends DataClass implements Insertable<PlanTemplate> {
   final String? primaryCharacter;
   final bool isBuiltin;
   final bool isPublished;
+  final int? featuredRank;
+  final bool browseVisible;
   final DateTime createdAt;
   final DateTime updatedAt;
   const PlanTemplate(
@@ -1296,6 +1332,8 @@ class PlanTemplate extends DataClass implements Insertable<PlanTemplate> {
       this.primaryCharacter,
       required this.isBuiltin,
       required this.isPublished,
+      this.featuredRank,
+      required this.browseVisible,
       required this.createdAt,
       required this.updatedAt});
   @override
@@ -1330,6 +1368,10 @@ class PlanTemplate extends DataClass implements Insertable<PlanTemplate> {
     }
     map['is_builtin'] = Variable<bool>(isBuiltin);
     map['is_published'] = Variable<bool>(isPublished);
+    if (!nullToAbsent || featuredRank != null) {
+      map['featured_rank'] = Variable<int>(featuredRank);
+    }
+    map['browse_visible'] = Variable<bool>(browseVisible);
     map['created_at'] = Variable<DateTime>(createdAt);
     map['updated_at'] = Variable<DateTime>(updatedAt);
     return map;
@@ -1366,6 +1408,10 @@ class PlanTemplate extends DataClass implements Insertable<PlanTemplate> {
           : Value(primaryCharacter),
       isBuiltin: Value(isBuiltin),
       isPublished: Value(isPublished),
+      featuredRank: featuredRank == null && nullToAbsent
+          ? const Value.absent()
+          : Value(featuredRank),
+      browseVisible: Value(browseVisible),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -1392,6 +1438,8 @@ class PlanTemplate extends DataClass implements Insertable<PlanTemplate> {
       primaryCharacter: serializer.fromJson<String?>(json['primaryCharacter']),
       isBuiltin: serializer.fromJson<bool>(json['isBuiltin']),
       isPublished: serializer.fromJson<bool>(json['isPublished']),
+      featuredRank: serializer.fromJson<int?>(json['featuredRank']),
+      browseVisible: serializer.fromJson<bool>(json['browseVisible']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -1417,6 +1465,8 @@ class PlanTemplate extends DataClass implements Insertable<PlanTemplate> {
       'primaryCharacter': serializer.toJson<String?>(primaryCharacter),
       'isBuiltin': serializer.toJson<bool>(isBuiltin),
       'isPublished': serializer.toJson<bool>(isPublished),
+      'featuredRank': serializer.toJson<int?>(featuredRank),
+      'browseVisible': serializer.toJson<bool>(browseVisible),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -1440,6 +1490,8 @@ class PlanTemplate extends DataClass implements Insertable<PlanTemplate> {
           Value<String?> primaryCharacter = const Value.absent(),
           bool? isBuiltin,
           bool? isPublished,
+          Value<int?> featuredRank = const Value.absent(),
+          bool? browseVisible,
           DateTime? createdAt,
           DateTime? updatedAt}) =>
       PlanTemplate(
@@ -1467,6 +1519,9 @@ class PlanTemplate extends DataClass implements Insertable<PlanTemplate> {
             : this.primaryCharacter,
         isBuiltin: isBuiltin ?? this.isBuiltin,
         isPublished: isPublished ?? this.isPublished,
+        featuredRank:
+            featuredRank.present ? featuredRank.value : this.featuredRank,
+        browseVisible: browseVisible ?? this.browseVisible,
         createdAt: createdAt ?? this.createdAt,
         updatedAt: updatedAt ?? this.updatedAt,
       );
@@ -1509,6 +1564,12 @@ class PlanTemplate extends DataClass implements Insertable<PlanTemplate> {
       isBuiltin: data.isBuiltin.present ? data.isBuiltin.value : this.isBuiltin,
       isPublished:
           data.isPublished.present ? data.isPublished.value : this.isPublished,
+      featuredRank: data.featuredRank.present
+          ? data.featuredRank.value
+          : this.featuredRank,
+      browseVisible: data.browseVisible.present
+          ? data.browseVisible.value
+          : this.browseVisible,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -1534,6 +1595,8 @@ class PlanTemplate extends DataClass implements Insertable<PlanTemplate> {
           ..write('primaryCharacter: $primaryCharacter, ')
           ..write('isBuiltin: $isBuiltin, ')
           ..write('isPublished: $isPublished, ')
+          ..write('featuredRank: $featuredRank, ')
+          ..write('browseVisible: $browseVisible, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -1541,26 +1604,29 @@ class PlanTemplate extends DataClass implements Insertable<PlanTemplate> {
   }
 
   @override
-  int get hashCode => Object.hash(
-      id,
-      templateKey,
-      title,
-      subtitle,
-      description,
-      shortDescription,
-      coverImageUrl,
-      planType,
-      testamentScope,
-      difficulty,
-      estimatedMinutes,
-      estimatedDays,
-      totalChapters,
-      primaryBookKey,
-      primaryCharacter,
-      isBuiltin,
-      isPublished,
-      createdAt,
-      updatedAt);
+  int get hashCode => Object.hashAll([
+        id,
+        templateKey,
+        title,
+        subtitle,
+        description,
+        shortDescription,
+        coverImageUrl,
+        planType,
+        testamentScope,
+        difficulty,
+        estimatedMinutes,
+        estimatedDays,
+        totalChapters,
+        primaryBookKey,
+        primaryCharacter,
+        isBuiltin,
+        isPublished,
+        featuredRank,
+        browseVisible,
+        createdAt,
+        updatedAt
+      ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1582,6 +1648,8 @@ class PlanTemplate extends DataClass implements Insertable<PlanTemplate> {
           other.primaryCharacter == this.primaryCharacter &&
           other.isBuiltin == this.isBuiltin &&
           other.isPublished == this.isPublished &&
+          other.featuredRank == this.featuredRank &&
+          other.browseVisible == this.browseVisible &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -1604,6 +1672,8 @@ class PlanTemplatesCompanion extends UpdateCompanion<PlanTemplate> {
   final Value<String?> primaryCharacter;
   final Value<bool> isBuiltin;
   final Value<bool> isPublished;
+  final Value<int?> featuredRank;
+  final Value<bool> browseVisible;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -1625,6 +1695,8 @@ class PlanTemplatesCompanion extends UpdateCompanion<PlanTemplate> {
     this.primaryCharacter = const Value.absent(),
     this.isBuiltin = const Value.absent(),
     this.isPublished = const Value.absent(),
+    this.featuredRank = const Value.absent(),
+    this.browseVisible = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -1647,6 +1719,8 @@ class PlanTemplatesCompanion extends UpdateCompanion<PlanTemplate> {
     this.primaryCharacter = const Value.absent(),
     this.isBuiltin = const Value.absent(),
     this.isPublished = const Value.absent(),
+    this.featuredRank = const Value.absent(),
+    this.browseVisible = const Value.absent(),
     required DateTime createdAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
@@ -1673,6 +1747,8 @@ class PlanTemplatesCompanion extends UpdateCompanion<PlanTemplate> {
     Expression<String>? primaryCharacter,
     Expression<bool>? isBuiltin,
     Expression<bool>? isPublished,
+    Expression<int>? featuredRank,
+    Expression<bool>? browseVisible,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -1695,6 +1771,8 @@ class PlanTemplatesCompanion extends UpdateCompanion<PlanTemplate> {
       if (primaryCharacter != null) 'primary_character': primaryCharacter,
       if (isBuiltin != null) 'is_builtin': isBuiltin,
       if (isPublished != null) 'is_published': isPublished,
+      if (featuredRank != null) 'featured_rank': featuredRank,
+      if (browseVisible != null) 'browse_visible': browseVisible,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -1719,6 +1797,8 @@ class PlanTemplatesCompanion extends UpdateCompanion<PlanTemplate> {
       Value<String?>? primaryCharacter,
       Value<bool>? isBuiltin,
       Value<bool>? isPublished,
+      Value<int?>? featuredRank,
+      Value<bool>? browseVisible,
       Value<DateTime>? createdAt,
       Value<DateTime>? updatedAt,
       Value<int>? rowid}) {
@@ -1740,6 +1820,8 @@ class PlanTemplatesCompanion extends UpdateCompanion<PlanTemplate> {
       primaryCharacter: primaryCharacter ?? this.primaryCharacter,
       isBuiltin: isBuiltin ?? this.isBuiltin,
       isPublished: isPublished ?? this.isPublished,
+      featuredRank: featuredRank ?? this.featuredRank,
+      browseVisible: browseVisible ?? this.browseVisible,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -1800,6 +1882,12 @@ class PlanTemplatesCompanion extends UpdateCompanion<PlanTemplate> {
     if (isPublished.present) {
       map['is_published'] = Variable<bool>(isPublished.value);
     }
+    if (featuredRank.present) {
+      map['featured_rank'] = Variable<int>(featuredRank.value);
+    }
+    if (browseVisible.present) {
+      map['browse_visible'] = Variable<bool>(browseVisible.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -1832,6 +1920,8 @@ class PlanTemplatesCompanion extends UpdateCompanion<PlanTemplate> {
           ..write('primaryCharacter: $primaryCharacter, ')
           ..write('isBuiltin: $isBuiltin, ')
           ..write('isPublished: $isPublished, ')
+          ..write('featuredRank: $featuredRank, ')
+          ..write('browseVisible: $browseVisible, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -7253,6 +7343,8 @@ typedef $$PlanTemplatesTableCreateCompanionBuilder = PlanTemplatesCompanion
   Value<String?> primaryCharacter,
   Value<bool> isBuiltin,
   Value<bool> isPublished,
+  Value<int?> featuredRank,
+  Value<bool> browseVisible,
   required DateTime createdAt,
   required DateTime updatedAt,
   Value<int> rowid,
@@ -7276,6 +7368,8 @@ typedef $$PlanTemplatesTableUpdateCompanionBuilder = PlanTemplatesCompanion
   Value<String?> primaryCharacter,
   Value<bool> isBuiltin,
   Value<bool> isPublished,
+  Value<int?> featuredRank,
+  Value<bool> browseVisible,
   Value<DateTime> createdAt,
   Value<DateTime> updatedAt,
   Value<int> rowid,
@@ -7345,6 +7439,12 @@ class $$PlanTemplatesTableFilterComposer
 
   ColumnFilters<bool> get isPublished => $composableBuilder(
       column: $table.isPublished, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get featuredRank => $composableBuilder(
+      column: $table.featuredRank, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get browseVisible => $composableBuilder(
+      column: $table.browseVisible, builder: (column) => ColumnFilters(column));
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnFilters(column));
@@ -7421,6 +7521,14 @@ class $$PlanTemplatesTableOrderingComposer
   ColumnOrderings<bool> get isPublished => $composableBuilder(
       column: $table.isPublished, builder: (column) => ColumnOrderings(column));
 
+  ColumnOrderings<int> get featuredRank => $composableBuilder(
+      column: $table.featuredRank,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get browseVisible => $composableBuilder(
+      column: $table.browseVisible,
+      builder: (column) => ColumnOrderings(column));
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
       column: $table.createdAt, builder: (column) => ColumnOrderings(column));
 
@@ -7488,6 +7596,12 @@ class $$PlanTemplatesTableAnnotationComposer
   GeneratedColumn<bool> get isPublished => $composableBuilder(
       column: $table.isPublished, builder: (column) => column);
 
+  GeneratedColumn<int> get featuredRank => $composableBuilder(
+      column: $table.featuredRank, builder: (column) => column);
+
+  GeneratedColumn<bool> get browseVisible => $composableBuilder(
+      column: $table.browseVisible, builder: (column) => column);
+
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -7538,6 +7652,8 @@ class $$PlanTemplatesTableTableManager extends RootTableManager<
             Value<String?> primaryCharacter = const Value.absent(),
             Value<bool> isBuiltin = const Value.absent(),
             Value<bool> isPublished = const Value.absent(),
+            Value<int?> featuredRank = const Value.absent(),
+            Value<bool> browseVisible = const Value.absent(),
             Value<DateTime> createdAt = const Value.absent(),
             Value<DateTime> updatedAt = const Value.absent(),
             Value<int> rowid = const Value.absent(),
@@ -7560,6 +7676,8 @@ class $$PlanTemplatesTableTableManager extends RootTableManager<
             primaryCharacter: primaryCharacter,
             isBuiltin: isBuiltin,
             isPublished: isPublished,
+            featuredRank: featuredRank,
+            browseVisible: browseVisible,
             createdAt: createdAt,
             updatedAt: updatedAt,
             rowid: rowid,
@@ -7582,6 +7700,8 @@ class $$PlanTemplatesTableTableManager extends RootTableManager<
             Value<String?> primaryCharacter = const Value.absent(),
             Value<bool> isBuiltin = const Value.absent(),
             Value<bool> isPublished = const Value.absent(),
+            Value<int?> featuredRank = const Value.absent(),
+            Value<bool> browseVisible = const Value.absent(),
             required DateTime createdAt,
             required DateTime updatedAt,
             Value<int> rowid = const Value.absent(),
@@ -7604,6 +7724,8 @@ class $$PlanTemplatesTableTableManager extends RootTableManager<
             primaryCharacter: primaryCharacter,
             isBuiltin: isBuiltin,
             isPublished: isPublished,
+            featuredRank: featuredRank,
+            browseVisible: browseVisible,
             createdAt: createdAt,
             updatedAt: updatedAt,
             rowid: rowid,

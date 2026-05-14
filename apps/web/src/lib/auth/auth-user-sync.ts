@@ -3,12 +3,11 @@ import type { DecodedIdToken } from 'firebase-admin/auth';
 import { sql } from '@/lib/db/neon';
 
 export async function upsertFirebaseAuthUser(token: DecodedIdToken) {
-  const db = sql();
   const email = typeof token.email === 'string' ? token.email : null;
   const name = typeof token.name === 'string' ? token.name : null;
   const picture = typeof token.picture === 'string' ? token.picture : null;
 
-  const rows = (await db`
+  const rows = (await sql`
     insert into auth_users (
       firebase_uid,
       email,

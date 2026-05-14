@@ -26,6 +26,11 @@ apps/mobile/web/
 node_modules/
 .next/
 out/
+apps/web/tsconfig.tsbuildinfo
+
+# apps/web is part of the pnpm workspace; a nested npm lockfile confuses Next.js
+# monorepo root detection and can contribute to broken /_next/static asset paths.
+apps/web/package-lock.json
 
 # Env
 .env
