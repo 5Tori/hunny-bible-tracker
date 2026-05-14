@@ -1,8 +1,8 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
 import '../core/auth/auth_repository.dart';
-import '../core/auth/neon_auth_api.dart';
-import '../core/auth/neon_auth_config.dart';
+import '../core/auth/firebase_auth_config.dart';
 import 'app/app.dart';
 import 'core/database/app_database.dart';
 import 'features/read/data/read_repository.dart';
@@ -14,11 +14,15 @@ Future<void> main() async {
   final readRepository = ReadRepository(database);
   await readRepository.initializeLocalData();
 
-  final neonConfig = NeonAuthConfig.fromEnvironment();
-  final neonAuthApi = NeonAuthApi(config: neonConfig);
-  await neonAuthApi.initIfConfigured();
+  final firebaseConfig = FirebaseAuthConfig.fromEnvironment();
+  var firebaseReady = false;
+  if (firebaseConfig.isConfigured) {
+    await Firebase.initializeApp(options: firebaseConfig.toFirebaseOptions());
+    firebaseReady = true;
+  }
   final authRepository = AuthRepository(
-    neonAuthApi: neonAuthApi,
+    firebaseConfig: firebaseConfig,
+    firebaseReady: firebaseReady,
     readRepository: readRepository,
   );
   try {

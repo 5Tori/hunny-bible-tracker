@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Google OAuth client secrets (never commit)
+**/client_secret*.json
+**/client_*secret*.json

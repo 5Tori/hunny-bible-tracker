@@ -3,7 +3,6 @@ import 'package:drift/drift.dart';
 import 'connection/connection.dart'
     if (dart.library.io) 'connection/native.dart'
     if (dart.library.js_interop) 'connection/web.dart';
-import 'local_user_id.dart';
 
 part 'app_database.g.dart';
 
@@ -22,7 +21,9 @@ class LocalUsers extends Table {
   TextColumn get id => text()();
   TextColumn get type => text().withDefault(const Constant('guest'))();
   TextColumn get authUserId => text().nullable()();
-  TextColumn get syncStatus => text().withDefault(const Constant('local_only'))();
+  TextColumn get syncStatus =>
+      text().withDefault(const Constant('local_only'))();
+
   /// Server-side profile / identity row id after sync (`docs/SYNC_PLAN.md`).
   TextColumn get serverId => text().nullable()();
   DateTimeColumn get lastSyncedAt => dateTime().nullable()();
@@ -34,13 +35,25 @@ class LocalUsers extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-class ReadingPlanTemplates extends Table {
+class PlanTemplates extends Table {
   TextColumn get id => text()();
   TextColumn get templateKey => text().unique()();
   TextColumn get title => text()();
+  TextColumn get subtitle => text().withDefault(const Constant(''))();
   TextColumn get description => text().withDefault(const Constant(''))();
-  TextColumn get planType => text().withDefault(const Constant('free_order'))();
+  TextColumn get shortDescription => text().withDefault(const Constant(''))();
+  TextColumn get coverImageUrl => text().nullable()();
+  TextColumn get planType => text().withDefault(const Constant('canonical'))();
+  TextColumn get testamentScope =>
+      text().withDefault(const Constant('whole_bible'))();
+  TextColumn get difficulty => text().nullable()();
+  IntColumn get estimatedMinutes => integer().nullable()();
+  IntColumn get estimatedDays => integer().nullable()();
+  IntColumn get totalChapters => integer().withDefault(const Constant(0))();
+  TextColumn get primaryBookKey => text().nullable()();
+  TextColumn get primaryCharacter => text().nullable()();
   BoolColumn get isBuiltin => boolean().withDefault(const Constant(true))();
+  BoolColumn get isPublished => boolean().withDefault(const Constant(true))();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
 
@@ -48,20 +61,73 @@ class ReadingPlanTemplates extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+class PlanTemplateSections extends Table {
+  TextColumn get id => text()();
+  TextColumn get planTemplateId => text()();
+  TextColumn get sectionKey => text()();
+  TextColumn get title => text()();
+  TextColumn get description => text().withDefault(const Constant(''))();
+  IntColumn get orderIndex => integer()();
+  IntColumn get estimatedMinutes => integer().nullable()();
+  DateTimeColumn get createdAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {planTemplateId, sectionKey},
+      ];
+}
+
+class PlanTemplateItems extends Table {
+  TextColumn get id => text()();
+  TextColumn get sectionId => text()();
+  IntColumn get orderIndex => integer()();
+  TextColumn get bookKey => text()();
+  IntColumn get startChapter => integer()();
+  IntColumn get endChapter => integer()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class PlanTags extends Table {
+  TextColumn get id => text()();
+  TextColumn get key => text().unique()();
+  TextColumn get name => text()();
+  TextColumn get type => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+class PlanTemplateTags extends Table {
+  TextColumn get planTemplateId => text()();
+  TextColumn get tagId => text()();
+
+  @override
+  Set<Column> get primaryKey => {planTemplateId, tagId};
+}
+
 class UserReadingPlans extends Table {
   TextColumn get id => text()();
   TextColumn get localUserId => text()();
-  TextColumn get templateKey => text()();
+  TextColumn get templateId => text()();
   TextColumn get title => text()();
   TextColumn get status => text().withDefault(const Constant('active'))();
+  DateTimeColumn get subscribedAt => dateTime()();
   DateTimeColumn get startedAt => dateTime().nullable()();
   DateTimeColumn get completedAt => dateTime().nullable()();
+  DateTimeColumn get archivedAt => dateTime().nullable()();
   BoolColumn get isActive => boolean().withDefault(const Constant(true))();
+  TextColumn get lastOpenedSectionId => text().nullable()();
   TextColumn get lastOpenedBookKey => text().nullable()();
   DateTimeColumn get createdAt => dateTime()();
   DateTimeColumn get updatedAt => dateTime()();
-  DateTimeColumn get deletedAt => dateTime().nullable()();
-  TextColumn get syncStatus => text().withDefault(const Constant('local_only'))();
+  TextColumn get syncStatus =>
+      text().withDefault(const Constant('local_only'))();
   TextColumn get serverId => text().nullable()();
   DateTimeColumn get lastSyncedAt => dateTime().nullable()();
   IntColumn get clientRevision => integer().withDefault(const Constant(0))();
@@ -70,14 +136,16 @@ class UserReadingPlans extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-class PlanScopeChapters extends Table {
+class UserPlanChapters extends Table {
   TextColumn get id => text()();
-  TextColumn get planId => text()();
+  TextColumn get userPlanId => text()();
+  TextColumn get sectionId => text()();
   TextColumn get bookKey => text()();
   IntColumn get chapterNumber => integer()();
   IntColumn get orderIndex => integer()();
   DateTimeColumn get createdAt => dateTime()();
-  TextColumn get syncStatus => text().withDefault(const Constant('local_only'))();
+  TextColumn get syncStatus =>
+      text().withDefault(const Constant('local_only'))();
   TextColumn get serverId => text().nullable()();
   DateTimeColumn get lastSyncedAt => dateTime().nullable()();
   IntColumn get clientRevision => integer().withDefault(const Constant(0))();
@@ -87,21 +155,44 @@ class PlanScopeChapters extends Table {
 
   @override
   List<Set<Column>> get uniqueKeys => [
-        {planId, bookKey, chapterNumber},
+        {userPlanId, bookKey, chapterNumber},
+      ];
+}
+
+class PlanCompletionEvents extends Table {
+  TextColumn get id => text()();
+  TextColumn get localUserId => text()();
+  TextColumn get userPlanId => text()();
+  TextColumn get templateId => text()();
+  IntColumn get completionNumber => integer()();
+  DateTimeColumn get completedAt => dateTime()();
+  DateTimeColumn get createdAt => dateTime()();
+  TextColumn get syncStatus =>
+      text().withDefault(const Constant('local_only'))();
+  TextColumn get serverId => text().nullable()();
+  DateTimeColumn get lastSyncedAt => dateTime().nullable()();
+  IntColumn get clientRevision => integer().withDefault(const Constant(0))();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {userPlanId},
       ];
 }
 
 class ChapterProgressEntries extends Table {
   TextColumn get id => text()();
   TextColumn get localUserId => text()();
-  TextColumn get planId => text()();
+  TextColumn get userPlanId => text()();
   TextColumn get bookKey => text()();
   IntColumn get chapterNumber => integer()();
   BoolColumn get isCompleted => boolean().withDefault(const Constant(false))();
   DateTimeColumn get completedAt => dateTime().nullable()();
   DateTimeColumn get updatedAt => dateTime()();
-  DateTimeColumn get deletedAt => dateTime().nullable()();
-  TextColumn get syncStatus => text().withDefault(const Constant('local_only'))();
+  TextColumn get syncStatus =>
+      text().withDefault(const Constant('local_only'))();
   TextColumn get serverId => text().nullable()();
   DateTimeColumn get lastSyncedAt => dateTime().nullable()();
   IntColumn get clientRevision => integer().withDefault(const Constant(0))();
@@ -111,14 +202,14 @@ class ChapterProgressEntries extends Table {
 
   @override
   List<Set<Column>> get uniqueKeys => [
-        {planId, bookKey, chapterNumber},
+        {localUserId, userPlanId, bookKey, chapterNumber},
       ];
 }
 
 class ReadingActivities extends Table {
   TextColumn get id => text()();
   TextColumn get localUserId => text()();
-  TextColumn get planId => text()();
+  TextColumn get userPlanId => text()();
   TextColumn get bookKey => text()();
   IntColumn get chapterNumber => integer()();
   TextColumn get action => text()();
@@ -126,7 +217,8 @@ class ReadingActivities extends Table {
   TextColumn get timezone => text()();
   DateTimeColumn get happenedAt => dateTime()();
   DateTimeColumn get createdAt => dateTime()();
-  TextColumn get syncStatus => text().withDefault(const Constant('local_only'))();
+  TextColumn get syncStatus =>
+      text().withDefault(const Constant('local_only'))();
   TextColumn get serverId => text().nullable()();
   DateTimeColumn get lastSyncedAt => dateTime().nullable()();
   IntColumn get clientRevision => integer().withDefault(const Constant(0))();
@@ -137,7 +229,7 @@ class ReadingActivities extends Table {
   /// Idempotent "complete" per calendar day (`docs/PROGRESS_AND_ACTIVITY_PLAN.md` §5.2).
   @override
   List<Set<Column>> get uniqueKeys => [
-        {localUserId, planId, bookKey, chapterNumber, activityDate, action},
+        {localUserId, userPlanId, bookKey, chapterNumber, activityDate, action},
       ];
 }
 
@@ -154,9 +246,14 @@ class AppSettings extends Table {
   tables: [
     BibleBooks,
     LocalUsers,
-    ReadingPlanTemplates,
+    PlanTemplates,
+    PlanTemplateSections,
+    PlanTemplateItems,
+    PlanTags,
+    PlanTemplateTags,
     UserReadingPlans,
-    PlanScopeChapters,
+    UserPlanChapters,
+    PlanCompletionEvents,
     ChapterProgressEntries,
     ReadingActivities,
     AppSettings,
@@ -165,134 +262,13 @@ class AppSettings extends Table {
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(openConnection());
 
+  AppDatabase.forTesting(super.executor);
+
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onUpgrade: (Migrator m, int from, int to) async {
-          if (from < 2) {
-            await m.createTable(localUsers);
-            final now = DateTime.now();
-            await into(localUsers).insert(
-              LocalUsersCompanion.insert(
-                id: generateShortLocalUserId(),
-                createdAt: now,
-                updatedAt: now,
-              ),
-            );
-
-            await m.addColumn(userReadingPlans, userReadingPlans.localUserId);
-            await m.addColumn(userReadingPlans, userReadingPlans.status);
-            await m.addColumn(userReadingPlans, userReadingPlans.startedAt);
-            await m.addColumn(userReadingPlans, userReadingPlans.completedAt);
-
-            await m.addColumn(
-              chapterProgressEntries,
-              chapterProgressEntries.localUserId,
-            );
-            await m.addColumn(
-              readingActivities,
-              readingActivities.localUserId,
-            );
-
-            await customStatement(
-              'UPDATE user_reading_plans SET started_at = created_at '
-              'WHERE started_at IS NULL',
-            );
-
-            await customStatement('''
-DELETE FROM reading_activities
-WHERE rowid NOT IN (
-  SELECT MIN(rowid) FROM reading_activities
-  GROUP BY local_user_id, plan_id, book_key, chapter_number, activity_date, action
-)
-''');
-
-            await customStatement('''
-CREATE UNIQUE INDEX IF NOT EXISTS reading_activities_complete_unique
-ON reading_activities (
-  local_user_id,
-  plan_id,
-  book_key,
-  chapter_number,
-  activity_date,
-  action
-)
-''');
-          }
-          if (from < 3) {
-            await m.addColumn(localUsers, localUsers.syncStatus);
-            await m.addColumn(localUsers, localUsers.serverId);
-            await m.addColumn(localUsers, localUsers.lastSyncedAt);
-            await m.addColumn(localUsers, localUsers.clientRevision);
-
-            await m.addColumn(userReadingPlans, userReadingPlans.serverId);
-            await m.addColumn(userReadingPlans, userReadingPlans.lastSyncedAt);
-            await m.addColumn(userReadingPlans, userReadingPlans.clientRevision);
-
-            await m.addColumn(
-              planScopeChapters,
-              planScopeChapters.syncStatus,
-            );
-            await m.addColumn(planScopeChapters, planScopeChapters.serverId);
-            await m.addColumn(
-              planScopeChapters,
-              planScopeChapters.lastSyncedAt,
-            );
-            await m.addColumn(
-              planScopeChapters,
-              planScopeChapters.clientRevision,
-            );
-
-            await m.addColumn(
-              chapterProgressEntries,
-              chapterProgressEntries.serverId,
-            );
-            await m.addColumn(
-              chapterProgressEntries,
-              chapterProgressEntries.lastSyncedAt,
-            );
-            await m.addColumn(
-              chapterProgressEntries,
-              chapterProgressEntries.clientRevision,
-            );
-
-            await m.addColumn(readingActivities, readingActivities.serverId);
-            await m.addColumn(
-              readingActivities,
-              readingActivities.lastSyncedAt,
-            );
-            await m.addColumn(
-              readingActivities,
-              readingActivities.clientRevision,
-            );
-          }
-          if (from < 4) {
-            final row = await (select(localUsers)..limit(1)).getSingleOrNull();
-            if (row != null && row.id == kLegacyGuestLocalUserId) {
-              final newId = generateShortLocalUserId();
-              await customStatement(
-                'UPDATE user_reading_plans SET local_user_id = ? '
-                'WHERE local_user_id = ?',
-                [newId, kLegacyGuestLocalUserId],
-              );
-              await customStatement(
-                'UPDATE chapter_progress_entries SET local_user_id = ? '
-                'WHERE local_user_id = ?',
-                [newId, kLegacyGuestLocalUserId],
-              );
-              await customStatement(
-                'UPDATE reading_activities SET local_user_id = ? '
-                'WHERE local_user_id = ?',
-                [newId, kLegacyGuestLocalUserId],
-              );
-              await customStatement(
-                'UPDATE local_users SET id = ? WHERE id = ?',
-                [newId, kLegacyGuestLocalUserId],
-              );
-            }
-          }
-        },
+        onCreate: (m) => m.createAll(),
       );
 }

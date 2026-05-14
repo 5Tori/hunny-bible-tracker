@@ -13,7 +13,6 @@ coverage/
 
 # Generated native folders can be created locally by flutter create
 apps/mobile/android/
-apps/mobile/ios/
 apps/mobile/macos/
 apps/mobile/windows/
 apps/mobile/linux/
@@ -32,3 +31,12 @@ out/
 .env
 .env.local
 .env.*.local
+apps/mobile/.env*.json
+!apps/mobile/.env.example.json
+
+# Google OAuth client secrets (do not commit)
+**/client_secret*.json
+**/client_*secret*.json
+
+# assets
+assets/

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>958030024997-rqtmbq3hs95qlbddlfdkvnm3fi2d4rvm.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.958030024997-rqtmbq3hs95qlbddlfdkvnm3fi2d4rvm</string>
+	<key>API_KEY</key>
+	<string>AIzaSyAROUGFmDtvhtaKfVcZ2EAqzd_gkhvQtcI</string>
+	<key>GCM_SENDER_ID</key>
+	<string>958030024997</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.example.hunnyBibleTracker</string>
+	<key>PROJECT_ID</key>
+	<string>hunny-bible-tracker-b</string>
+	<key>STORAGE_BUCKET</key>
+	<string>hunny-bible-tracker-b.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:958030024997:ios:9b2d965c70ac15252e4acc</string>
+</dict>
+</plist>

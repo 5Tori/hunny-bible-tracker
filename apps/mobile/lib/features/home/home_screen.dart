@@ -53,8 +53,7 @@ class HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     final overview = _readingOverview;
     final now = DateTime.now();
-    final dateLabel =
-        DateFormat('EEEE · MMM d').format(now).toUpperCase();
+    final dateLabel = DateFormat('EEEE · MMM d').format(now).toUpperCase();
 
     return SafeArea(
       child: RefreshIndicator(
@@ -120,7 +119,7 @@ class HomeScreenState extends State<HomeScreen> {
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Colors.black.withOpacity(0.7),
+                      Colors.black.withValues(alpha: 0.7),
                     ],
                   ),
                 ),
@@ -156,7 +155,8 @@ class HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 16),
                 _IconLabel(icon: Icons.bookmark_border, label: 'Save'),
                 const Spacer(),
-                const Icon(Icons.share_outlined, size: 18, color: AppTheme.mutedInk),
+                const Icon(Icons.share_outlined,
+                    size: 18, color: AppTheme.mutedInk),
               ],
             ),
             const SizedBox(height: 32),

@@ -28,11 +28,10 @@ The Read tab is the first production-quality area.
 - Current plan progress
 - Streak-ready reading activity log
 - Last opened plan/book memory
+- Firebase Auth account link
 
 ### Excluded from v0.1
 
-- Account creation
-- Neon Auth
 - Remote sync
 - Admin dashboard
 - Today's message feed
@@ -60,6 +59,7 @@ The Read tab is the first production-quality area.
 
 - Optional account for backup
 - Automatic + manual sync
+- Guided reading pack catalog and section/range plan templates (`docs/PLAN_STRUCTURE_REFACTOR.md`)
 - Today's message
 - Curated content
 - Find by keyword/topic/length

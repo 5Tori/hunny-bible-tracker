@@ -18,20 +18,12 @@ class ReadScreen extends StatefulWidget {
 
 class _ReadScreenState extends State<ReadScreen> {
   ReadingPlanView? _plan;
-  List<BookProgress> _books = const [];
+  List<PlanSectionProgress> _sections = const [];
   List<ChapterProgressView> _chapters = const [];
   ReadingOverview? _readingOverview;
+  String? _selectedSectionId;
   String? _selectedBookKey;
   bool _loading = true;
-
-  BookProgress? get _selectedBook {
-    final key = _selectedBookKey;
-    if (key == null) return null;
-    for (final book in _books) {
-      if (book.bookKey == key) return book;
-    }
-    return null;
-  }
 
   @override
   void initState() {
@@ -42,13 +34,15 @@ class _ReadScreenState extends State<ReadScreen> {
   Future<void> _loadInitialState() async {
     setState(() => _loading = true);
     final plan = await widget.readRepository.getActivePlan();
-    final books = await widget.readRepository.getBooksWithProgress(plan.id);
-    if (books.isEmpty) {
+    final sections =
+        await widget.readRepository.getSectionsWithProgress(plan.id);
+    if (sections.isEmpty) {
       final overview = await widget.readRepository.getReadingOverview(plan.id);
       if (!mounted) return;
       setState(() {
         _plan = plan;
-        _books = books;
+        _sections = sections;
+        _selectedSectionId = null;
         _selectedBookKey = null;
         _chapters = const [];
         _readingOverview = overview;
@@ -57,22 +51,27 @@ class _ReadScreenState extends State<ReadScreen> {
       return;
     }
 
+    var selectedSectionId = plan.lastOpenedSectionId;
     var selectedBookKey = plan.lastOpenedBookKey;
-    if (selectedBookKey == null ||
-        !books.any((b) => b.bookKey == selectedBookKey)) {
-      selectedBookKey = books.first.bookKey;
-    }
+    var selectedBook = _findBook(
+      sections: sections,
+      sectionId: selectedSectionId,
+      bookKey: selectedBookKey,
+    );
+    final selected = selectedBook ?? sections.first.books.first;
     final chapters = await widget.readRepository.getChaptersForBook(
       planId: plan.id,
-      bookKey: selectedBookKey,
+      sectionId: selected.sectionId,
+      bookKey: selected.bookKey,
     );
     final overview = await widget.readRepository.getReadingOverview(plan.id);
 
     if (!mounted) return;
     setState(() {
       _plan = plan;
-      _books = books;
-      _selectedBookKey = selectedBookKey;
+      _sections = sections;
+      _selectedSectionId = selected.sectionId;
+      _selectedBookKey = selected.bookKey;
       _chapters = chapters;
       _readingOverview = overview;
       _loading = false;
@@ -84,17 +83,20 @@ class _ReadScreenState extends State<ReadScreen> {
     if (plan == null) return;
 
     setState(() {
+      _selectedSectionId = book.sectionId;
       _selectedBookKey = book.bookKey;
       _chapters = const [];
     });
 
     await widget.readRepository.rememberLastOpenedBook(
       planId: plan.id,
+      sectionId: book.sectionId,
       bookKey: book.bookKey,
     );
 
     final chapters = await widget.readRepository.getChaptersForBook(
       planId: plan.id,
+      sectionId: book.sectionId,
       bookKey: book.bookKey,
     );
 
@@ -104,40 +106,93 @@ class _ReadScreenState extends State<ReadScreen> {
 
   Future<void> _toggleChapter(ChapterProgressView chapter) async {
     final plan = _plan;
+    final sectionId = _selectedSectionId;
     final bookKey = _selectedBookKey;
-    if (plan == null || bookKey == null) return;
+    if (plan == null || sectionId == null || bookKey == null) return;
 
-    await widget.readRepository.toggleChapter(
+    final result = await widget.readRepository.toggleChapter(
       planId: plan.id,
+      sectionId: sectionId,
       bookKey: bookKey,
       chapterNumber: chapter.chapterNumber,
     );
 
     await _refreshAfterChange();
+    if (result.completionReady && mounted) {
+      await _showCompletionDialog(result);
+    }
   }
 
   Future<void> _refreshAfterChange() async {
     final plan = _plan;
+    final sectionId = _selectedSectionId;
     final bookKey = _selectedBookKey;
-    if (plan == null || bookKey == null) return;
+    if (plan == null || sectionId == null || bookKey == null) return;
 
-    final books = await widget.readRepository.getBooksWithProgress(plan.id);
+    final sections =
+        await widget.readRepository.getSectionsWithProgress(plan.id);
     final chapters = await widget.readRepository.getChaptersForBook(
       planId: plan.id,
+      sectionId: sectionId,
       bookKey: bookKey,
     );
     final overview = await widget.readRepository.getReadingOverview(plan.id);
 
     if (!mounted) return;
     setState(() {
-      _books = books;
+      _sections = sections;
       _chapters = chapters;
       _readingOverview = overview;
     });
   }
 
+  Future<void> _showCompletionDialog(ChapterToggleResult result) async {
+    final plan = _plan;
+    if (plan == null) return;
+
+    final shouldFinish = await showDialog<bool>(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(3),
+          ),
+          title: const Text('Plan complete'),
+          content: Text(
+            'You finished all ${result.totalChapters} chapters in ${plan.title}.',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text('Keep reviewing'),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.pop(context, true),
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.ink,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+              child: const Text('Finish Plan'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (shouldFinish != true || !mounted) return;
+    await widget.readRepository.finishPlan(plan.id);
+    await _loadInitialState();
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Plan completed')),
+    );
+  }
+
   Future<void> _showPlanPicker() async {
-    final plans = await widget.readRepository.getAllPlans();
+    final plans = await widget.readRepository.getPlanSummaries();
     if (!mounted) return;
 
     final selected = await showModalBottomSheet<String>(
@@ -156,7 +211,8 @@ class _ReadScreenState extends State<ReadScreen> {
     if (!mounted) return;
 
     if (selected == _PlanPickerSheet.addNewSentinel) {
-      final templates = await widget.readRepository.getPlanTemplatesForCatalog();
+      final templates =
+          await widget.readRepository.getPlanTemplatesForCatalog();
       if (!mounted) return;
       final templateKey = await showModalBottomSheet<String>(
         context: context,
@@ -169,6 +225,10 @@ class _ReadScreenState extends State<ReadScreen> {
       );
       if (templateKey == null || !mounted) return;
       await widget.readRepository.addPlanFromTemplate(templateKey);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Added to My Plans')),
+      );
       await _loadInitialState();
       return;
     }
@@ -180,8 +240,8 @@ class _ReadScreenState extends State<ReadScreen> {
   }
 
   List<Widget> _buildBookRows({
+    required String sectionId,
     required List<BookProgress> books,
-    required BookProgress? selectedBook,
   }) {
     const columns = 3;
     const spacing = 6.0;
@@ -221,7 +281,16 @@ class _ReadScreenState extends State<ReadScreen> {
         ),
       );
 
-      final hasSelected = rowBooks.any((b) => b.bookKey == _selectedBookKey);
+      final selectedBook = _findBook(
+        sections: _sections,
+        sectionId: sectionId,
+        bookKey: _selectedBookKey,
+      );
+      final hasSelected = rowBooks.any(
+        (book) =>
+            book.sectionId == _selectedSectionId &&
+            book.bookKey == _selectedBookKey,
+      );
       if (hasSelected && selectedBook != null) {
         slivers.add(
           SliverToBoxAdapter(
@@ -248,12 +317,9 @@ class _ReadScreenState extends State<ReadScreen> {
       );
     }
 
-    final oldBooks = _books.where((book) => book.testament == 'old').toList();
-    final newBooks = _books.where((book) => book.testament == 'new').toList();
-    final selectedBook = _selectedBook;
     final overview = _readingOverview;
 
-    if (_books.isEmpty) {
+    if (_sections.isEmpty) {
       return SafeArea(
         child: RefreshIndicator(
           onRefresh: _loadInitialState,
@@ -322,15 +388,17 @@ class _ReadScreenState extends State<ReadScreen> {
       ),
     ];
 
-    if (oldBooks.isNotEmpty) {
+    for (var index = 0; index < _sections.length; index += 1) {
+      final section = _sections[index];
+      if (section.books.isEmpty) continue;
       bookSlivers.add(
         SliverPadding(
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
+          padding: EdgeInsets.fromLTRB(20, index == 0 ? 0 : 28, 20, 0),
           sliver: SliverToBoxAdapter(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _SectionHeader(title: 'Old Testament'),
+                _SectionHeader(title: section.title),
                 const SizedBox(height: 12),
               ],
             ),
@@ -339,33 +407,8 @@ class _ReadScreenState extends State<ReadScreen> {
       );
       bookSlivers.addAll(
         _buildBookRows(
-          books: oldBooks,
-          selectedBook:
-              selectedBook?.testament == 'old' ? selectedBook : null,
-        ),
-      );
-    }
-
-    if (newBooks.isNotEmpty) {
-      bookSlivers.add(
-        SliverPadding(
-          padding: EdgeInsets.fromLTRB(20, oldBooks.isNotEmpty ? 28 : 0, 20, 0),
-          sliver: SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _SectionHeader(title: 'New Testament'),
-                const SizedBox(height: 12),
-              ],
-            ),
-          ),
-        ),
-      );
-      bookSlivers.addAll(
-        _buildBookRows(
-          books: newBooks,
-          selectedBook:
-              selectedBook?.testament == 'new' ? selectedBook : null,
+          sectionId: section.sectionId,
+          books: section.books,
         ),
       );
     }
@@ -407,8 +450,22 @@ class _ReadScreenState extends State<ReadScreen> {
       ),
     );
   }
-}
 
+  BookProgress? _findBook({
+    required List<PlanSectionProgress> sections,
+    required String? sectionId,
+    required String? bookKey,
+  }) {
+    if (sectionId == null || bookKey == null) return null;
+    for (final section in sections) {
+      if (section.sectionId != sectionId) continue;
+      for (final book in section.books) {
+        if (book.bookKey == bookKey) return book;
+      }
+    }
+    return null;
+  }
+}
 
 class _ChapterSection extends StatelessWidget {
   const _ChapterSection({
@@ -438,7 +495,6 @@ class _ChapterSection extends StatelessWidget {
   }
 }
 
-
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.title});
 
@@ -467,81 +523,175 @@ class _PlanPickerSheet extends StatelessWidget {
   /// Returned from this sheet when the user chooses “Add new plan”.
   static const addNewSentinel = '__plan_picker_add_new__';
 
-  final List<ReadingPlanView> plans;
+  final List<ReadingPlanSummary> plans;
   final String? currentPlanId;
 
   @override
   Widget build(BuildContext context) {
-    final screenH = MediaQuery.sizeOf(context).height;
-    final maxH = (screenH * 0.36).clamp(220.0, 320.0);
-
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(0, 12, 0, 8),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
         child: ColoredBox(
           color: Colors.white,
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppTheme.border,
-                borderRadius: BorderRadius.circular(2),
+              Container(
+                width: 96,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Reading Plans',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: maxH,
-              child: ListView(
-                children: [
-                  ...plans.map((plan) {
-                    final isCurrent = plan.id == currentPlanId;
-                    return ListTile(
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 24),
-                      title: Text(
-                        plan.title,
-                        style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                              fontWeight: isCurrent
-                                  ? FontWeight.w700
-                                  : FontWeight.w400,
-                            ),
-                      ),
-                      trailing: isCurrent
-                          ? const Icon(Icons.check, size: 20, color: AppTheme.ink)
-                          : null,
-                      onTap: () => Navigator.pop(context, plan.id),
-                    );
-                  }),
-                  const Divider(height: 1),
-                  ListTile(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 24),
-                    leading:
-                        const Icon(Icons.add, size: 20, color: AppTheme.ink),
-                    title: Text(
-                      'Add new plan',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
+              const SizedBox(height: 28),
+              Text(
+                'My Plans',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Switch between your active plans',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.mutedInk,
+                      fontSize: 18,
                     ),
-                    onTap: () => Navigator.pop(context, addNewSentinel),
+              ),
+              const SizedBox(height: 28),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.sizeOf(context).height * 0.48,
+                ),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: plans.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 10),
+                  itemBuilder: (context, index) {
+                    final summary = plans[index];
+                    final isCurrent = summary.plan.id == currentPlanId;
+                    return _PlanSummaryCard(
+                      summary: summary,
+                      isCurrent: isCurrent,
+                      onTap: () => Navigator.pop(context, summary.plan.id),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+              OutlinedButton.icon(
+                onPressed: () => Navigator.pop(context, addNewSentinel),
+                icon: const Icon(Icons.add, size: 22),
+                label: const Text('Add New Plan'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.mutedInk,
+                  side: BorderSide(
+                    color: AppTheme.border,
+                    style: BorderStyle.solid,
                   ),
-                ],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PlanSummaryCard extends StatelessWidget {
+  const _PlanSummaryCard({
+    required this.summary,
+    required this.isCurrent,
+    required this.onTap,
+  });
+
+  final ReadingPlanSummary summary;
+  final bool isCurrent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(3),
+          border: Border.all(
+            color: isCurrent ? AppTheme.ink : AppTheme.border,
+            width: isCurrent ? 1.4 : 1,
+          ),
+        ),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          summary.plan.title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w800,
+                                  ),
+                        ),
+                      ),
+                      if (isCurrent) ...[
+                        const SizedBox(width: 10),
+                        Container(
+                          width: 28,
+                          height: 28,
+                          decoration: BoxDecoration(
+                            color: AppTheme.ink,
+                            borderRadius: BorderRadius.circular(3),
+                          ),
+                          child: const Icon(
+                            Icons.check,
+                            size: 18,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  summary.progressLabel,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.mutedInk,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                minHeight: 8,
+                value: summary.progress,
+                backgroundColor: AppTheme.softSurface,
+                valueColor: const AlwaysStoppedAnimation(AppTheme.ink),
               ),
             ),
           ],
-        ),
         ),
       ),
     );
@@ -555,60 +705,210 @@ class _PlanTemplatePickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final screenH = MediaQuery.sizeOf(context).height;
-    final maxH = (screenH * 0.36).clamp(220.0, 320.0);
     final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
 
     return SafeArea(
       child: Padding(
-        padding: EdgeInsets.fromLTRB(0, 12, 0, 8 + bottomInset),
+        padding: EdgeInsets.fromLTRB(20, 12, 20, 14 + bottomInset),
         child: ColoredBox(
           color: Colors.white,
           child: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-            Container(
-              width: 36,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppTheme.border,
-                borderRadius: BorderRadius.circular(2),
+              Container(
+                width: 96,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: AppTheme.border,
+                  borderRadius: BorderRadius.circular(2),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Choose a plan',
-              style: Theme.of(context)
-                  .textTheme
-                  .titleMedium
-                  ?.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 8),
-            SizedBox(
-              height: maxH,
-              child: ListView(
-                children: [
-                  for (final t in templates)
-                    ListTile(
-                      contentPadding:
-                          const EdgeInsets.symmetric(horizontal: 24),
-                      title: Text(t.title),
-                      subtitle: t.description.isEmpty
-                          ? null
-                          : Text(
-                              t.description,
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                      onTap: () => Navigator.pop(context, t.templateKey),
+              const SizedBox(height: 28),
+              Text(
+                'Add a Plan',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Browse plans and add to your list',
+                textAlign: TextAlign.center,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.mutedInk,
+                      fontSize: 18,
                     ),
-                ],
               ),
-            ),
-          ],
-        ),
+              const SizedBox(height: 28),
+              ConstrainedBox(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.sizeOf(context).height * 0.62,
+                ),
+                child: ListView.separated(
+                  shrinkWrap: true,
+                  itemCount: templates.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 16),
+                  itemBuilder: (context, index) {
+                    final template = templates[index];
+                    return _PlanCatalogCard(
+                      template: template,
+                      onAdd: template.isAdded
+                          ? null
+                          : () => Navigator.pop(context, template.templateKey),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
+    );
+  }
+}
+
+class _PlanCatalogCard extends StatelessWidget {
+  const _PlanCatalogCard({
+    required this.template,
+    required this.onAdd,
+  });
+
+  final ReadingPlanTemplateView template;
+  final VoidCallback? onAdd;
+
+  @override
+  Widget build(BuildContext context) {
+    final minutes = template.estimatedMinutes;
+    final timeLabel = minutes == null
+        ? null
+        : minutes >= 60
+            ? 'About ${(minutes / 60).round()} hours'
+            : 'About $minutes min';
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+            decoration: BoxDecoration(
+              color: AppTheme.accentYellowDark,
+              borderRadius: BorderRadius.circular(3),
+            ),
+            child: Text(
+              template.planTypeLabel,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.ink,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                  ),
+            ),
+          ),
+          const SizedBox(height: 18),
+          Text(
+            template.title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  fontSize: 20,
+                ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            template.shortDescription.isNotEmpty
+                ? template.shortDescription
+                : template.description,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.mutedInk,
+                  fontSize: 16,
+                  height: 1.35,
+                ),
+          ),
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 16,
+            runSpacing: 8,
+            children: [
+              _CatalogMeta(
+                icon: Icons.menu_book_outlined,
+                text: '${template.totalChapters} chapters',
+              ),
+              if (timeLabel != null)
+                _CatalogMeta(
+                  icon: Icons.schedule,
+                  text: timeLabel,
+                ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            width: double.infinity,
+            child: template.isAdded
+                ? OutlinedButton.icon(
+                    onPressed: null,
+                    icon: const Icon(Icons.check, size: 20),
+                    label: const Text('Added'),
+                    style: OutlinedButton.styleFrom(
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  )
+                : FilledButton.icon(
+                    onPressed: onAdd,
+                    icon: const Icon(Icons.add, size: 22),
+                    label: const Text('Add to My Plans'),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: AppTheme.ink,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(3),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CatalogMeta extends StatelessWidget {
+  const _CatalogMeta({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 19, color: AppTheme.mutedInk),
+        const SizedBox(width: 6),
+        Text(
+          text,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.mutedInk,
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+      ],
     );
   }
 }

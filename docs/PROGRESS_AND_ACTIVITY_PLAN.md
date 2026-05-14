@@ -47,7 +47,7 @@ Used for:
 
 **Rule (v1):** Any day with **≥1** chapter completed in **any** plan → that calendar day counts **once** for streak / reading day.
 
-**Identity:** Introduce **`local_users`** and `local_user_id` **before** Neon Auth (see §3). Until auth, the app creates **one guest** row at first launch; all plans and rows point at it. Login later **merges** device data to `auth_user_id` with a controlled migration instead of inventing identity at sync time.
+**Identity:** Introduce **`local_users`** and `local_user_id` **before** remote auth (see §3). Until auth, the app creates **one guest** row at first launch; all plans and rows point at it. Login later **merges** device data to `auth_user_id` with a controlled migration instead of inventing identity at sync time.
 
 ---
 
@@ -85,7 +85,7 @@ Used for:
 
 ## 3. Local user identity (recommended **now**, not at auth time)
 
-**Review:** Add `local_user_id` at the local DB stage so Neon Auth migration is safer.
+**Review:** Add `local_user_id` at the local DB stage so remote auth migration is safer.
 
 ### 3.1 Table: `local_users` (new)
 

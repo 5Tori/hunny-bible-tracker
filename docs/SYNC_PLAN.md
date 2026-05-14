@@ -18,7 +18,7 @@ User action
 Flutter App
   -> Next.js API
   -> Neon Postgres
-  -> Neon Auth
+  -> Firebase Auth
 ```
 
 The Flutter app should not connect directly to Neon.
@@ -46,7 +46,7 @@ For normative detail on **LWW vs append-only logs** and idempotent completion ke
 
 The Flutter app keeps **SQLite as the write path**; the columns below exist so a future outbox / API layer can push and reconcile without another schema bump for the basics.
 
-**Phase F (Neon Auth):** see `docs/NEON_AUTH.md` for Auth base URL, trusted `Origin`, and linking `local_users.auth_user_id` from the mobile client.
+**Phase F (Firebase Auth):** see `docs/FIREBASE_AUTH.md` for Firebase token verification and linking `local_users.auth_user_id` from the mobile client.
 
 ### `sync_status` (text)
 

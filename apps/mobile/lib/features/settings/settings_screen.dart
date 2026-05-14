@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import '../../core/api/hunny_api_models.dart';
 import '../../core/auth/auth_repository.dart';
-import '../../core/auth/neon_auth_models.dart';
+import '../../core/auth/auth_models.dart';
 import '../../core/theme/app_theme.dart';
 import '../read/data/read_repository.dart';
 import '../read/domain/read_models.dart';
-import 'widgets/neon_auth_sheet.dart';
-import 'widgets/post_signup_backup_dialog.dart';
+import 'widgets/auth_sheet.dart';
+import 'widgets/post_auth_backup_dialog.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
@@ -27,7 +26,7 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _loading = true;
   LocalUserProfile? _profile;
-  NeonAuthSession? _session;
+  AuthSession? _session;
 
   @override
   void initState() {
@@ -37,7 +36,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    NeonAuthSession? session;
+    AuthSession? session;
     LocalUserProfile? profile;
     try {
       session = await widget.authRepository.refreshRemoteSession();
@@ -59,24 +58,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final timezone = DateTime.now().timeZoneName;
-    final utcOffset = DateTime.now().timeZoneOffset;
-    final sign = utcOffset.isNegative ? '-' : '+';
-    final hours = utcOffset.inHours.abs().toString().padLeft(2, '0');
-    final minutes = (utcOffset.inMinutes.abs() % 60).toString().padLeft(2, '0');
-    final tzLabel = 'UTC$sign$hours:$minutes $timezone';
-
     final profile = _profile;
     final session = _session;
-    final signedIn = profile?.isNeonLinked == true;
-    final title = signedIn
-        ? (session?.user.email ?? 'Signed in')
-        : 'Guest';
-    final subtitle = widget.authRepository.isAvailable
-        ? (signedIn
-            ? 'Signed in with Neon Auth. Progress stays on this device until cloud sync is available.'
-            : 'Reading data lives on this device only. Sign in with Neon to link your account for future sync.')
-        : 'Set NEON_AUTH_BASE_URL and NEON_AUTH_ORIGIN (dart-define) to enable Neon sign-in.';
+    final signedIn = profile?.isAuthLinked == true;
+    final accountTitle =
+        signedIn ? (session?.user.email ?? '') : (profile?.localUserId ?? '');
+    const guestSubtitle = 'Sign in to save your data.';
 
     return SafeArea(
       child: ListView(
@@ -90,144 +77,99 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           // Account card
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(3),
               border: Border.all(color: AppTheme.border),
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                Icon(
-                  signedIn ? Icons.verified_user_outlined : Icons.person_outline,
-                  size: 28,
-                  color: AppTheme.mutedInk,
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: AppTheme.softSurface,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  child: Icon(
+                    signedIn
+                        ? Icons.verified_user_outlined
+                        : Icons.person_outline,
+                    size: 28,
+                    color: AppTheme.mutedInk,
+                  ),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 16),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        title,
-                        style: Theme.of(context)
-                            .textTheme
-                            .titleMedium
-                            ?.copyWith(fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: AppTheme.mutedInk,
-                            ),
-                      ),
-                      if (!signedIn && profile != null && !_loading) ...[
-                        const SizedBox(height: 12),
+                      if (signedIn)
                         Text(
-                          'Local device ID',
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                                color: AppTheme.mutedInk,
-                                fontWeight: FontWeight.w600,
-                                letterSpacing: 0.3,
-                              ),
-                        ),
-                        const SizedBox(height: 4),
+                          accountTitle,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                        )
+                      else
                         Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
                             Expanded(
                               child: SelectableText(
-                                profile.localUserId,
+                                accountTitle,
                                 style: Theme.of(context)
                                     .textTheme
-                                    .bodySmall
+                                    .titleMedium
                                     ?.copyWith(
                                       fontFamily: 'monospace',
-                                      fontSize: 12,
-                                      height: 1.35,
-                                      color: AppTheme.ink.withValues(alpha: 0.85),
+                                      fontWeight: FontWeight.w700,
                                     ),
                               ),
                             ),
-                            IconButton(
-                              visualDensity: VisualDensity.compact,
-                              tooltip: 'Copy local ID',
-                              onPressed: () async {
-                                await Clipboard.setData(
-                                  ClipboardData(text: profile.localUserId),
-                                );
-                                if (!context.mounted) return;
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Local device ID copied'),
-                                  ),
-                                );
-                              },
-                              icon: Icon(
-                                Icons.copy_outlined,
-                                size: 20,
-                                color: AppTheme.mutedInk,
+                            if (profile != null && !_loading)
+                              IconButton(
+                                visualDensity: VisualDensity.compact,
+                                tooltip: 'Copy local ID',
+                                onPressed: () async {
+                                  await Clipboard.setData(
+                                    ClipboardData(text: profile.localUserId),
+                                  );
+                                  if (!context.mounted) return;
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(
+                                      content: Text('Local device ID copied'),
+                                    ),
+                                  );
+                                },
+                                icon: Icon(
+                                  Icons.copy_outlined,
+                                  size: 18,
+                                  color: AppTheme.mutedInk,
+                                ),
                               ),
-                            ),
                           ],
                         ),
-                      ],
-                      if (signedIn && session != null) ...[
-                        const SizedBox(height: 6),
+                      if (!signedIn) ...[
+                        const SizedBox(height: 4),
                         Text(
-                          'Neon user id: ${session.user.id}',
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                fontSize: 11,
-                                color: AppTheme.mutedInk,
-                              ),
-                        ),
-                      ],
-                      if (signedIn &&
-                          widget.authRepository.isApiConfigured) ...[
-                        const SizedBox(height: 12),
-                        Align(
-                          alignment: Alignment.centerLeft,
-                          child: TextButton(
-                            onPressed: _loading
-                                ? null
-                                : () async {
-                                    try {
-                                      final me = await widget.authRepository
-                                          .fetchApiMe();
-                                      if (!context.mounted) return;
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(
-                                            'API /me: ${me.email ?? me.sub}',
-                                          ),
-                                        ),
-                                      );
-                                    } on HunnyApiException catch (e) {
-                                      if (!context.mounted) return;
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(
-                                          content: Text(e.message),
-                                        ),
-                                      );
-                                    } catch (e) {
-                                      if (!context.mounted) return;
-                                      ScaffoldMessenger.of(context)
-                                          .showSnackBar(
-                                        SnackBar(content: Text('$e')),
-                                      );
-                                    }
-                                  },
-                            child: const Text('Test Hunny API (/me)'),
-                          ),
+                          guestSubtitle,
+                          style:
+                              Theme.of(context).textTheme.bodySmall?.copyWith(
+                                    color: AppTheme.mutedInk,
+                                  ),
                         ),
                       ],
                     ],
                   ),
                 ),
+                const SizedBox(width: 14),
                 if (_loading)
                   const Padding(
                     padding: EdgeInsets.only(left: 8),
@@ -249,8 +191,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     style: FilledButton.styleFrom(
                       backgroundColor: AppTheme.ink,
                       foregroundColor: Colors.white,
+                      minimumSize: const Size(0, 40),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
+                        horizontal: 14,
+                        vertical: 9,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(3),
+                      ),
                       textStyle: const TextStyle(
                           fontSize: 13, fontWeight: FontWeight.w600),
                     ),
@@ -260,15 +208,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     onPressed: !widget.authRepository.isAvailable
                         ? null
                         : () async {
-                            await showNeonAuthSheet(
+                            await showAuthSheet(
                               context: context,
                               authRepository: widget.authRepository,
-                              onAuthSuccess:
-                                  ({required createdNewAccount}) async {
+                              onAuthSuccess: (
+                                  {required createdNewAccount}) async {
                                 await _load();
                                 if (!context.mounted) return;
                                 if (createdNewAccount) {
-                                  await showPostSignupBackupPromptIfNeeded(
+                                  await showPostAuthBackupPromptIfNeeded(
                                     context: context,
                                     authRepository: widget.authRepository,
                                     readRepository: widget.readRepository,
@@ -284,8 +232,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       foregroundColor: Colors.white,
                       disabledBackgroundColor: AppTheme.ink,
                       disabledForegroundColor: Colors.white,
+                      minimumSize: const Size(0, 40),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
+                        horizontal: 14,
+                        vertical: 9,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(3),
+                      ),
                       textStyle: const TextStyle(
                           fontSize: 13, fontWeight: FontWeight.w600),
                     ),
@@ -301,17 +255,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _SettingsRow(
             icon: Icons.language,
             title: 'Timezone',
-            trailing: tzLabel,
+            trailing: _detectedTimezoneLabel(),
+            showChevron: false,
           ),
           _SettingsRow(
             icon: Icons.translate,
             title: 'Language',
             trailing: 'English',
+            onTap: () => _showLanguageSheet(context),
           ),
           _SettingsRow(
             icon: Icons.notifications_outlined,
             title: 'Notifications',
-            trailing: 'On',
+            trailing: 'Off',
+            onTap: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Notifications will be added later.'),
+                ),
+              );
+            },
           ),
           const SizedBox(height: 28),
 
@@ -321,6 +284,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _SettingsRow(
             icon: Icons.help_outline,
             title: 'Help & feedback',
+            onTap: () => _showHelpFeedbackSheet(
+              context,
+              signedInEmail: signedIn ? session?.user.email : null,
+            ),
           ),
           const SizedBox(height: 24),
           Center(
@@ -335,6 +302,639 @@ class _SettingsScreenState extends State<SettingsScreen> {
       ),
     );
   }
+}
+
+Future<void> _showHelpFeedbackSheet(
+  BuildContext context, {
+  String? signedInEmail,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (sheetContext) {
+      final viewInsets = MediaQuery.viewInsetsOf(sheetContext);
+      return Padding(
+        padding: EdgeInsets.only(bottom: viewInsets.bottom),
+        child: FractionallySizedBox(
+          heightFactor: 0.86,
+          child: _HelpFeedbackSheet(signedInEmail: signedInEmail),
+        ),
+      );
+    },
+  );
+}
+
+enum _HelpFeedbackTab { help, feedback }
+
+enum _FeedbackCategory { bug, idea, other }
+
+class _FeedbackCategoryOption {
+  const _FeedbackCategoryOption({
+    required this.category,
+    required this.label,
+    required this.icon,
+  });
+
+  final _FeedbackCategory category;
+  final String label;
+  final IconData icon;
+}
+
+const _feedbackCategories = [
+  _FeedbackCategoryOption(
+    category: _FeedbackCategory.bug,
+    label: 'Bug',
+    icon: Icons.bug_report_outlined,
+  ),
+  _FeedbackCategoryOption(
+    category: _FeedbackCategory.idea,
+    label: 'Idea',
+    icon: Icons.lightbulb_outline,
+  ),
+  _FeedbackCategoryOption(
+    category: _FeedbackCategory.other,
+    label: 'Other',
+    icon: Icons.chat_bubble_outline,
+  ),
+];
+
+const _faqs = [
+  (
+    question: 'How do I track my reading progress?',
+    answer:
+        'Open the Read tab. Tap any chapter square to mark it as read. Your overview stats update automatically.',
+  ),
+  (
+    question: 'Can I change my reading plan?',
+    answer:
+        'Yes. Go to Read, choose Plans, pick a new plan, and confirm. Existing progress is preserved per book.',
+  ),
+  (
+    question: 'How is the daily message chosen?',
+    answer:
+        'Daily content is selected for the day and follows your local device timezone.',
+  ),
+  (
+    question: 'Where are my saved verses?',
+    answer:
+        'Saved items will live in the List tab as the saved content tools expand.',
+  ),
+  (
+    question: 'Do I need an account?',
+    answer:
+        'No. You can read as a guest. Signing in lets the app connect your data to your account for future sync.',
+  ),
+];
+
+class _HelpFeedbackSheet extends StatefulWidget {
+  const _HelpFeedbackSheet({this.signedInEmail});
+
+  final String? signedInEmail;
+
+  @override
+  State<_HelpFeedbackSheet> createState() => _HelpFeedbackSheetState();
+}
+
+class _HelpFeedbackSheetState extends State<_HelpFeedbackSheet> {
+  final _messageController = TextEditingController();
+  final _emailController = TextEditingController();
+  _HelpFeedbackTab _tab = _HelpFeedbackTab.help;
+  _FeedbackCategory _category = _FeedbackCategory.idea;
+  bool _submitting = false;
+
+  bool get _isSignedIn => widget.signedInEmail?.isNotEmpty == true;
+
+  @override
+  void dispose() {
+    _messageController.dispose();
+    _emailController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final message = _messageController.text.trim();
+    if (message.isEmpty || _submitting) return;
+
+    setState(() => _submitting = true);
+    final contactEmail = _isSignedIn
+        ? widget.signedInEmail
+        : _emailController.text.trim().isEmpty
+            ? null
+            : _emailController.text.trim();
+    final category = _category.name;
+
+    // TODO: Send category, message, and contactEmail to the feedback API.
+    await Future<void>.delayed(const Duration(milliseconds: 600));
+    if (!mounted) return;
+    Navigator.of(context).pop();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          contactEmail == null
+              ? 'Thanks for your feedback. We read every message.'
+              : 'Thanks for your feedback. We will follow up if needed.',
+        ),
+      ),
+    );
+    debugPrint('Feedback submitted: $category / ${message.length} chars');
+  }
+
+  void _switchToFeedback() {
+    setState(() => _tab = _HelpFeedbackTab.feedback);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      top: false,
+      child: Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 56,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppTheme.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 28),
+                Text(
+                  'Help & feedback',
+                  style: Theme.of(context)
+                      .textTheme
+                      .titleLarge
+                      ?.copyWith(fontSize: 22),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Find quick answers or send us a note.',
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.mutedInk,
+                      ),
+                ),
+                const SizedBox(height: 22),
+                _HelpFeedbackTabs(
+                  selected: _tab,
+                  onChanged: (tab) => setState(() => _tab = tab),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 160),
+              child: _tab == _HelpFeedbackTab.help
+                  ? _HelpPanel(
+                      key: const ValueKey('help'),
+                      onFeedbackTap: _switchToFeedback,
+                    )
+                  : _FeedbackPanel(
+                      key: const ValueKey('feedback'),
+                      category: _category,
+                      messageController: _messageController,
+                      emailController: _emailController,
+                      showEmailField: !_isSignedIn,
+                      submitting: _submitting,
+                      onCategoryChanged: (category) {
+                        setState(() => _category = category);
+                      },
+                      onMessageChanged: () => setState(() {}),
+                      onCancel: () => Navigator.of(context).pop(),
+                      onSubmit: _submit,
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HelpFeedbackTabs extends StatelessWidget {
+  const _HelpFeedbackTabs({
+    required this.selected,
+    required this.onChanged,
+  });
+
+  final _HelpFeedbackTab selected;
+  final ValueChanged<_HelpFeedbackTab> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppTheme.border),
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: Row(
+        children: [
+          _TabButton(
+            label: 'Help',
+            selected: selected == _HelpFeedbackTab.help,
+            onTap: () => onChanged(_HelpFeedbackTab.help),
+          ),
+          _TabButton(
+            label: 'Feedback',
+            selected: selected == _HelpFeedbackTab.feedback,
+            onTap: () => onChanged(_HelpFeedbackTab.feedback),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TabButton extends StatelessWidget {
+  const _TabButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Material(
+        color: selected ? Colors.white : Colors.transparent,
+        borderRadius: BorderRadius.circular(3),
+        elevation: selected ? 1 : 0,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(3),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            child: Text(
+              label,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    fontWeight: FontWeight.w700,
+                    color: selected ? AppTheme.ink : AppTheme.mutedInk,
+                  ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _HelpPanel extends StatelessWidget {
+  const _HelpPanel({super.key, required this.onFeedbackTap});
+
+  final VoidCallback onFeedbackTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+      children: [
+        for (final faq in _faqs)
+          ExpansionTile(
+            tilePadding: EdgeInsets.zero,
+            childrenPadding: const EdgeInsets.only(bottom: 14),
+            shape: const Border(
+              bottom: BorderSide(color: AppTheme.border),
+            ),
+            collapsedShape: const Border(
+              bottom: BorderSide(color: AppTheme.border),
+            ),
+            title: Text(
+              faq.question,
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  faq.answer,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.mutedInk,
+                        height: 1.45,
+                      ),
+                ),
+              ),
+            ],
+          ),
+        const SizedBox(height: 24),
+        OutlinedButton(
+          onPressed: onFeedbackTap,
+          style: OutlinedButton.styleFrom(
+            foregroundColor: AppTheme.ink,
+            side: BorderSide(color: AppTheme.border),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(3),
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 16),
+          ),
+          child: const Column(
+            children: [
+              Text(
+                "Didn't find your answer?",
+                style: TextStyle(fontWeight: FontWeight.w400),
+              ),
+              SizedBox(height: 4),
+              Text(
+                'Send us a message ->',
+                style: TextStyle(fontWeight: FontWeight.w800),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _FeedbackPanel extends StatelessWidget {
+  const _FeedbackPanel({
+    super.key,
+    required this.category,
+    required this.messageController,
+    required this.emailController,
+    required this.showEmailField,
+    required this.submitting,
+    required this.onCategoryChanged,
+    required this.onMessageChanged,
+    required this.onCancel,
+    required this.onSubmit,
+  });
+
+  final _FeedbackCategory category;
+  final TextEditingController messageController;
+  final TextEditingController emailController;
+  final bool showEmailField;
+  final bool submitting;
+  final ValueChanged<_FeedbackCategory> onCategoryChanged;
+  final VoidCallback onMessageChanged;
+  final VoidCallback onCancel;
+  final VoidCallback onSubmit;
+
+  @override
+  Widget build(BuildContext context) {
+    final canSubmit = messageController.text.trim().isNotEmpty && !submitting;
+
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 20),
+      children: [
+        const _FieldLabel('CATEGORY'),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            for (final option in _feedbackCategories) ...[
+              Expanded(
+                child: _FeedbackCategoryButton(
+                  option: option,
+                  selected: category == option.category,
+                  onTap: () => onCategoryChanged(option.category),
+                ),
+              ),
+              if (option != _feedbackCategories.last) const SizedBox(width: 10),
+            ],
+          ],
+        ),
+        const SizedBox(height: 28),
+        const _FieldLabel('MESSAGE'),
+        const SizedBox(height: 10),
+        TextField(
+          controller: messageController,
+          onChanged: (_) => onMessageChanged(),
+          maxLength: 1000,
+          minLines: 5,
+          maxLines: 7,
+          textInputAction: TextInputAction.newline,
+          decoration: const InputDecoration(
+            hintText: "Tell us what's on your mind...",
+            counterText: '',
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(3)),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(3)),
+              borderSide: BorderSide(color: AppTheme.border),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.all(Radius.circular(3)),
+              borderSide: BorderSide(color: AppTheme.ink),
+            ),
+          ),
+        ),
+        const SizedBox(height: 4),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            '${messageController.text.length}/1000',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.mutedInk,
+                ),
+          ),
+        ),
+        if (showEmailField) ...[
+          const SizedBox(height: 24),
+          const _FieldLabel('EMAIL (optional)'),
+          const SizedBox(height: 10),
+          TextField(
+            controller: emailController,
+            keyboardType: TextInputType.emailAddress,
+            textInputAction: TextInputAction.done,
+            decoration: const InputDecoration(
+              prefixIcon: Icon(Icons.mail_outline, size: 20),
+              hintText: 'you@example.com',
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(3)),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(3)),
+                borderSide: BorderSide(color: AppTheme.border),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.all(Radius.circular(3)),
+                borderSide: BorderSide(color: AppTheme.ink),
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 28),
+        Row(
+          children: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: submitting ? null : onCancel,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: AppTheme.ink,
+                  side: BorderSide(color: AppTheme.border),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+                child: const Text('Cancel'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: FilledButton.icon(
+                onPressed: canSubmit ? onSubmit : null,
+                icon: submitting
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : const Icon(Icons.send_outlined, size: 16),
+                label: Text(submitting ? 'Sending...' : 'Send'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.ink,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppTheme.mutedInk,
+                  disabledForegroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _FeedbackCategoryButton extends StatelessWidget {
+  const _FeedbackCategoryButton({
+    required this.option,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final _FeedbackCategoryOption option;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return OutlinedButton(
+      onPressed: onTap,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: AppTheme.ink,
+        backgroundColor: selected ? AppTheme.accentYellowDark : Colors.white,
+        side: BorderSide(
+          color: selected ? AppTheme.ink : AppTheme.border,
+          width: selected ? 1.5 : 1,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(3),
+        ),
+        padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 4),
+      ),
+      child: Column(
+        children: [
+          Icon(option.icon, size: 22),
+          const SizedBox(height: 8),
+          Text(
+            option.label,
+            style: const TextStyle(fontWeight: FontWeight.w700),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      text,
+      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+            color: AppTheme.mutedInk,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.8,
+          ),
+    );
+  }
+}
+
+Future<void> _showLanguageSheet(BuildContext context) {
+  return showModalBottomSheet<void>(
+    context: context,
+    backgroundColor: Colors.white,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+    ),
+    builder: (sheetContext) {
+      return SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: AppTheme.border,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text(
+                'Language',
+                textAlign: TextAlign.center,
+                style: Theme.of(sheetContext)
+                    .textTheme
+                    .titleMedium
+                    ?.copyWith(fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 12),
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('English'),
+                trailing: const Icon(Icons.check, color: AppTheme.ink),
+                onTap: () => Navigator.of(sheetContext).pop(),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+String _detectedTimezoneLabel() {
+  final now = DateTime.now();
+  final timezone = now.timeZoneName.trim();
+  final utcOffset = now.timeZoneOffset;
+  final sign = utcOffset.isNegative ? '-' : '+';
+  final hours = utcOffset.inHours.abs().toString().padLeft(2, '0');
+  final minutes = (utcOffset.inMinutes.abs() % 60).toString().padLeft(2, '0');
+  final offset = 'UTC$sign$hours:$minutes';
+  return timezone.isEmpty ? offset : '$timezone ($offset)';
 }
 
 class _SectionLabel extends StatelessWidget {
@@ -359,45 +959,70 @@ class _SettingsRow extends StatelessWidget {
     required this.icon,
     required this.title,
     this.trailing,
+    this.showChevron = true,
+    this.onTap,
   });
   final IconData icon;
   final String title;
   final String? trailing;
+  final bool showChevron;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 1),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        border: Border(
-          bottom: BorderSide(color: AppTheme.border.withValues(alpha: 0.5)),
-        ),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 20, color: AppTheme.mutedInk),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              title,
-              style: Theme.of(context)
-                  .textTheme
-                  .bodyLarge
-                  ?.copyWith(fontWeight: FontWeight.w500),
+    return Material(
+      color: Colors.white,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          margin: const EdgeInsets.only(bottom: 1),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(color: AppTheme.border.withValues(alpha: 0.5)),
             ),
           ),
-          if (trailing != null)
-            Text(
-              trailing!,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.mutedInk,
+          child: Row(
+            children: [
+              Icon(icon, size: 20, color: AppTheme.mutedInk),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Text(
+                  title,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.w500),
+                ),
+              ),
+              if (trailing != null) ...[
+                const SizedBox(width: 12),
+                Flexible(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      trailing!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.mutedInk,
+                          ),
+                    ),
                   ),
-            ),
-          const SizedBox(width: 8),
-          const Icon(Icons.chevron_right, size: 18, color: AppTheme.mutedInk),
-        ],
+                ),
+              ],
+              if (showChevron) ...[
+                const SizedBox(width: 8),
+                const Icon(
+                  Icons.chevron_right,
+                  size: 18,
+                  color: AppTheme.mutedInk,
+                ),
+              ],
+            ],
+          ),
+        ),
       ),
     );
   }

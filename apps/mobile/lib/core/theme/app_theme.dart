@@ -32,7 +32,7 @@ class AppTheme {
       ),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: surface,
-        indicatorColor: accentYellow.withOpacity(0.35),
+        indicatorColor: accentYellow.withValues(alpha: 0.35),
         labelTextStyle: WidgetStateProperty.resolveWith(
           (states) => TextStyle(
             fontSize: 12,

@@ -1,5 +1,6 @@
 class BookProgress {
   const BookProgress({
+    required this.sectionId,
     required this.bookKey,
     required this.testament,
     required this.bookOrder,
@@ -9,6 +10,7 @@ class BookProgress {
     required this.completedCount,
   });
 
+  final String sectionId;
   final String bookKey;
   final String testament;
   final int bookOrder;
@@ -18,6 +20,26 @@ class BookProgress {
   final int completedCount;
 
   double get progress => chapterCount == 0 ? 0 : completedCount / chapterCount;
+}
+
+class PlanSectionProgress {
+  const PlanSectionProgress({
+    required this.sectionId,
+    required this.title,
+    required this.orderIndex,
+    required this.books,
+    required this.completedCount,
+    required this.totalCount,
+  });
+
+  final String sectionId;
+  final String title;
+  final int orderIndex;
+  final List<BookProgress> books;
+  final int completedCount;
+  final int totalCount;
+
+  double get progress => totalCount == 0 ? 0 : completedCount / totalCount;
 }
 
 class ChapterProgressView {
@@ -36,30 +58,68 @@ class ReadingPlanView {
   const ReadingPlanView({
     required this.id,
     required this.title,
-    required this.templateKey,
+    required this.templateId,
+    required this.lastOpenedSectionId,
     required this.lastOpenedBookKey,
   });
 
   final String id;
   final String title;
-  final String templateKey;
+  final String templateId;
+  final String? lastOpenedSectionId;
   final String? lastOpenedBookKey;
+}
+
+class ReadingPlanSummary {
+  const ReadingPlanSummary({
+    required this.plan,
+    required this.completedChapters,
+    required this.totalChapters,
+  });
+
+  final ReadingPlanView plan;
+  final int completedChapters;
+  final int totalChapters;
+
+  double get progress =>
+      totalChapters == 0 ? 0 : completedChapters / totalChapters;
+
+  String get progressLabel => '${(progress * 100).round()}%';
+}
+
+class ChapterToggleResult {
+  const ChapterToggleResult({
+    required this.changed,
+    required this.completionReady,
+    required this.completedChapters,
+    required this.totalChapters,
+  });
+
+  const ChapterToggleResult.unchanged()
+      : changed = false,
+        completionReady = false,
+        completedChapters = 0,
+        totalChapters = 0;
+
+  final bool changed;
+  final bool completionReady;
+  final int completedChapters;
+  final int totalChapters;
 }
 
 /// On-device profile row (`local_users`) for Settings / auth UI.
 class LocalUserProfile {
   const LocalUserProfile({
     required this.localUserId,
-    this.neonUserId,
+    this.authUserId,
     required this.accountType,
   });
 
   final String localUserId;
-  final String? neonUserId;
+  final String? authUserId;
   final String accountType;
 
-  bool get isNeonLinked =>
-      neonUserId != null && neonUserId!.isNotEmpty;
+  bool get isAuthLinked => authUserId != null && authUserId!.isNotEmpty;
 }
 
 /// Built-in (or future catalog) plan definition for “add plan” flows.
@@ -68,11 +128,29 @@ class ReadingPlanTemplateView {
     required this.templateKey,
     required this.title,
     required this.description,
+    required this.shortDescription,
+    required this.planType,
+    required this.estimatedMinutes,
+    required this.totalChapters,
+    required this.coverImageUrl,
+    required this.isAdded,
   });
 
   final String templateKey;
   final String title;
   final String description;
+  final String shortDescription;
+  final String planType;
+  final int? estimatedMinutes;
+  final int totalChapters;
+  final String? coverImageUrl;
+  final bool isAdded;
+
+  String get planTypeLabel => planType
+      .split('_')
+      .where((part) => part.isNotEmpty)
+      .map((part) => part.toUpperCase())
+      .join(' ');
 }
 
 /// Chapters and averages scoped to one plan (`plan_id`).
