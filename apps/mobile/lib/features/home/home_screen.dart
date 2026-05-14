@@ -2,19 +2,22 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/theme/app_theme.dart';
+import 'data/today_message_api_client.dart';
 import '../read/data/read_repository.dart';
 import '../read/domain/read_models.dart';
 import '../read/widgets/current_plan_progress_panel.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({
+  HomeScreen({
     super.key,
     required this.readRepository,
     required this.onReadTap,
-  });
+    TodayMessageApiClient? todayMessageApiClient,
+  }) : todayMessageApiClient = todayMessageApiClient ?? TodayMessageApiClient();
 
   final ReadRepository readRepository;
   final VoidCallback onReadTap;
+  final TodayMessageApiClient todayMessageApiClient;
 
   @override
   State<HomeScreen> createState() => HomeScreenState();
@@ -23,6 +26,8 @@ class HomeScreen extends StatefulWidget {
 class HomeScreenState extends State<HomeScreen> {
   ReadingOverview? _readingOverview;
   ReadingPlanView? _plan;
+  TodayMessage? _todayMessage;
+  var _todayMessageLoading = false;
 
   @override
   void initState() {
@@ -33,15 +38,31 @@ class HomeScreenState extends State<HomeScreen> {
   Future<void> refresh() => _load();
 
   Future<void> _load() async {
+    if (mounted) setState(() => _todayMessageLoading = true);
     final plan = await widget.readRepository.getCurrentPlan();
     final overview = plan == null
         ? null
         : await widget.readRepository.getReadingOverview(plan.id);
+    final todayMessage = await _fetchTodayMessage();
     if (!mounted) return;
     setState(() {
       _plan = plan;
       _readingOverview = overview;
+      _todayMessage = todayMessage;
+      _todayMessageLoading = false;
     });
+  }
+
+  Future<TodayMessage?> _fetchTodayMessage() async {
+    try {
+      final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+      return await widget.todayMessageApiClient.fetchTodayMessage(
+        date: today,
+        language: 'en',
+      );
+    } catch (_) {
+      return null;
+    }
   }
 
   String _greeting() {
@@ -98,68 +119,11 @@ class HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 28),
 
-            // Verse of the Day
-            _SectionLabel(title: 'VERSE OF THE DAY'),
+            _SectionLabel(title: "TODAY'S MESSAGE"),
             const SizedBox(height: 12),
-            Container(
-              width: double.infinity,
-              height: 200,
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(16),
-                image: const DecorationImage(
-                  image: NetworkImage(
-                    'https://images.unsplash.com/photo-1507400492013-162706c8c05e?w=600&q=80',
-                  ),
-                  fit: BoxFit.cover,
-                ),
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withValues(alpha: 0.7),
-                    ],
-                  ),
-                ),
-                padding: const EdgeInsets.all(20),
-                alignment: Alignment.bottomLeft,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '"Be still, and know that I am God."',
-                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'PSALM 46:10',
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            color: Colors.white70,
-                            letterSpacing: 0.5,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                _IconLabel(icon: Icons.favorite_border, label: '1.2k'),
-                const SizedBox(width: 16),
-                _IconLabel(icon: Icons.bookmark_border, label: 'Save'),
-                const Spacer(),
-                const Icon(Icons.share_outlined,
-                    size: 18, color: AppTheme.mutedInk),
-              ],
+            TodayMessageCard(
+              message: _todayMessage,
+              loading: _todayMessageLoading,
             ),
             const SizedBox(height: 32),
 
@@ -253,19 +217,125 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-class _IconLabel extends StatelessWidget {
-  const _IconLabel({required this.icon, required this.label});
-  final IconData icon;
-  final String label;
+class TodayMessageCard extends StatelessWidget {
+  const TodayMessageCard({
+    super.key,
+    required this.message,
+    required this.loading,
+  });
+
+  final TodayMessage? message;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: AppTheme.mutedInk),
-        const SizedBox(width: 4),
-        Text(label, style: Theme.of(context).textTheme.bodySmall),
-      ],
+    final current = message;
+    if (loading && current == null) {
+      return Container(
+        height: 200,
+        decoration: BoxDecoration(
+          color: AppTheme.softSurface,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppTheme.border),
+        ),
+        alignment: Alignment.center,
+        child: const SizedBox(
+          width: 22,
+          height: 22,
+          child: CircularProgressIndicator(strokeWidth: 2),
+        ),
+      );
+    }
+
+    if (current == null) {
+      return Container(
+        height: 140,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: AppTheme.softSurface,
+          borderRadius: BorderRadius.circular(6),
+          border: Border.all(color: AppTheme.border),
+        ),
+        alignment: Alignment.centerLeft,
+        child: Text(
+          'No message published yet.',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                color: AppTheme.mutedInk,
+                fontWeight: FontWeight.w600,
+              ),
+        ),
+      );
+    }
+
+    final imageUrl = current.imageUrl;
+    final hasImage = imageUrl != null;
+
+    return Container(
+      width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 200),
+      decoration: BoxDecoration(
+        color: AppTheme.ink,
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: AppTheme.border),
+        image: hasImage
+            ? DecorationImage(
+                image: NetworkImage(imageUrl),
+                fit: BoxFit.cover,
+              )
+            : null,
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: hasImage
+                ? [
+                    Colors.black.withValues(alpha: 0.10),
+                    Colors.black.withValues(alpha: 0.76),
+                  ]
+                : const [
+                    AppTheme.ink,
+                    Color(0xFF30302A),
+                  ],
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              current.primaryText,
+              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    height: 1.35,
+                  ),
+            ),
+            if (current.verseText != null && current.message != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                current.message!,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Colors.white.withValues(alpha: 0.82),
+                      fontWeight: FontWeight.w600,
+                    ),
+              ),
+            ],
+            const SizedBox(height: 10),
+            Text(
+              current.verseReference.toUpperCase(),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: Colors.white.withValues(alpha: 0.78),
+                    letterSpacing: 0.7,
+                    fontWeight: FontWeight.w800,
+                  ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
