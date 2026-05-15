@@ -2,9 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/auth/auth_repository.dart';
 import '../../core/theme/app_theme.dart';
-import '../find/discover_screen.dart';
 import '../home/home_screen.dart';
-import '../list/list_screen.dart';
 import '../read/data/read_repository.dart';
 import '../read/read_screen.dart';
 import '../settings/settings_screen.dart';
@@ -24,7 +22,7 @@ class RootShell extends StatefulWidget {
 }
 
 class _RootShellState extends State<RootShell> {
-  int _selectedIndex = 2;
+  int _selectedIndex = 0;
   int _readRefreshToken = 0;
   final _homeKey = GlobalKey<HomeScreenState>();
 
@@ -41,14 +39,12 @@ class _RootShellState extends State<RootShell> {
       HomeScreen(
         key: _homeKey,
         readRepository: widget.readRepository,
-        onReadTap: () => _selectTab(2),
+        onReadTap: () => _selectTab(1),
       ),
-      const DiscoverScreen(),
       ReadScreen(
         key: ValueKey(_readRefreshToken),
         readRepository: widget.readRepository,
       ),
-      const SavedListScreen(),
       SettingsScreen(
         authRepository: widget.authRepository,
         readRepository: widget.readRepository,
@@ -89,37 +85,19 @@ class _RootShellState extends State<RootShell> {
                 Expanded(
                   child: _BottomNavItem(
                     selected: _selectedIndex == 1,
-                    icon: Icons.search_outlined,
-                    selectedIcon: Icons.search,
-                    label: 'Discover',
+                    icon: Icons.menu_book_outlined,
+                    selectedIcon: Icons.menu_book,
+                    label: 'Read',
                     onTap: () => _selectTab(1),
                   ),
                 ),
                 Expanded(
                   child: _BottomNavItem(
                     selected: _selectedIndex == 2,
-                    icon: Icons.menu_book_outlined,
-                    selectedIcon: Icons.menu_book,
-                    label: 'Read',
-                    onTap: () => _selectTab(2),
-                  ),
-                ),
-                Expanded(
-                  child: _BottomNavItem(
-                    selected: _selectedIndex == 3,
-                    icon: Icons.favorite_border,
-                    selectedIcon: Icons.favorite,
-                    label: 'Saved',
-                    onTap: () => _selectTab(3),
-                  ),
-                ),
-                Expanded(
-                  child: _BottomNavItem(
-                    selected: _selectedIndex == 4,
                     icon: Icons.settings_outlined,
                     selectedIcon: Icons.settings,
                     label: 'Settings',
-                    onTap: () => _selectTab(4),
+                    onTap: () => _selectTab(2),
                   ),
                 ),
               ],

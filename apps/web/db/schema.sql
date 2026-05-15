@@ -251,6 +251,7 @@ create table if not exists today_messages (
   publish_date date not null,
   language text not null default 'en',
   verse_reference text not null,
+  bible_version text,
   verse_text text,
   message text,
   image_url text,

@@ -6,6 +6,7 @@ import '../../core/api/hunny_api_models.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/auth/auth_models.dart';
 import '../../core/theme/app_theme.dart';
+import '../plans/plans_screen.dart';
 import '../read/data/read_repository.dart';
 import '../read/domain/read_models.dart';
 import 'data/feedback_api_client.dart';
@@ -182,6 +183,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } finally {
       if (mounted) setState(() => _restoring = false);
     }
+  }
+
+  Future<void> _openPlans() async {
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => PlansScreen(
+          readRepository: widget.readRepository,
+          initialTab: PlansInitialTab.myPlans,
+        ),
+      ),
+    );
+    if (changed == true) widget.onReadingDataRestored?.call();
   }
 
   @override
@@ -374,6 +387,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
               ],
             ),
+          ),
+          const SizedBox(height: 12),
+          _SettingsRow(
+            icon: Icons.library_books_outlined,
+            title: 'Manage reading plans',
+            onTap: _openPlans,
           ),
           const SizedBox(height: 28),
 

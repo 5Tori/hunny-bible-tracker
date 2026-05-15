@@ -184,6 +184,12 @@ class HomeScreenState extends State<HomeScreen> {
   Future<void> _openTodayMessageArticle() async {
     final message = _todayMessage;
     if (message == null) return;
+    final relatedPlan = message.planTemplateIdentifier == null
+        ? null
+        : await widget.readRepository.getPlanTemplateByIdentifier(
+            message.planTemplateIdentifier!,
+          );
+    if (!mounted) return;
 
     final started = await showModalBottomSheet<bool>(
       context: context,
@@ -192,6 +198,7 @@ class HomeScreenState extends State<HomeScreen> {
       builder: (context) {
         return _TodayMessageArticleSheet(
           message: message,
+          relatedPlan: relatedPlan,
           onStartPlan: widget.readRepository.addPlanFromTemplate,
         );
       },
@@ -294,48 +301,6 @@ class HomeScreenState extends State<HomeScreen> {
               planTitle: _plan?.title ?? 'No current plan',
               showContinueReading: true,
               onContinueReading: widget.onReadTap,
-            ),
-            const SizedBox(height: 32),
-
-            // Featured Content
-            Row(
-              children: [
-                _SectionLabel(title: 'FEATURED CONTENT'),
-                const Spacer(),
-                Text(
-                  'All ›',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.ink,
-                      ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            SizedBox(
-              height: 160,
-              child: ListView(
-                scrollDirection: Axis.horizontal,
-                children: const [
-                  _FeaturedCard(
-                    type: 'VIDEO',
-                    title: 'Sermon on the Mount',
-                    duration: '12 min',
-                  ),
-                  SizedBox(width: 12),
-                  _FeaturedCard(
-                    type: 'READ',
-                    title: 'Finding peace in chaos',
-                    duration: '5 min read',
-                  ),
-                  SizedBox(width: 12),
-                  _FeaturedCard(
-                    type: 'AUDIO',
-                    title: 'Morning devotional',
-                    duration: '8 min',
-                  ),
-                ],
-              ),
             ),
           ],
         ),
@@ -482,7 +447,7 @@ class TodayMessageCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      current.verseReference.toUpperCase(),
+                      current.referenceLabel.toUpperCase(),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: Colors.white.withValues(alpha: 0.78),
                             letterSpacing: 2.0,
@@ -637,10 +602,12 @@ class _MessageActionButton extends StatelessWidget {
 class _TodayMessageArticleSheet extends StatefulWidget {
   const _TodayMessageArticleSheet({
     required this.message,
+    required this.relatedPlan,
     required this.onStartPlan,
   });
 
   final TodayMessage message;
+  final ReadingPlanTemplateView? relatedPlan;
   final Future<String> Function(String templateKey) onStartPlan;
 
   @override
@@ -652,11 +619,12 @@ class _TodayMessageArticleSheetState extends State<_TodayMessageArticleSheet> {
   var _startingPlan = false;
 
   Future<void> _startPlan() async {
-    final templateKey = widget.message.planTemplateKey;
-    if (templateKey == null || _startingPlan) return;
+    final identifier = widget.message.planTemplateIdentifier ??
+        widget.relatedPlan?.templateKey;
+    if (identifier == null || _startingPlan) return;
     setState(() => _startingPlan = true);
     try {
-      await widget.onStartPlan(templateKey);
+      await widget.onStartPlan(identifier);
       if (!mounted) return;
       Navigator.of(context).pop(true);
     } catch (_) {
@@ -671,6 +639,8 @@ class _TodayMessageArticleSheetState extends State<_TodayMessageArticleSheet> {
   @override
   Widget build(BuildContext context) {
     final message = widget.message;
+    final relatedPlan = widget.relatedPlan;
+    final showRelatedPlan = message.hasRelatedPlan || relatedPlan != null;
 
     return DraggableScrollableSheet(
       initialChildSize: 0.86,
@@ -702,7 +672,7 @@ class _TodayMessageArticleSheetState extends State<_TodayMessageArticleSheet> {
                     ),
                     const SizedBox(height: 34),
                     Text(
-                      message.verseReference.toUpperCase(),
+                      message.referenceLabel.toUpperCase(),
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppTheme.mutedInk,
                             fontWeight: FontWeight.w800,
@@ -730,12 +700,14 @@ class _TodayMessageArticleSheetState extends State<_TodayMessageArticleSheet> {
                             fontWeight: FontWeight.w500,
                           ),
                     ),
-                    if (message.hasRelatedPlan) ...[
+                    if (showRelatedPlan) ...[
                       const SizedBox(height: 28),
                       _RelatedPlanCard(
-                        title: message.planTitle,
-                        chapters: message.planChapters,
-                        minutes: message.planMinutes,
+                        title: relatedPlan?.title ?? message.planTitle,
+                        chapters:
+                            relatedPlan?.totalChapters ?? message.planChapters,
+                        minutes: relatedPlan?.estimatedMinutes ??
+                            message.planMinutes,
                         starting: _startingPlan,
                         onStartPlan: _startPlan,
                       ),
@@ -855,78 +827,6 @@ class _RelatedPlanCard extends StatelessWidget {
                 child: Text(starting ? 'Starting...' : 'Start plan'),
               ),
             ],
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FeaturedCard extends StatelessWidget {
-  const _FeaturedCard({
-    required this.type,
-    required this.title,
-    required this.duration,
-  });
-  final String type;
-  final String title;
-  final String duration;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 150,
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-            decoration: BoxDecoration(
-              color: AppTheme.ink,
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              type,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.white,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.5,
-                  ),
-            ),
-          ),
-          const Spacer(),
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: AppTheme.accentYellow,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: const Icon(Icons.play_arrow, size: 18, color: AppTheme.ink),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context)
-                .textTheme
-                .bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w600, color: AppTheme.ink),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            duration,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.mutedInk,
-                ),
           ),
         ],
       ),

@@ -174,11 +174,14 @@ class LocalUserProfile {
 /// Built-in (or future catalog) plan definition for “add plan” flows.
 class ReadingPlanTemplateView {
   const ReadingPlanTemplateView({
+    required this.id,
     required this.templateKey,
     required this.title,
     required this.description,
     required this.shortDescription,
     required this.planType,
+    required this.testamentScope,
+    required this.difficulty,
     required this.estimatedMinutes,
     required this.totalChapters,
     required this.coverImageUrl,
@@ -186,11 +189,14 @@ class ReadingPlanTemplateView {
     required this.completionCount,
   });
 
+  final String id;
   final String templateKey;
   final String title;
   final String description;
   final String shortDescription;
   final String planType;
+  final String testamentScope;
+  final String? difficulty;
   final int? estimatedMinutes;
   final int totalChapters;
   final String? coverImageUrl;

@@ -11,6 +11,7 @@ const emptyForm: AdminTodayMessageInput = {
   publish_date: '',
   language: 'en',
   verse_reference: '',
+  bible_version: '',
   verse_text: '',
   message: '',
   image_url: '',
@@ -36,6 +37,7 @@ function mapToForm(message: TodayMessageBase): AdminTodayMessageInput {
     publish_date: message.publish_date,
     language: message.language,
     verse_reference: message.verse_reference,
+    bible_version: message.bible_version ?? '',
     verse_text: message.verse_text ?? '',
     message: message.message ?? '',
     image_url: message.image_url ?? '',
@@ -259,14 +261,25 @@ export default function AdminTodayMessageEditor({ messageId }: AdminTodayMessage
           </div>
         </div>
 
-        <div className="field-row">
-          <label htmlFor="verse_reference">Verse reference</label>
-          <input
-            id="verse_reference"
-            value={form.verse_reference}
-            onChange={(event) => setForm({ ...form, verse_reference: event.target.value })}
-            placeholder="e.g. John 3:16"
-          />
+        <div className="field-row group-grid">
+          <div>
+            <label htmlFor="verse_reference">Verse reference</label>
+            <input
+              id="verse_reference"
+              value={form.verse_reference}
+              onChange={(event) => setForm({ ...form, verse_reference: event.target.value })}
+              placeholder="e.g. John 3:16"
+            />
+          </div>
+          <div>
+            <label htmlFor="bible_version">Bible version</label>
+            <input
+              id="bible_version"
+              value={form.bible_version ?? ''}
+              onChange={(event) => setForm({ ...form, bible_version: event.target.value })}
+              placeholder="ESV"
+            />
+          </div>
         </div>
 
         <div className="field-row">

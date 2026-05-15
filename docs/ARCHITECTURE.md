@@ -8,23 +8,24 @@ This document is the system map for Hunny Bible Tracker. It should let a new age
 Flutter mobile app
   -> Drift / SQLite local database
   -> Firebase Auth SDK
-  -> optional Next.js API calls
+  -> optional authenticated Next.js API calls
 
-Next.js web/API app
+Next.js web/API/admin app
   -> Firebase Admin SDK token verification
   -> Neon Postgres
+  -> Cloudinary image upload for admin-managed media
 ```
 
-The mobile app is usable offline. SQLite is the first write target for reading plans, chapter progress, reading activities, and settings.
+The mobile app is offline-first. SQLite is the first write target for reading plans, chapter progress, reading activities, settings, and local Today’s Message flags.
 
-The web/API app currently handles authentication support only. Reading progress sync is planned but not implemented.
+The web/API app serves admin tools, public content APIs, Firebase-authenticated account APIs, reading backup/restore APIs, and shareable Today’s Message pages.
 
 ## Applications
 
 | Path | Role |
 | --- | --- |
 | `apps/mobile` | Flutter iOS/Android app |
-| `apps/web` | Next.js web pages and API routes |
+| `apps/web` | Next.js web pages, API routes, and admin dashboard |
 
 ## Mobile Module Map
 
@@ -34,15 +35,15 @@ The web/API app currently handles authentication support only. Reading progress 
 | `lib/app/app.dart` | Top-level app composition |
 | `lib/core/database/app_database.dart` | Drift schema source |
 | `lib/core/database/app_database.g.dart` | Generated Drift code |
-| `lib/core/database/connection/` | Native/web database connection adapters |
 | `lib/core/auth/` | Firebase Auth config, auth repository, auth DTOs |
-| `lib/core/api/` | Optional API client config/models |
-| `lib/features/root/root_shell.dart` | Bottom tab shell |
-| `lib/features/home/` | Home tab |
-| `lib/features/find/` | Discover/Find tab mock catalog and filters |
-| `lib/features/read/` | Reading plan UI, repository, domain models, widgets |
-| `lib/features/list/` | Placeholder List tab |
-| `lib/features/settings/` | Account/settings/help feedback UI |
+| `lib/core/api/` | API config and sync response models |
+| `lib/features/root/root_shell.dart` | MVP bottom tab shell: Home, Read, Settings |
+| `lib/features/home/` | Home tab, Today’s Message, current progress card |
+| `lib/features/read/` | Read tab, repository, sync payloads, domain models, widgets |
+| `lib/features/plans/` | Full-screen Plan Manager / Plan Library |
+| `lib/features/settings/` | Account, backup/restore, plan entrypoint, feedback UI |
+| `lib/features/find/` | Hidden Discover prototype retained for later |
+| `lib/features/list/` | Hidden Saved/List prototype retained for later |
 | `assets/data/bible_books.en.json` | Canonical book metadata seed |
 | `assets/brand/google_g.svg` | Google sign-in mark used in auth sheet |
 
@@ -54,11 +55,21 @@ The web/API app currently handles authentication support only. Reading progress 
 | `apps/web/src/app/privacy/page.tsx` | Privacy page |
 | `apps/web/src/app/terms/page.tsx` | Terms page |
 | `apps/web/src/app/support/page.tsx` | Support page |
+| `apps/web/src/app/admin` | Admin dashboard pages |
+| `apps/web/src/app/today-message/[id]/page.tsx` | Public share page for Today’s Message |
 | `apps/web/src/app/api/health/route.ts` | Health check |
 | `apps/web/src/app/api/v1/auth/sync/route.ts` | Firebase token verify + Neon auth user upsert |
 | `apps/web/src/app/api/v1/me/route.ts` | Firebase token verify + current user response |
-| `apps/web/src/lib/auth/verify-firebase-token.ts` | Firebase Admin token verification |
-| `apps/web/src/lib/auth/auth-user-sync.ts` | Neon `auth_users` upsert |
+| `apps/web/src/app/api/v1/plans` | Published plan catalog APIs |
+| `apps/web/src/app/api/v1/sync/push/route.ts` | Authenticated reading-data backup |
+| `apps/web/src/app/api/v1/sync/bootstrap/route.ts` | Authenticated reading-data restore/bootstrap |
+| `apps/web/src/app/api/v1/today-message` | Public Today’s Message API and engagement routes |
+| `apps/web/src/app/api/v1/feedback/route.ts` | Mobile Help & feedback submission |
+| `apps/web/src/lib/auth/` | Firebase Admin token verification and auth user sync |
+| `apps/web/src/lib/plans.ts` | Plan template CRUD and public serialization |
+| `apps/web/src/lib/today-messages.ts` | Today’s Message CRUD, public lookup, engagement counters |
+| `apps/web/src/lib/sync/reading-sync.ts` | Reading backup/restore server logic |
+| `apps/web/src/lib/feedback.ts` | Feedback validation and insert logic |
 | `apps/web/src/lib/db/neon.ts` | Neon serverless SQL client |
 | `apps/web/db/schema.sql` | Active server DB schema source |
 
@@ -71,6 +82,7 @@ Tap chapter
   -> Drift transaction
   -> chapter_progress_entries updated
   -> reading_activities insert-or-ignore for completion activity
+  -> affected rows marked pending
   -> UI reloads section/book/chapter progress
 ```
 
@@ -83,26 +95,62 @@ finishPlan()
   -> user_reading_plans.is_active = false
 ```
 
-Completed plans appear in the My Plans `Completed` tab. Browse Plans can start the same template again, creating a new user plan run.
+Completed plans appear in Plans > My Plans > Completed. Starting again creates a new user plan run.
 
-## Data Flow: Authentication
+Current plans can be archived from Plans. Archive preserves progress and activity rows, moves the run out of Current, and allows Restore later.
+
+## Data Flow: Plan Catalog
+
+```text
+Admin edits/publishes plan
+  -> Neon plan_templates / sections / items
+  -> GET /api/v1/plans
+  -> mobile caches template rows in Drift
+  -> user starts a plan
+  -> user_plan_chapters snapshot is created locally
+```
+
+Started plan runs are snapshots. Later template edits should not rewrite existing `user_plan_chapters`.
+
+## Data Flow: Today’s Message
+
+```text
+Admin creates/publishes Today’s Message
+  -> today_messages row in Neon
+  -> GET /api/v1/today-message?date=YYYY-MM-DD&language=en
+  -> Home card renders image, verse, version, actions, hint, Read More
+  -> Read More modal can start/continue related plan
+```
+
+The public API returns the latest published message where `publish_date <= date`, so the mobile app can still show a message if today’s date does not have a dedicated row.
+
+## Data Flow: Authentication and Backup
 
 ```text
 Continue with Google
   -> Firebase Auth native sign-in
   -> local_users.auth_user_id = Firebase uid
-  -> optional POST /api/v1/auth/sync
+  -> POST /api/v1/auth/sync
   -> Neon auth_users upsert
+  -> optional POST /api/v1/sync/push
+```
+
+Manual restore:
+
+```text
+Settings -> Restore backup
+  -> GET /api/v1/sync/bootstrap
+  -> Drift insertOnConflictUpdate for backed-up reading rows
 ```
 
 Firebase Auth owns identity. Neon stores application data and server-side user profile rows.
 
 ## Current Boundaries
 
-- Mobile reads/writes progress locally.
-- API routes do not yet sync reading plans, chapters, progress, activities, or completion events.
-- `apps/web/db/schema.sql` is active only for auth support today.
-- Any future sync work must go through API routes, not direct mobile-to-Neon access.
+- Mobile reads/writes progress locally first.
+- Backup/restore exists, but automatic incremental pull/merge and conflict UI are not implemented.
+- Mobile must not connect directly to Neon.
+- Discover and Saved/List surfaces are hidden for MVP closed testing.
 
 ## Related Docs
 
@@ -110,4 +158,6 @@ Firebase Auth owns identity. Neon stores application data and server-side user p
 - `docs/AUTH_AND_API.md`
 - `docs/SYNC_STRATEGY.md`
 - `docs/PRODUCT_ROADMAP.md`
+- `docs/ADMIN_DASHBOARD.md`
 - `docs/DEVELOPMENT.md`
+- `docs/to-do/MVP_CLOSE_TESTING_TODO.md`

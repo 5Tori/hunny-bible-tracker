@@ -4,6 +4,12 @@ Hunny Bible Tracker release history and Play Console notes.
 
 Use this file to keep lightweight release records for internal testing, closed testing, and production releases.
 
+Current active checklist before the next closed-test artifact:
+
+```text
+docs/to-do/MVP_CLOSE_TESTING_TODO.md
+```
+
 ---
 
 ## Release Entry Template
@@ -69,6 +75,7 @@ Initial Android closed testing release for Hunny Bible Tracker.
 - This release is intended for Google Play closed testing.
 - Testers should verify app launch, reading progress tracking, chapter check/uncheck behavior, local persistence, and settings links.
 - Google Sign-In and sync-related behavior should be tested if enabled in this build.
+- This entry predates the latest Home Today’s Message, Plans Manager, feedback, and backup/restore updates. Create a new entry for the next closed-test build rather than editing this historical record.
 
 #### Play Console Release Notes
 

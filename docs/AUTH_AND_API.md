@@ -9,8 +9,8 @@ Firebase Auth
   -> mobile identity and Google login
 
 Next.js API routes
-  -> verify Firebase ID token
-  -> upsert Neon auth user
+  -> verify Firebase ID tokens where required
+  -> read/write Neon app data
 
 Neon Postgres
   -> app data database
@@ -97,24 +97,39 @@ cd apps/mobile/android
 
 All current API routes live under `apps/web/src/app/api`.
 
-| Route | Method | Purpose |
-| --- | --- | --- |
-| `/api/health` | `GET` | Health check |
-| `/api/v1/auth/sync` | `POST` | Verify Firebase bearer token, upsert `auth_users`, return user |
-| `/api/v1/me` | `GET` | Verify Firebase bearer token, upsert `auth_users`, return current user summary |
+| Route | Method | Auth | Purpose |
+| --- | --- | --- | --- |
+| `/api/health` | `GET` | None | Health check |
+| `/api/v1/auth/sync` | `POST` | Firebase bearer | Verify token, upsert `auth_users`, return user |
+| `/api/v1/me` | `GET` | Firebase bearer | Verify token, upsert `auth_users`, return current user summary |
+| `/api/v1/plans` | `GET` | None | Public published plan catalog |
+| `/api/v1/plans/[identifier]` | `GET` | None | Public single published plan by id/key |
+| `/api/v1/sync/push` | `POST` | Firebase bearer | Upload reading backup rows |
+| `/api/v1/sync/bootstrap` | `GET` | Firebase bearer | Download backed-up reading rows |
+| `/api/v1/today-message` | `GET` | None | Latest published Today’s Message by date/language |
+| `/api/v1/today-message/[id]/heart` | `POST` | None | Increment Today’s Message heart counter |
+| `/api/v1/today-message/[id]/share` | `POST` | None | Increment Today’s Message share counter |
+| `/api/v1/feedback` | `POST` | None | Insert Help & feedback message |
+| `/api/v1/admin/verify` | `GET` | Admin Firebase bearer | Verify admin access |
+| `/api/v1/admin/plans` | `GET/POST` | Admin Firebase bearer | Plan template list/create |
+| `/api/v1/admin/plans/[id]` | `GET/PUT/DELETE` | Admin Firebase bearer | Plan template read/update/delete |
+| `/api/v1/admin/plans/upload` | `POST` | Admin Firebase bearer | Upload plan cover image |
+| `/api/v1/admin/today-messages` | `GET/POST` | Admin Firebase bearer | Today’s Message list/create |
+| `/api/v1/admin/today-messages/[id]` | `GET/PUT/DELETE` | Admin Firebase bearer | Today’s Message read/update/delete |
+| `/api/v1/admin/today-messages/upload` | `POST` | Admin Firebase bearer | Upload Today’s Message image |
 
-Auth routes require:
+Firebase-protected routes require:
 
 ```text
 Authorization: Bearer <Firebase ID token>
 ```
 
-Possible auth errors:
+Common auth errors:
 
 - `missing_bearer`
 - `missing_token`
 - `invalid_token`
-- `sync_failed`
+- `auth_user_sync_failed`
 
 ## API Environment
 
@@ -125,6 +140,10 @@ DATABASE_URL="postgresql://USER:PASSWORD@HOST/dbname?sslmode=require"
 FIREBASE_PROJECT_ID="..."
 FIREBASE_CLIENT_EMAIL="firebase-adminsdk-...@YOUR_PROJECT.iam.gserviceaccount.com"
 FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+ADMIN_EMAILS="admin@example.com"
+CLOUDINARY_CLOUD_NAME="..."
+CLOUDINARY_API_KEY="..."
+CLOUDINARY_API_SECRET="..."
 ```
 
 Firebase Admin can also use application default credentials if service-account env vars are not set and the environment supports ADC.
@@ -134,7 +153,7 @@ Firebase Admin can also use application default credentials if service-account e
 `HUNNY_API_BASE_URL` is optional.
 
 - If unset or empty, the Flutter app can still run locally with Firebase Auth and SQLite.
-- If set, sign-in will try to sync the Firebase user to Neon through `apps/web`.
+- If set, sign-in syncs the Firebase user to Neon and reading backup/restore can call `apps/web`.
 
 Local API URLs:
 
@@ -142,6 +161,19 @@ Local API URLs:
 | --- | --- |
 | iOS simulator | `http://127.0.0.1:3000` |
 | Android emulator | `http://10.0.2.2:3000` |
+
+## Reading Backup/Restore
+
+Signed-in users can:
+
+- Push backup through `POST /api/v1/sync/push`
+- Restore/bootstrap through `GET /api/v1/sync/bootstrap`
+
+Current limitations:
+
+- No automatic multi-device incremental pull loop yet.
+- No end-user conflict resolution UI yet.
+- Restore can hide local-only starter plans when server backup data exists.
 
 ## Deployment Checklist
 
@@ -151,10 +183,13 @@ Local API URLs:
 - Android debug/release/Play SHA-1 values are registered.
 - iOS `Info.plist` has correct `GIDClientID` and reversed URL scheme.
 - Flutter builds include dart-define values.
-- API deployment has `DATABASE_URL` and Firebase Admin env vars.
-- Neon has `apps/web/db/schema.sql` applied.
+- API deployment has `DATABASE_URL`, Firebase Admin env vars, `ADMIN_EMAILS`, and Cloudinary env vars.
+- Neon has `apps/web/db/schema.sql` and subsequent migrations applied.
 - `POST /api/v1/auth/sync` succeeds after mobile login.
-- `GET /api/v1/me` succeeds with a Firebase ID token.
+- `POST /api/v1/sync/push` succeeds for a signed-in account.
+- `GET /api/v1/sync/bootstrap` succeeds for a signed-in account.
+- `GET /api/v1/today-message?date=YYYY-MM-DD&language=en` returns published content when available.
+- `POST /api/v1/feedback` accepts valid mobile feedback.
 
 ## Release Build Examples
 

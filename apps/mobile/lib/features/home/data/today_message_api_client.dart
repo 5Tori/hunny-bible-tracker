@@ -95,6 +95,7 @@ class TodayMessage {
     required this.publishDate,
     required this.language,
     required this.verseReference,
+    required this.bibleVersion,
     required this.verseText,
     required this.message,
     required this.imageUrl,
@@ -104,6 +105,7 @@ class TodayMessage {
     required this.articleTitle,
     required this.articleBody,
     required this.relatedPlanTemplateKey,
+    required this.primaryRelatedPlanTemplateId,
     required this.relatedPlanTitle,
     required this.relatedPlanChapters,
     required this.relatedPlanMinutes,
@@ -115,6 +117,7 @@ class TodayMessage {
   final String publishDate;
   final String language;
   final String verseReference;
+  final String? bibleVersion;
   final String? verseText;
   final String? message;
   final String? imageUrl;
@@ -124,6 +127,7 @@ class TodayMessage {
   final String? articleTitle;
   final String? articleBody;
   final String? relatedPlanTemplateKey;
+  final String? primaryRelatedPlanTemplateId;
   final String? relatedPlanTitle;
   final int? relatedPlanChapters;
   final int? relatedPlanMinutes;
@@ -131,6 +135,12 @@ class TodayMessage {
   final int shareCount;
 
   String get primaryText => verseText ?? message ?? verseReference;
+
+  String get referenceLabel {
+    final version = bibleVersion;
+    if (version == null) return verseReference;
+    return '$verseReference · $version';
+  }
 
   String get reflectionTitle => hintTitle ?? 'A quick reflection';
 
@@ -144,9 +154,10 @@ class TodayMessage {
   String get articleText => articleBody ?? reflectionSummary;
 
   bool get hasRelatedPlan =>
-      relatedPlanTemplateKey != null && relatedPlanTitle != null;
+      relatedPlanTemplateKey != null || primaryRelatedPlanTemplateId != null;
 
-  String? get planTemplateKey => relatedPlanTemplateKey;
+  String? get planTemplateIdentifier =>
+      relatedPlanTemplateKey ?? primaryRelatedPlanTemplateId;
 
   String get planTitle => relatedPlanTitle ?? 'Related plan';
 
@@ -174,6 +185,7 @@ class TodayMessage {
       publishDate: publishDate,
       language: language,
       verseReference: verseReference,
+      bibleVersion: bibleVersion,
       verseText: verseText,
       message: message,
       imageUrl: imageUrl,
@@ -183,6 +195,7 @@ class TodayMessage {
       articleTitle: articleTitle,
       articleBody: articleBody,
       relatedPlanTemplateKey: relatedPlanTemplateKey,
+      primaryRelatedPlanTemplateId: primaryRelatedPlanTemplateId,
       relatedPlanTitle: relatedPlanTitle,
       relatedPlanChapters: relatedPlanChapters,
       relatedPlanMinutes: relatedPlanMinutes,
@@ -197,6 +210,7 @@ class TodayMessage {
       publishDate: _requiredString(json, 'publish_date'),
       language: _stringValue(json['language'], fallback: 'en'),
       verseReference: _requiredString(json, 'verse_reference'),
+      bibleVersion: _nullableString(json['bible_version']),
       verseText: _nullableString(json['verse_text']),
       message: _nullableString(json['message']),
       imageUrl: _nullableString(json['image_url']),
@@ -207,6 +221,9 @@ class TodayMessage {
       articleBody: _nullableString(json['article_body']),
       relatedPlanTemplateKey: _nullableString(
         json['related_plan_template_key'],
+      ),
+      primaryRelatedPlanTemplateId: _nullableString(
+        json['primary_related_plan_template_id'],
       ),
       relatedPlanTitle: _nullableString(json['related_plan_title']),
       relatedPlanChapters: _nullableInt(json['related_plan_chapters']),

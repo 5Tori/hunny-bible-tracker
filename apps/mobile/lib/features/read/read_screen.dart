@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../plans/plans_screen.dart';
 import 'data/read_repository.dart';
 import 'domain/read_models.dart';
 import 'widgets/book_card.dart';
@@ -175,11 +175,9 @@ class _ReadScreenState extends State<ReadScreen> {
 
   Future<void> _showPlanPicker() async {
     final currentPlans = await widget.readRepository.getCurrentPlanSummaries();
-    final completedPlans =
-        await widget.readRepository.getCompletedPlanSummaries();
     if (!mounted) return;
 
-    final selected = await showModalBottomSheet<String>(
+    final selected = await showModalBottomSheet<_PlanPickerSelection>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.white,
@@ -187,55 +185,42 @@ class _ReadScreenState extends State<ReadScreen> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
       builder: (context) => _PlanPickerSheet(
-        readRepository: widget.readRepository,
         currentPlans: currentPlans,
-        completedPlans: completedPlans,
         currentPlanId: _plan?.id,
-        inProgressTemplateIds: {
-          for (final s in currentPlans) s.plan.templateId,
-        },
       ),
     );
 
-    if (!mounted) return;
+    if (!mounted || selected == null) return;
 
-    if (selected == _PlanPickerSheet.addNewSentinel) {
-      try {
-        await widget.readRepository.refreshPlanTemplatesFromRemote();
-      } catch (_) {
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Could not refresh plans. Showing saved plans.'),
-          ),
-        );
-      }
-      final templates =
-          await widget.readRepository.getPlanTemplatesForCatalog();
-      if (!mounted) return;
-      final templateKey = await showModalBottomSheet<String>(
-        context: context,
-        isScrollControlled: true,
-        backgroundColor: Colors.white,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        builder: (context) => _PlanTemplatePickerSheet(templates: templates),
-      );
-      if (templateKey == null || !mounted) return;
-      await widget.readRepository.addPlanFromTemplate(templateKey);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Plan added')),
-      );
-      await _loadInitialState();
-      return;
+    switch (selected.action) {
+      case _PlanPickerAction.switchPlan:
+        final planId = selected.planId;
+        if (planId == null || planId == _plan?.id) return;
+        await widget.readRepository.switchToPlan(planId);
+        await _loadInitialState();
+        return;
+      case _PlanPickerAction.browsePlans:
+        await _openPlansScreen(PlansInitialTab.catalog);
+        return;
+      case _PlanPickerAction.managePlans:
+        await _openPlansScreen(PlansInitialTab.myPlans);
+        return;
     }
+  }
 
-    if (selected == null || selected == _plan?.id) return;
-
-    await widget.readRepository.switchToPlan(selected);
-    await _loadInitialState();
+  Future<void> _openPlansScreen(PlansInitialTab initialTab) async {
+    final changed = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (context) => PlansScreen(
+          readRepository: widget.readRepository,
+          initialTab: initialTab,
+        ),
+      ),
+    );
+    if (!mounted) return;
+    if (changed == true) {
+      await _loadInitialState();
+    }
   }
 
   List<Widget> _buildBookRows({
@@ -347,7 +332,8 @@ class _ReadScreenState extends State<ReadScreen> {
                       ),
                       const SizedBox(height: 20),
                       FilledButton.icon(
-                        onPressed: _showPlanPicker,
+                        onPressed: () =>
+                            _openPlansScreen(PlansInitialTab.catalog),
                         icon: const Icon(Icons.add, size: 20),
                         label: const Text('Browse Plans'),
                         style: FilledButton.styleFrom(
@@ -685,33 +671,20 @@ class _CompletionBanner extends StatelessWidget {
 
 class _PlanPickerSheet extends StatefulWidget {
   const _PlanPickerSheet({
-    required this.readRepository,
     required this.currentPlans,
-    required this.completedPlans,
     required this.currentPlanId,
-    required this.inProgressTemplateIds,
   });
 
-  /// Returned from this sheet when the user chooses Browse Plans.
-  static const addNewSentinel = '__plan_picker_add_new__';
-
-  final ReadRepository readRepository;
   final List<ReadingPlanSummary> currentPlans;
-  final List<CompletedPlanSummary> completedPlans;
   final String? currentPlanId;
-  final Set<String> inProgressTemplateIds;
 
   @override
   State<_PlanPickerSheet> createState() => _PlanPickerSheetState();
 }
 
 class _PlanPickerSheetState extends State<_PlanPickerSheet> {
-  var _tab = _PlanPickerTab.current;
-
   @override
   Widget build(BuildContext context) {
-    final showingCurrent = _tab == _PlanPickerTab.current;
-
     return SafeArea(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 14),
@@ -737,40 +710,30 @@ class _PlanPickerSheetState extends State<_PlanPickerSheet> {
               ),
               const SizedBox(height: 8),
               Text(
-                showingCurrent
-                    ? 'Switch between your current plans'
-                    : 'Review completed reading plans',
+                'Switch quickly, or open the full plan manager',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                       color: AppTheme.mutedInk,
                       fontSize: 18,
                     ),
               ),
-              const SizedBox(height: 22),
-              _PlanPickerTabs(
-                value: _tab,
-                onChanged: (tab) => setState(() => _tab = tab),
-              ),
               const SizedBox(height: 18),
               ConstrainedBox(
                 constraints: BoxConstraints(
                   maxHeight: MediaQuery.sizeOf(context).height * 0.48,
                 ),
-                child: showingCurrent
-                    ? _CurrentPlansList(
-                        plans: widget.currentPlans,
-                        currentPlanId: widget.currentPlanId,
-                      )
-                    : _CompletedPlansList(
-                        readRepository: widget.readRepository,
-                        plans: widget.completedPlans,
-                        inProgressTemplateIds: widget.inProgressTemplateIds,
-                      ),
+                child: _CurrentPlansList(
+                  plans: widget.currentPlans,
+                  currentPlanId: widget.currentPlanId,
+                ),
               ),
               const SizedBox(height: 16),
               OutlinedButton.icon(
                 onPressed: () {
-                  Navigator.pop(context, _PlanPickerSheet.addNewSentinel);
+                  Navigator.pop(
+                    context,
+                    const _PlanPickerSelection.browsePlans(),
+                  );
                 },
                 icon: const Icon(Icons.add, size: 22),
                 label: const Text('Browse Plans'),
@@ -790,6 +753,29 @@ class _PlanPickerSheetState extends State<_PlanPickerSheet> {
                   ),
                 ),
               ),
+              const SizedBox(height: 10),
+              FilledButton.icon(
+                onPressed: () {
+                  Navigator.pop(
+                    context,
+                    const _PlanPickerSelection.managePlans(),
+                  );
+                },
+                icon: const Icon(Icons.tune, size: 20),
+                label: const Text('Manage Plans'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.ink,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 18),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ),
             ],
           ),
         ),
@@ -798,80 +784,22 @@ class _PlanPickerSheetState extends State<_PlanPickerSheet> {
   }
 }
 
-enum _PlanPickerTab { current, completed }
+enum _PlanPickerAction { switchPlan, browsePlans, managePlans }
 
-class _PlanPickerTabs extends StatelessWidget {
-  const _PlanPickerTabs({
-    required this.value,
-    required this.onChanged,
-  });
+class _PlanPickerSelection {
+  const _PlanPickerSelection.switchPlan(this.planId)
+      : action = _PlanPickerAction.switchPlan;
 
-  final _PlanPickerTab value;
-  final ValueChanged<_PlanPickerTab> onChanged;
+  const _PlanPickerSelection.browsePlans()
+      : action = _PlanPickerAction.browsePlans,
+        planId = null;
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(3),
-      decoration: BoxDecoration(
-        color: AppTheme.softSurface,
-        borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Row(
-        children: [
-          _PlanPickerTabButton(
-            label: 'Current',
-            selected: value == _PlanPickerTab.current,
-            onTap: () => onChanged(_PlanPickerTab.current),
-          ),
-          _PlanPickerTabButton(
-            label: 'Completed',
-            selected: value == _PlanPickerTab.completed,
-            onTap: () => onChanged(_PlanPickerTab.completed),
-          ),
-        ],
-      ),
-    );
-  }
-}
+  const _PlanPickerSelection.managePlans()
+      : action = _PlanPickerAction.managePlans,
+        planId = null;
 
-class _PlanPickerTabButton extends StatelessWidget {
-  const _PlanPickerTabButton({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(3),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          decoration: BoxDecoration(
-            color: selected ? Colors.white : Colors.transparent,
-            borderRadius: BorderRadius.circular(3),
-            border: selected ? Border.all(color: AppTheme.border) : null,
-          ),
-          alignment: Alignment.center,
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: selected ? AppTheme.ink : AppTheme.mutedInk,
-                  fontWeight: FontWeight.w800,
-                ),
-          ),
-        ),
-      ),
-    );
-  }
+  final _PlanPickerAction action;
+  final String? planId;
 }
 
 class _PlanPickerEmptyState extends StatelessWidget {
@@ -921,41 +849,10 @@ class _CurrentPlansList extends StatelessWidget {
         return _PlanSummaryCard(
           summary: summary,
           isCurrent: summary.plan.id == currentPlanId,
-          onTap: () => Navigator.pop(context, summary.plan.id),
-        );
-      },
-    );
-  }
-}
-
-class _CompletedPlansList extends StatelessWidget {
-  const _CompletedPlansList({
-    required this.readRepository,
-    required this.plans,
-    required this.inProgressTemplateIds,
-  });
-
-  final ReadRepository readRepository;
-  final List<CompletedPlanSummary> plans;
-  final Set<String> inProgressTemplateIds;
-
-  @override
-  Widget build(BuildContext context) {
-    if (plans.isEmpty) {
-      return const _PlanPickerEmptyState(message: 'No completed plans yet.');
-    }
-
-    return ListView.separated(
-      shrinkWrap: true,
-      itemCount: plans.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (context, index) {
-        final summary = plans[index];
-        final hasActiveRun = inProgressTemplateIds.contains(summary.templateId);
-        return _CompletedPlanSummaryCard(
-          summary: summary,
-          hasActiveRunForTemplate: hasActiveRun,
-          readRepository: readRepository,
+          onTap: () => Navigator.pop(
+            context,
+            _PlanPickerSelection.switchPlan(summary.plan.id),
+          ),
         );
       },
     );
@@ -1058,444 +955,6 @@ class _PlanSummaryCard extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-class _CompletedPlanSummaryCard extends StatefulWidget {
-  const _CompletedPlanSummaryCard({
-    required this.summary,
-    required this.hasActiveRunForTemplate,
-    required this.readRepository,
-  });
-
-  final CompletedPlanSummary summary;
-  final bool hasActiveRunForTemplate;
-  final ReadRepository readRepository;
-
-  @override
-  State<_CompletedPlanSummaryCard> createState() =>
-      _CompletedPlanSummaryCardState();
-}
-
-class _CompletedPlanSummaryCardState extends State<_CompletedPlanSummaryCard> {
-  var _startingAgain = false;
-
-  Future<void> _onStartAgain(BuildContext context) async {
-    final key = widget.summary.templateKey;
-    if (key.isEmpty || _startingAgain) return;
-
-    setState(() => _startingAgain = true);
-    try {
-      final planId = await widget.readRepository.addPlanFromTemplate(key);
-      if (!context.mounted) return;
-      Navigator.pop(context, planId);
-    } catch (_) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not start plan. Try again.')),
-      );
-    } finally {
-      if (mounted) setState(() => _startingAgain = false);
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final summary = widget.summary;
-    final completedAt = summary.lastCompletedAt;
-    final dateLabel = completedAt == null
-        ? null
-        : 'Last completed ${DateFormat('MMM d, y').format(completedAt)}';
-    final chaptersLabel = summary.totalChapters <= 0
-        ? null
-        : summary.totalChapters == 1
-            ? '1 chapter'
-            : '${summary.totalChapters} chapters';
-    final timeLabel = summary.estimatedReadingLabel;
-    final canStartAgain =
-        summary.templateKey.isNotEmpty && !widget.hasActiveRunForTemplate;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            summary.title,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            summary.completionLabel,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.mutedInk,
-                  fontWeight: FontWeight.w600,
-                ),
-          ),
-          if (dateLabel != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              dateLabel,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.mutedInk,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ],
-          if (chaptersLabel != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              chaptersLabel,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.mutedInk,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ],
-          if (timeLabel != null) ...[
-            const SizedBox(height: 4),
-            Text(
-              timeLabel,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.mutedInk,
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ],
-          if (widget.hasActiveRunForTemplate) ...[
-            const SizedBox(height: 10),
-            Text(
-              'This plan is already in Current.',
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.mutedInk,
-                    fontStyle: FontStyle.italic,
-                  ),
-            ),
-          ],
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: !canStartAgain || _startingAgain
-                  ? null
-                  : () => _onStartAgain(context),
-              style: FilledButton.styleFrom(
-                backgroundColor: AppTheme.ink,
-                foregroundColor: Colors.white,
-                disabledBackgroundColor: AppTheme.softSurface,
-                disabledForegroundColor: AppTheme.mutedInk,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(3),
-                ),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                textStyle: const TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              child: _startingAgain
-                  ? const SizedBox(
-                      height: 20,
-                      width: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: Colors.white,
-                      ),
-                    )
-                  : const Text('Start Again'),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _PlanTemplatePickerSheet extends StatelessWidget {
-  const _PlanTemplatePickerSheet({required this.templates});
-
-  final List<ReadingPlanTemplateView> templates;
-
-  @override
-  Widget build(BuildContext context) {
-    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
-
-    return SafeArea(
-      child: Padding(
-        padding: EdgeInsets.fromLTRB(20, 12, 20, 14 + bottomInset),
-        child: ColoredBox(
-          color: Colors.white,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                width: 96,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppTheme.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-              const SizedBox(height: 28),
-              Text(
-                'Browse Plans',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Browse plans and add to your list',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.mutedInk,
-                      fontSize: 18,
-                    ),
-              ),
-              const SizedBox(height: 28),
-              ConstrainedBox(
-                constraints: BoxConstraints(
-                  maxHeight: MediaQuery.sizeOf(context).height * 0.62,
-                ),
-                child: templates.isEmpty
-                    ? const _PlanPickerEmptyState(
-                        message: 'No published plans yet.',
-                      )
-                    : GridView.builder(
-                        padding: EdgeInsets.zero,
-                        itemCount: templates.length,
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 0.78,
-                        ),
-                        itemBuilder: (context, index) {
-                          final template = templates[index];
-                          return _PlanCatalogCard(
-                            template: template,
-                            onAdd: template.isInProgress
-                                ? null
-                                : () => Navigator.pop(
-                                    context, template.templateKey),
-                          );
-                        },
-                      ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PlanCatalogCard extends StatelessWidget {
-  const _PlanCatalogCard({
-    required this.template,
-    required this.onAdd,
-  });
-
-  final ReadingPlanTemplateView template;
-  final VoidCallback? onAdd;
-
-  @override
-  Widget build(BuildContext context) {
-    final minutes = template.estimatedMinutes;
-    final timeLabel = minutes == null
-        ? null
-        : minutes >= 60
-            ? 'About ${(minutes / 60).round()} hours'
-            : 'About $minutes min';
-
-    final shortDesc =
-        template.shortDescription.isNotEmpty ? template.shortDescription : template.description;
-
-    final coverUrl = template.coverImageUrl;
-    final hasImage = coverUrl != null && coverUrl.isNotEmpty;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onAdd,
-        borderRadius: BorderRadius.circular(3),
-        child: Container(
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(3),
-            border: Border.all(color: AppTheme.border),
-          ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AspectRatio(
-                aspectRatio: 1.12,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    hasImage
-                        ? Image.network(
-                            coverUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) =>
-                                _PlanImagePlaceholder(planTypeLabel: template.planTypeLabel),
-                          )
-                        : _PlanImagePlaceholder(planTypeLabel: template.planTypeLabel),
-                    Positioned(
-                      top: 10,
-                      left: 10,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-                        decoration: BoxDecoration(
-                          color: AppTheme.accentYellowDark,
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                        child: Text(
-                          template.planTypeLabel,
-                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                color: AppTheme.ink,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.2,
-                              ),
-                        ),
-                      ),
-                    ),
-                    if (template.isInProgress)
-                      Positioned(
-                        top: 10,
-                        right: 10,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppTheme.accentYellowLight,
-                            borderRadius: BorderRadius.circular(3),
-                            border: Border.all(color: AppTheme.border),
-                          ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.check, size: 16, color: AppTheme.ink),
-                              SizedBox(width: 6),
-                              Text(
-                                'ADDED',
-                                style: TextStyle(
-                                  color: AppTheme.ink,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.1,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      template.title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w800,
-                            fontSize: 18,
-                          ),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      shortDesc,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.mutedInk,
-                            fontSize: 14,
-                            height: 1.25,
-                          ),
-                    ),
-                    const SizedBox(height: 12),
-                    Wrap(
-                      spacing: 12,
-                      runSpacing: 6,
-                      children: [
-                        _CatalogMeta(
-                          icon: Icons.menu_book_outlined,
-                          text: '${template.totalChapters} chapters',
-                        ),
-                        if (timeLabel != null)
-                          _CatalogMeta(
-                            icon: Icons.schedule,
-                            text: timeLabel,
-                          ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _PlanImagePlaceholder extends StatelessWidget {
-  const _PlanImagePlaceholder({required this.planTypeLabel});
-
-  final String planTypeLabel;
-
-  @override
-  Widget build(BuildContext context) {
-    return ColoredBox(
-      color: AppTheme.softSurface,
-      child: Center(
-        child: Icon(
-          Icons.menu_book_outlined,
-          size: 42,
-          color: AppTheme.mutedInk,
-        ),
-      ),
-    );
-  }
-}
-
-class _CatalogMeta extends StatelessWidget {
-  const _CatalogMeta({required this.icon, required this.text});
-
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 19, color: AppTheme.mutedInk),
-        const SizedBox(width: 6),
-        Text(
-          text,
-          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: AppTheme.mutedInk,
-                fontWeight: FontWeight.w600,
-              ),
-        ),
-      ],
     );
   }
 }

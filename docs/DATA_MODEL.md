@@ -2,15 +2,16 @@
 
 This document is the current data-model source of truth for the project.
 
-## Current Schema Sources
+## Schema Sources
 
 | Layer | Source |
 | --- | --- |
 | Local mobile database | `apps/mobile/lib/core/database/app_database.dart` |
 | Generated Drift code | `apps/mobile/lib/core/database/app_database.g.dart` |
 | Server database | `apps/web/db/schema.sql` |
+| Server migrations | `apps/web/db/migrations/` |
 
-Local Drift schema version is `1`. During active development, this schema is treated as the clean baseline. If schema behavior looks stale during manual testing, delete the app and reinstall.
+Local Drift schema version is `2`. During active MVP development, stale local data can be cleared by deleting/reinstalling the app or resetting the simulator/emulator build.
 
 ## Conceptual Model
 
@@ -30,8 +31,7 @@ The important split:
 
 - Template data defines what a plan is.
 - User plan data snapshots one user's run of that plan.
-
-When a user starts a plan, template ranges are resolved into individual `user_plan_chapters`. Later template edits should not rewrite already-started plan runs.
+- Later template edits should not rewrite already-started plan runs.
 
 ## Local Tables
 
@@ -58,7 +58,7 @@ One local profile row exists before remote sync. Firebase UID is stored in `auth
 | `id` | Short local device/user id |
 | `type` | `guest` or `authenticated` |
 | `auth_user_id` | Firebase `uid`, nullable |
-| `sync_status`, `server_id`, `last_synced_at`, `client_revision` | Future sync metadata |
+| `sync_status`, `server_id`, `last_synced_at`, `client_revision` | Sync metadata |
 
 ### `plan_templates`
 
@@ -82,12 +82,14 @@ Important columns:
 - `primary_character`
 - `is_builtin`
 - `is_published`
+- `featured_rank`
+- `browse_visible`
 
 Template source:
 
 - Plan templates are created and edited in the web admin dashboard.
 - Published templates are stored in Neon and served through `GET /api/v1/plans`.
-- Mobile caches the published template rows locally before Browse Plans / Add Plan flows.
+- Mobile caches published template rows locally before Catalog / Start Plan flows.
 
 ### `plan_template_sections`
 
@@ -97,9 +99,8 @@ Examples:
 
 - `Old Testament`
 - `New Testament`
-- `Before Samuel`
-- `Young Samuel`
-- `Samuel and Saul`
+- `Dreams and Betrayal`
+- `Joseph in Egypt`
 
 ### `plan_template_items`
 
@@ -108,18 +109,18 @@ Chapter ranges inside a section.
 Example:
 
 ```text
-Young Samuel
-  1_samuel 3-7
+Dreams and Betrayal
+  Genesis 37
 
-Samuel and Saul
-  1_samuel 8-15
+Joseph in Egypt
+  Genesis 39-41
 ```
 
 This is why the same book can appear in multiple sections with different chapter ranges.
 
 ### `plan_tags` and `plan_template_tags`
 
-Reserved for catalog/search metadata. These tables exist locally but are not heavily used yet.
+Reserved for catalog/search metadata.
 
 Potential tag types:
 
@@ -142,22 +143,25 @@ Important columns:
 | `local_user_id` | Owner |
 | `template_id` | Source template |
 | `title` | Snapshot title |
-| `status` | `active`, `completion_ready`, `completed`; future: `paused`, `archived` |
+| `status` | `active`, `completion_ready`, `completed`, `archived` |
 | `subscribed_at` | Added to user's plan list |
 | `started_at` | First completion/start moment |
 | `completed_at` | Finish Plan confirmation time |
-| `archived_at` | Reserved for future explicit archive |
+| `archived_at` | Hidden from Current while preserving progress/history |
 | `is_active` | Current selected run flag |
 | `last_opened_section_id` | Read tab resume state |
 | `last_opened_book_key` | Read tab resume state |
-| sync metadata | Future sync |
+| sync metadata | Backup/restore state |
 
 Current UI interpretation:
 
-- My Plans `Current`: `active` and `completion_ready`
-- My Plans `Completed`: `completed`
-- Browse Plans `In Progress`: a template has an active/current run
-- Browse Plans `Start Again`: a template has completed history and no current run
+- Plans > My Plans > Current: `active` and `completion_ready` where `archived_at is null`
+- Plans > My Plans > Completed: completion history from `plan_completion_events`
+- Plans > My Plans > Archived: `archived_at is not null`
+- Catalog `Continue`: a template has an active/current run
+- Catalog `Start Again`: a template has completed history and no current run
+
+Archive is non-destructive. It updates the plan row and keeps `user_plan_chapters`, `chapter_progress_entries`, `reading_activities`, and `plan_completion_events`.
 
 ### `user_plan_chapters`
 
@@ -169,7 +173,7 @@ Unique key:
 unique(user_plan_id, book_key, chapter_number)
 ```
 
-Note: section id is stored on each row so section-based rendering can show the same book in different sections.
+Section id is stored on each row so section-based rendering can show the same book in different sections.
 
 ### `chapter_progress_entries`
 
@@ -214,7 +218,7 @@ Unique key:
 unique(user_plan_id)
 ```
 
-`completion_number` is calculated per local user + template. This supports Browse Plans labels such as `Completed once` and future rewards.
+`completion_number` is calculated per local user + template. This supports labels such as `Completed once` and `Completed N times`.
 
 ### `app_settings`
 
@@ -225,41 +229,94 @@ Examples:
 - `last_active_plan_id`
 - `account_mode`
 - `initial_backup_prompt_done`
+- `last_reading_sync_at`
+- `today_message_hearted_<id>`
+- `today_message_saved_<id>`
 
-## Server Schema Status
+## Server Tables
 
-The active server schema in `apps/web/db/schema.sql` currently supports auth user upsert:
+`apps/web/db/schema.sql` is the server schema source for Neon.
 
-```sql
-auth_users (
-  id uuid primary key,
-  firebase_uid text unique,
-  email text,
-  display_name text,
-  photo_url text,
-  email_verified boolean,
-  created_at timestamptz,
-  updated_at timestamptz,
-  last_seen_at timestamptz
-)
+### Identity
+
+```text
+auth_users
 ```
 
-Remote sync tables for plan templates, user plans, progress, activities, and completion events are not implemented yet.
+Firebase Auth owns identity. `auth_users.firebase_uid` maps Firebase users to app data rows.
 
-When sync work starts, the server schema should be aligned with the current local model:
+### Plan catalog
 
-- `plan_templates`
-- `plan_template_sections`
-- `plan_template_items`
-- `user_reading_plans`
-- `user_plan_chapters`
-- `chapter_progress_entries`
-- `reading_activities`
-- `plan_completion_events`
+```text
+plan_templates
+plan_template_sections
+plan_template_items
+plan_tags
+plan_template_tags
+```
+
+Admin-owned plan content is stored in Neon and published to mobile through `/api/v1/plans`.
+
+### Reading backup/restore
+
+```text
+user_reading_plans
+user_plan_chapters
+chapter_progress_entries
+reading_activities
+plan_completion_events
+sync_states
+```
+
+Server sync rows are scoped to `auth_users`. Mobile UUIDs are stored as `client_id` values, allowing the API to acknowledge uploaded rows back to local Drift rows.
+
+### Today’s Message
+
+```text
+media_assets
+today_messages
+```
+
+Important `today_messages` fields:
+
+- `publish_date`
+- `language`
+- `verse_reference`
+- `bible_version`
+- `verse_text`
+- `message`
+- `image_url`
+- `image_public_id`
+- `hint_title`
+- `hint_summary`
+- `article_title`
+- `article_body`
+- `primary_related_plan_template_id`
+- `is_published`
+- `heart_count`
+- `share_count`
+
+`unique(publish_date, language)` keeps one canonical message per language per day. Public lookup returns the latest published message where `publish_date <= requested date`.
+
+Only publish verse text that the project is licensed or allowed to display.
+
+### Feedback
+
+```text
+feedback_messages
+```
+
+Mobile Settings > Help & feedback posts to the server with:
+
+- `category`: `bug`, `idea`, or `other`
+- `message`
+- optional contact/signed-in email
+- source and metadata
 
 ## Current Repository Consistency Notes
 
 - Local Drift code uses `user_plan_id` for plan-run scoped rows.
 - Local denominator table is `user_plan_chapters`.
 - Firebase `uid` is stored locally in `local_users.auth_user_id`.
-- The mobile app currently syncs only auth user identity to the server.
+- Mobile backup/restore maps local UUIDs to server UUIDs through `client_id` / `server_id`.
+- Mobile still writes locally first; backup/restore is an authenticated secondary path.

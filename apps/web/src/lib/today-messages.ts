@@ -7,6 +7,7 @@ export interface TodayMessageBase {
   publish_date: string;
   language: string;
   verse_reference: string;
+  bible_version: string | null;
   verse_text: string | null;
   message: string | null;
   image_url: string | null;
@@ -31,6 +32,7 @@ export interface AdminTodayMessageInput {
   publish_date: string;
   language?: string | null;
   verse_reference: string;
+  bible_version?: string | null;
   verse_text?: string | null;
   message?: string | null;
   image_url?: string | null;
@@ -92,6 +94,7 @@ function normalizeInput(input: AdminTodayMessageInput): NormalizedAdminTodayMess
     publish_date: publishDate,
     language: normalizeLanguage(input.language),
     verse_reference: verseReference,
+    bible_version: emptyToNull(input.bible_version)?.toUpperCase() ?? null,
     verse_text: emptyToNull(input.verse_text),
     message: emptyToNull(input.message),
     image_url: emptyToNull(input.image_url),
@@ -188,6 +191,7 @@ export async function createAdminTodayMessage(rawInput: AdminTodayMessageInput) 
       publish_date,
       language,
       verse_reference,
+      bible_version,
       verse_text,
       message,
       image_url,
@@ -205,6 +209,7 @@ export async function createAdminTodayMessage(rawInput: AdminTodayMessageInput) 
       ${input.publish_date},
       ${input.language},
       ${input.verse_reference},
+      ${input.bible_version ?? null},
       ${input.verse_text ?? null},
       ${input.message ?? null},
       ${input.image_url ?? null},
@@ -233,6 +238,7 @@ export async function updateAdminTodayMessage(id: string, rawInput: AdminTodayMe
       publish_date = ${input.publish_date},
       language = ${input.language},
       verse_reference = ${input.verse_reference},
+      bible_version = ${input.bible_version ?? null},
       verse_text = ${input.verse_text ?? null},
       message = ${input.message ?? null},
       image_url = ${input.image_url ?? null},

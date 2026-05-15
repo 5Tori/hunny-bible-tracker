@@ -148,7 +148,10 @@ Web:
 
 ```bash
 pnpm web:build
+pnpm --dir apps/web typecheck
 ```
+
+Run `flutter analyze` and `pnpm --dir apps/web typecheck` after focused mobile/web implementation work. Run the broader test/build set before release candidates.
 
 ## Native Platform Notes
 
@@ -233,3 +236,7 @@ Then run:
 flutter analyze
 flutter test
 ```
+
+### Mobile data looks stale during MVP development
+
+The app is still in active schema/content development. If plan or Today’s Message behavior looks stale during manual testing, uninstall the app or reset the simulator/emulator app data, then run again with the current API base URL.

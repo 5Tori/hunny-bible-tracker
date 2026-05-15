@@ -1,4 +1,4 @@
--- Today’s Message manager (see docs/ref/TODAY_MESSAGES.md).
+-- Today’s Message manager (see docs/ADMIN_DASHBOARD.md and docs/DATA_MODEL.md).
 create table if not exists today_messages (
   id uuid primary key default gen_random_uuid(),
   publish_date date not null,

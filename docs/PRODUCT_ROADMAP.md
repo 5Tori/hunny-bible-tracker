@@ -7,60 +7,118 @@ This document explains what the product is today and what should be built next.
 Hunny Bible Tracker is becoming a guided Bible reading pack app, not just a chapter checklist.
 
 ```text
-Browse Plans
-  -> add/start a reading journey
+Home prompt / Plan Catalog
+  -> start a reading journey
   -> read section/book/chapter progress
   -> finish a plan
   -> keep completed history
-  -> start again when desired
+  -> archive/restore or start again when desired
 ```
 
-The app is not a Bible text reader in v0.1. It tracks references and progress.
+The app is not a full Bible text reader in v0.1. It tracks references, progress, plans, and short admin-managed message content.
 
-## Current Tabs
+## MVP Tabs
 
 | Tab | Current state |
 | --- | --- |
-| Home | Greeting, verse mock, current plan progress, featured content mock |
-| Discover/Find | Mock content catalog with search/filter UI |
-| Read | Main production-quality area |
-| List | Placeholder |
-| Settings | Account, preferences, help/feedback |
+| Home | Greeting, Today’s Message, Read More modal, related plan CTA, current reading progress |
+| Read | Main reading surface and quick plan switcher |
+| Settings | Account, backup/restore, Manage reading plans, Help & feedback |
 
-## Read Tab Current UX
+Hidden for MVP:
 
-Current implemented flow:
+- Discover/Find prototype
+- Saved/List prototype
 
-- Top plan title opens My Plans sheet.
-- My Plans has `Current` and `Completed` tabs.
-- `Current` shows active/current plan runs.
-- `Completed` shows finished run history.
-- `Browse Plans` opens catalog.
-- Catalog cards show type, title, short description, chapter count, estimated time.
-- A plan already being read shows `In Progress`.
-- A plan with completed history shows `Completed once` or `Completed N times`.
-- A completed template can be started again with `Start Again`.
+## Home Current UX
+
+Today’s Message is a small content unit:
+
+- Image
+- Verse text
+- Verse reference + Bible version
+- Heart, Save, Share actions
+- Quick reflection title/summary
+- Read More article modal
+- Related plan CTA in the article modal
+
+Public lookup returns the latest published message on or before the requested date. This prevents a blank Home card when today’s content has not been published yet.
+
+Heart/share counts are server counters. Save is local for now.
+
+## Read Current UX
+
+Implemented flow:
+
+- Top plan title opens a lightweight My Plans sheet.
+- The sheet is quick switching only.
+- Sheet rows show Current Plans and progress.
+- Sheet buttons open full Plans screen:
+  - `Browse Plans` -> Plans Catalog
+  - `Manage Plans` -> Plans My Plans
 - Chapter grids can be read in any order.
 - Plan completion requires confirmation.
 
-## Current Built-In Plans
+## Plans Current UX
 
-### Bible in a Year
+Plans is a full-screen Plan Manager / Plan Library, not a bottom tab.
 
-Sections:
-
-- Old Testament
-- New Testament
-
-### Samuel Story
+### My Plans
 
 Sections:
 
-- Before Samuel
-- Young Samuel
-- Samuel and Saul
+- `Current`: active and completion-ready runs
+- `Completed`: finished run history
+- `Archived`: archived runs with preserved progress
 
-This proves the section/range model supports non-canonical story plans and repeated books across different sections.
+Current plan cards show:
+
+- title
+- completed / total chapters
+- percent
+- Continue
+- Archive
+
+Archived plan cards show:
+
+- preserved progress
+- Restore
+
+### Catalog
+
+Catalog shows published plan templates from Neon, cached locally on mobile.
+
+CTA policy:
+
+- Never started -> `Start Plan`
+- Active/current run exists -> `Continue`
+- Completed before and no active run -> `Start Again`
+
+`Plan Detail` is intentionally not implemented yet.
+
+## Settings Current UX
+
+- Guest state shows local account state and sign-in prompt.
+- Signed-in state shows account email.
+- Google-only sign-in flow through Firebase Auth.
+- Timezone is automatically detected.
+- Language opens a bottom sheet with English only.
+- Notifications are Off and reserved for future development.
+- Backup section supports Sync now and Restore backup for signed-in users.
+- Account section links to Manage reading plans.
+- Help & feedback bottom sheet includes FAQ and feedback form.
+- Signed-in feedback uses account email internally; guest users can enter email.
+
+## Admin Current UX
+
+The web admin dashboard supports:
+
+- Plan template create/edit/publish/archive
+- Plan sections and chapter ranges
+- Cloudinary cover image upload
+- Today’s Message create/edit/publish/delete
+- Today’s Message image upload
+- Today’s Message article fields and related plan selection
 
 ## Completion Policy
 
@@ -70,39 +128,43 @@ When all chapters in a plan run are complete:
 2. Show completion dialog.
 3. If confirmed, create one `plan_completion_events` row.
 4. Mark plan `completed`.
-5. Remove it from current plan list.
-6. Keep it visible in `Completed`.
+5. Remove it from Current.
+6. Keep it visible in Completed history.
 
-Completed plans are read-only for now. To read again, start a new run from Browse Plans.
+Completed plans are read-only for now. To read again, start a new run from Catalog or Completed `Start Again`.
 
-## Settings Current UX
+Archive policy:
 
-- Guest state shows local device id and short sign-in prompt.
-- Signed-in state shows account email.
-- Google-only sign-in flow through Firebase Auth.
-- Timezone is automatically detected.
-- Language opens a bottom sheet with English only.
-- Notifications are Off and reserved for future development.
-- Help & feedback bottom sheet includes FAQ and feedback form.
-- Signed-in feedback uses account email internally; guest users can enter email.
+- Archive hides an active/current run without deleting progress or reading history.
+- Restore moves the archived run back to Current and makes it active.
 
-## Discover Current UX
+## Current Launch Definition
 
-The Discover/Find tab is local mock data today.
+Closed-test MVP should include:
 
-Current behavior:
-
-- Search filters by title, reference, and tags.
-- Keyword filters are AND.
-- Topic filters are AND.
-- Length filters are OR inside the length dimension.
-- Results must pass all active filter dimensions.
-
-Future server content should preserve these semantics or document any change.
+- Home Today’s Message working with published server content.
+- Read flow stable for at least one active plan.
+- Plans screen can start, continue, archive, restore, and start again.
+- Settings sign-in, Sync now, Restore backup, and Help & feedback work.
+- Discover/Saved remain hidden.
+- Privacy, Terms, and Support pages exist.
+- Android closed testing build passes basic manual QA.
 
 ## Near-Term Priorities
 
-### 1. Plan Catalog Detail
+### 1. Closed Testing Cleanup
+
+Use `docs/to-do/MVP_CLOSE_TESTING_TODO.md` as the active checklist.
+
+Focus:
+
+- Release configuration
+- Seed/publish real content
+- Manual QA
+- Store copy / release notes
+- Backup/restore sanity checks
+
+### 2. Plan Detail Screen
 
 Add detail view for a plan before starting:
 
@@ -113,61 +175,58 @@ Add detail view for a plan before starting:
 - Tags
 - Optional intro/prologue
 
-### 2. More Built-In Plans
+### 3. More Published Plans
 
-Add a few real guided packs:
+Minimum useful launch set:
 
-- Life of Joseph
-- Life of David
-- Psalms for Anxiety
+- Bible in a Year
+- The Story of Joseph
 - Gospel of Mark
+- Psalms for Anxiety
+- Life of David
 
-Each should be seeded through the same template/section/item model.
+Each should be created through the same template/section/item model and published in admin.
 
-### 3. Completed Plan Polish
+### 4. Today’s Message Content Pipeline
 
-Improve completed history:
+Prepare a small calendar of real messages:
 
-- Completed date
-- Run number
-- Total chapters
-- Optional completion message
-- Future reward/badge placeholder
+- Verse reference
+- Bible version
+- Licensed/allowed verse text or reference-only fallback
+- Image
+- Quick reflection
+- Article body
+- Related plan
 
-### 4. Remote Sync Foundation
+### 5. Sync Polish
 
-Implement server schema and API for local model sync. See `docs/SYNC_STRATEGY.md`.
+The backup/restore foundation exists. Next work should improve:
 
-### 5. List Tab
+- User-facing error states
+- App-start sync timing
+- Conflict telemetry
+- Incremental pull only if bootstrap becomes too heavy
 
-Decide first useful scope:
+### 6. Saved / Discover Scope
 
-- Saved references
-- Saved content items
-- Reading notes
+Do not re-enable Discover/Saved until there is a real content source or a very small committed scope.
 
-Do not introduce full Bible text storage unless product scope changes.
+Possible first Saved scope:
 
-### 6. Discover Content API
+- saved Today’s Messages
+- saved plans
 
-Replace mock catalog with server-provided content when content strategy is ready.
-
-Potential content types:
-
-- Devotional
-- Article
-- Video
-- Plan prologue
-- Section intro
-- Completion message
+Avoid full Bible text storage unless product scope changes.
 
 ## Later Ideas
 
-- Plan tags and filtering in Browse Plans
-- Plan media table for cover/detail/prologue/completion assets
-- Reward templates and reward grants
+- Plan detail media
+- Plan tags and filtering in Catalog
 - Reflection prompts
-- Admin dashboard for plan/content authoring
+- Section intro content
+- Completion messages
+- Rewards/badges
 - Push notifications
 - Account statistics and lifetime unique chapters read
 
@@ -178,4 +237,5 @@ Potential content types:
 - Do not make users distinguish sign-up vs sign-in for Google Auth.
 - Keep plan definitions separate from user progress.
 - Keep reading activity separate from current progress state.
+- Archive should preserve progress and statistics.
 - Keep Neon behind API routes; mobile should not connect to Neon directly.

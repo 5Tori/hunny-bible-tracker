@@ -17,7 +17,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const title = `${message.article_title || message.verse_reference} | Hunny Bible Tracker`;
+  const referenceLabel = message.bible_version
+    ? `${message.verse_reference} · ${message.bible_version}`
+    : message.verse_reference;
+  const title = `${message.article_title || referenceLabel} | Hunny Bible Tracker`;
   const description =
     message.hint_summary ||
     message.article_body ||
@@ -63,6 +66,7 @@ export default async function TodayMessagePage({ params }: PageProps) {
     <main>
       <p className="eyebrow">Today’s Message</p>
       <h1>{message.verse_reference}</h1>
+      {message.bible_version ? <p className="eyebrow">{message.bible_version}</p> : null}
       {message.image_url ? (
         <img
           src={message.image_url}

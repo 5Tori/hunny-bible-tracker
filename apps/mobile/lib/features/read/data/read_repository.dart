@@ -96,6 +96,15 @@ class ReadRepository {
     return _summariesForPlans(plans);
   }
 
+  Future<List<ReadingPlanSummary>> getArchivedPlanSummaries() async {
+    final plans = await (db.select(db.userReadingPlans)
+          ..where((tbl) => tbl.archivedAt.isNotNull())
+          ..orderBy([(tbl) => OrderingTerm.desc(tbl.updatedAt)]))
+        .get();
+
+    return _summariesForPlans(plans.map(_toReadingPlanView).toList());
+  }
+
   Future<List<CompletedPlanSummary>> getCompletedPlanSummaries() async {
     final localUserId = await _activeLocalUserId();
     final events = await (db.select(db.planCompletionEvents)
@@ -220,6 +229,84 @@ class ReadRepository {
     await _setSetting('last_active_plan_id', planId);
   }
 
+  Future<void> archiveCurrentPlan(String planId) async {
+    final plan = await (db.select(db.userReadingPlans)
+          ..where(
+            (tbl) =>
+                tbl.id.equals(planId) &
+                tbl.archivedAt.isNull() &
+                tbl.status.isIn(['active', 'completion_ready']),
+          )
+          ..limit(1))
+        .getSingleOrNull();
+    if (plan == null) return;
+
+    final now = DateTime.now();
+    await (db.update(db.userReadingPlans)
+          ..where((tbl) => tbl.id.equals(planId)))
+        .write(
+      UserReadingPlansCompanion(
+        status: const Value('archived'),
+        archivedAt: Value(now),
+        isActive: const Value(false),
+        updatedAt: Value(now),
+        syncStatus: const Value('pending'),
+        clientRevision: Value(plan.clientRevision + 1),
+      ),
+    );
+
+    if (!plan.isActive) return;
+
+    final fallback = await (db.select(db.userReadingPlans)
+          ..where(
+            (tbl) =>
+                tbl.archivedAt.isNull() &
+                tbl.status.isIn(['active', 'completion_ready']),
+          )
+          ..orderBy([(tbl) => OrderingTerm.desc(tbl.updatedAt)])
+          ..limit(1))
+        .getSingleOrNull();
+
+    if (fallback == null) {
+      await _setSetting('last_active_plan_id', '');
+      return;
+    }
+    await switchToPlan(fallback.id);
+  }
+
+  Future<void> restoreArchivedPlan(String planId) async {
+    final plan = await (db.select(db.userReadingPlans)
+          ..where(
+            (tbl) => tbl.id.equals(planId) & tbl.archivedAt.isNotNull(),
+          )
+          ..limit(1))
+        .getSingleOrNull();
+    if (plan == null) return;
+
+    final counts = await _getCompletionCounts(planId);
+    final restoredStatus = counts.total > 0 && counts.completed >= counts.total
+        ? 'completion_ready'
+        : 'active';
+    final now = DateTime.now();
+
+    await db.transaction(() async {
+      await _deactivateAllActivePlans();
+      await (db.update(db.userReadingPlans)
+            ..where((tbl) => tbl.id.equals(planId)))
+          .write(
+        UserReadingPlansCompanion(
+          status: Value(restoredStatus),
+          archivedAt: const Value(null),
+          isActive: const Value(true),
+          updatedAt: Value(now),
+          syncStatus: const Value('pending'),
+          clientRevision: Value(plan.clientRevision + 1),
+        ),
+      );
+    });
+    await _setSetting('last_active_plan_id', planId);
+  }
+
   Future<List<ReadingPlanTemplateView>> getPlanTemplatesForCatalog() async {
     final rows = await (db.select(db.planTemplates)
           ..where((tbl) =>
@@ -251,11 +338,14 @@ class ReadRepository {
     return rows
         .map(
           (row) => ReadingPlanTemplateView(
+            id: row.id,
             templateKey: row.templateKey,
             title: row.title,
             description: row.description,
             shortDescription: row.shortDescription,
             planType: row.planType,
+            testamentScope: row.testamentScope,
+            difficulty: row.difficulty,
             estimatedMinutes: row.estimatedMinutes,
             totalChapters: row.totalChapters,
             coverImageUrl: row.coverImageUrl,
@@ -266,13 +356,50 @@ class ReadRepository {
         .toList();
   }
 
-  Future<String> addPlanFromTemplate(String templateKey) async {
+  Future<ReadingPlanTemplateView?> getPlanTemplateByIdentifier(
+    String identifier,
+  ) async {
+    final row = await (db.select(db.planTemplates)
+          ..where(
+            (tbl) =>
+                tbl.templateKey.equals(identifier) | tbl.id.equals(identifier),
+          )
+          ..limit(1))
+        .getSingleOrNull();
+    if (row == null) return null;
+
+    return ReadingPlanTemplateView(
+      id: row.id,
+      templateKey: row.templateKey,
+      title: row.title,
+      description: row.description,
+      shortDescription: row.shortDescription,
+      planType: row.planType,
+      testamentScope: row.testamentScope,
+      difficulty: row.difficulty,
+      estimatedMinutes: row.estimatedMinutes,
+      totalChapters: row.totalChapters,
+      coverImageUrl: row.coverImageUrl,
+      isInProgress: false,
+      completionCount: 0,
+    );
+  }
+
+  Future<String> addPlanFromTemplate(String templateIdentifier) async {
     final template = await (db.select(db.planTemplates)
-          ..where((tbl) => tbl.templateKey.equals(templateKey))
+          ..where(
+            (tbl) =>
+                tbl.templateKey.equals(templateIdentifier) |
+                tbl.id.equals(templateIdentifier),
+          )
           ..limit(1))
         .getSingleOrNull();
     if (template == null) {
-      throw ArgumentError.value(templateKey, 'templateKey', 'Unknown template');
+      throw ArgumentError.value(
+        templateIdentifier,
+        'templateIdentifier',
+        'Unknown template',
+      );
     }
 
     final existing = await (db.select(db.userReadingPlans)
