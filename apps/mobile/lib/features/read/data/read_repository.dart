@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../core/api/hunny_api_models.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/local_user_id.dart';
 import '../domain/read_models.dart';
@@ -23,6 +24,7 @@ class ReadRepository {
   /// Shown after Firebase creates a new account from Google sign-in.
   static const kAppSettingInitialBackupPromptDone =
       'initial_backup_prompt_done';
+  static const kAppSettingLastReadingSyncAt = 'last_reading_sync_at';
 
   Future<void> initializeLocalData() async {
     await db.transaction(() async {
@@ -821,6 +823,245 @@ class ReadRepository {
     await _setSetting('account_mode', 'guest');
   }
 
+  Future<Map<String, dynamic>> buildReadingSyncPushPayload() async {
+    final localUserId = await _activeLocalUserId();
+    final plans = await (db.select(db.userReadingPlans)
+          ..where((tbl) => tbl.localUserId.equals(localUserId)))
+        .get();
+    final planIds = plans.map((plan) => plan.id).toSet().toList();
+
+    final chapters = planIds.isEmpty
+        ? <UserPlanChapter>[]
+        : await (db.select(db.userPlanChapters)
+              ..where((tbl) => tbl.userPlanId.isIn(planIds)))
+            .get();
+    final progress = planIds.isEmpty
+        ? <ChapterProgressEntry>[]
+        : await (db.select(db.chapterProgressEntries)
+              ..where(
+                (tbl) =>
+                    tbl.localUserId.equals(localUserId) &
+                    tbl.userPlanId.isIn(planIds),
+              ))
+            .get();
+    final activities = planIds.isEmpty
+        ? <ReadingActivity>[]
+        : await (db.select(db.readingActivities)
+              ..where(
+                (tbl) =>
+                    tbl.localUserId.equals(localUserId) &
+                    tbl.userPlanId.isIn(planIds),
+              ))
+            .get();
+    final completionEvents = planIds.isEmpty
+        ? <PlanCompletionEvent>[]
+        : await (db.select(db.planCompletionEvents)
+              ..where(
+                (tbl) =>
+                    tbl.localUserId.equals(localUserId) &
+                    tbl.userPlanId.isIn(planIds),
+              ))
+            .get();
+
+    return {
+      'client': {
+        'localUserId': localUserId,
+        'pushedAt': DateTime.now().toUtc().toIso8601String(),
+      },
+      'userReadingPlans': plans.map(_syncPlanToJson).toList(),
+      'userPlanChapters': chapters.map(_syncChapterToJson).toList(),
+      'chapterProgressEntries': progress.map(_syncProgressToJson).toList(),
+      'readingActivities': activities.map(_syncActivityToJson).toList(),
+      'planCompletionEvents':
+          completionEvents.map(_syncCompletionToJson).toList(),
+    };
+  }
+
+  Future<void> applyReadingSyncPushResult(
+    HunnySyncPushResult result,
+  ) async {
+    final now = result.serverTime;
+    await db.transaction(() async {
+      await _markUserReadingPlansSynced(
+        result.acknowledgements.userReadingPlans,
+        now,
+      );
+      await _markUserPlanChaptersSynced(
+        result.acknowledgements.userPlanChapters,
+        now,
+      );
+      await _markChapterProgressSynced(
+        result.acknowledgements.chapterProgressEntries,
+        now,
+      );
+      await _markReadingActivitiesSynced(
+        result.acknowledgements.readingActivities,
+        now,
+      );
+      await _markPlanCompletionEventsSynced(
+        result.acknowledgements.planCompletionEvents,
+        now,
+      );
+      await _setSetting(
+        kAppSettingLastReadingSyncAt,
+        now.toUtc().toIso8601String(),
+      );
+    });
+  }
+
+  Future<void> applyReadingSyncBootstrap(
+    HunnySyncBootstrapResult result,
+  ) async {
+    final localUserId = await _activeLocalUserId();
+    final syncedAt = result.serverTime;
+    final restoredPlanIds = result.userReadingPlans
+        .map((row) => _readString(row, 'id'))
+        .where((id) => id.isNotEmpty)
+        .toSet();
+
+    await db.transaction(() async {
+      if (restoredPlanIds.isNotEmpty) {
+        final localOnlyPlans = await (db.select(db.userReadingPlans)
+              ..where(
+                (tbl) =>
+                    tbl.localUserId.equals(localUserId) & tbl.serverId.isNull(),
+              ))
+            .get();
+        final now = DateTime.now();
+        for (final plan in localOnlyPlans) {
+          if (restoredPlanIds.contains(plan.id)) continue;
+          await (db.update(db.userReadingPlans)
+                ..where((tbl) => tbl.id.equals(plan.id)))
+              .write(
+            UserReadingPlansCompanion(
+              isActive: const Value(false),
+              archivedAt: Value(now),
+              updatedAt: Value(now),
+              syncStatus: const Value('local_only'),
+            ),
+          );
+        }
+      }
+
+      for (final row in result.userReadingPlans) {
+        await db.into(db.userReadingPlans).insertOnConflictUpdate(
+              UserReadingPlansCompanion.insert(
+                id: _readString(row, 'id'),
+                localUserId: localUserId,
+                templateId: _readString(row, 'templateId'),
+                title: _readString(row, 'title'),
+                status: Value(_readString(row, 'status', fallback: 'active')),
+                subscribedAt: _readDate(row, 'subscribedAt'),
+                startedAt: Value(_readOptionalDate(row, 'startedAt')),
+                completedAt: Value(_readOptionalDate(row, 'completedAt')),
+                archivedAt: Value(_readOptionalDate(row, 'archivedAt')),
+                isActive: Value(_readBool(row, 'isActive')),
+                lastOpenedSectionId:
+                    Value(_readOptionalString(row, 'lastOpenedSectionId')),
+                lastOpenedBookKey:
+                    Value(_readOptionalString(row, 'lastOpenedBookKey')),
+                createdAt: _readDate(row, 'createdAt'),
+                updatedAt: _readDate(row, 'updatedAt'),
+                syncStatus: const Value('synced'),
+                serverId: Value(_readOptionalString(row, 'serverId')),
+                lastSyncedAt: Value(syncedAt),
+                clientRevision: Value(_readInt(row, 'clientRevision')),
+              ),
+            );
+      }
+
+      for (final row in result.userPlanChapters) {
+        await db.into(db.userPlanChapters).insertOnConflictUpdate(
+              UserPlanChaptersCompanion.insert(
+                id: _readString(row, 'id'),
+                userPlanId: _readString(row, 'userPlanId'),
+                sectionId: _readString(row, 'sectionId'),
+                bookKey: _readString(row, 'bookKey'),
+                chapterNumber: _readInt(row, 'chapterNumber'),
+                orderIndex: _readInt(row, 'orderIndex'),
+                createdAt: _readDate(row, 'createdAt'),
+                syncStatus: const Value('synced'),
+                serverId: Value(_readOptionalString(row, 'serverId')),
+                lastSyncedAt: Value(syncedAt),
+                clientRevision: Value(_readInt(row, 'clientRevision')),
+              ),
+            );
+      }
+
+      for (final row in result.chapterProgressEntries) {
+        await db.into(db.chapterProgressEntries).insertOnConflictUpdate(
+              ChapterProgressEntriesCompanion.insert(
+                id: _readString(row, 'id'),
+                localUserId: localUserId,
+                userPlanId: _readString(row, 'userPlanId'),
+                bookKey: _readString(row, 'bookKey'),
+                chapterNumber: _readInt(row, 'chapterNumber'),
+                isCompleted: Value(_readBool(row, 'isCompleted')),
+                completedAt: Value(_readOptionalDate(row, 'completedAt')),
+                updatedAt: _readDate(row, 'updatedAt'),
+                syncStatus: const Value('synced'),
+                serverId: Value(_readOptionalString(row, 'serverId')),
+                lastSyncedAt: Value(syncedAt),
+                clientRevision: Value(_readInt(row, 'clientRevision')),
+              ),
+            );
+      }
+
+      for (final row in result.readingActivities) {
+        await db.into(db.readingActivities).insertOnConflictUpdate(
+              ReadingActivitiesCompanion.insert(
+                id: _readString(row, 'id'),
+                localUserId: localUserId,
+                userPlanId: _readString(row, 'userPlanId'),
+                bookKey: _readString(row, 'bookKey'),
+                chapterNumber: _readInt(row, 'chapterNumber'),
+                action: _readString(row, 'action'),
+                activityDate: _readString(row, 'activityDate'),
+                timezone: _readString(row, 'timezone'),
+                happenedAt: _readDate(row, 'happenedAt'),
+                createdAt: _readDate(row, 'createdAt'),
+                syncStatus: const Value('synced'),
+                serverId: Value(_readOptionalString(row, 'serverId')),
+                lastSyncedAt: Value(syncedAt),
+                clientRevision: Value(_readInt(row, 'clientRevision')),
+              ),
+            );
+      }
+
+      for (final row in result.planCompletionEvents) {
+        await db.into(db.planCompletionEvents).insertOnConflictUpdate(
+              PlanCompletionEventsCompanion.insert(
+                id: _readString(row, 'id'),
+                localUserId: localUserId,
+                userPlanId: _readString(row, 'userPlanId'),
+                templateId: _readString(row, 'templateId'),
+                completionNumber: _readInt(row, 'completionNumber'),
+                completedAt: _readDate(row, 'completedAt'),
+                createdAt: _readDate(row, 'createdAt'),
+                syncStatus: const Value('synced'),
+                serverId: Value(_readOptionalString(row, 'serverId')),
+                lastSyncedAt: Value(syncedAt),
+                clientRevision: Value(_readInt(row, 'clientRevision')),
+              ),
+            );
+      }
+
+      await _setSetting(
+        kAppSettingLastReadingSyncAt,
+        syncedAt.toUtc().toIso8601String(),
+      );
+      if (restoredPlanIds.isNotEmpty) {
+        await _setSetting('last_active_plan_id', restoredPlanIds.first);
+      }
+    });
+  }
+
+  Future<DateTime?> getLastReadingSyncAt() async {
+    final value = await getAppSetting(kAppSettingLastReadingSyncAt);
+    if (value == null || value.isEmpty) return null;
+    return DateTime.tryParse(value);
+  }
+
   Future<void> _ensureGuestLocalUser() async {
     final existing =
         await (db.select(db.localUsers)..limit(1)).getSingleOrNull();
@@ -1179,6 +1420,206 @@ class ReadRepository {
 
   String _chapterKey(String bookKey, int chapterNumber) =>
       '$bookKey|$chapterNumber';
+
+  Map<String, dynamic> _syncPlanToJson(UserReadingPlan row) {
+    return {
+      'id': row.id,
+      'localUserId': row.localUserId,
+      'templateId': row.templateId,
+      'title': row.title,
+      'status': row.status,
+      'subscribedAt': _dateToJson(row.subscribedAt),
+      'startedAt': _optionalDateToJson(row.startedAt),
+      'completedAt': _optionalDateToJson(row.completedAt),
+      'archivedAt': _optionalDateToJson(row.archivedAt),
+      'isActive': row.isActive,
+      'lastOpenedSectionId': row.lastOpenedSectionId,
+      'lastOpenedBookKey': row.lastOpenedBookKey,
+      'createdAt': _dateToJson(row.createdAt),
+      'updatedAt': _dateToJson(row.updatedAt),
+      'clientRevision': row.clientRevision,
+    };
+  }
+
+  Map<String, dynamic> _syncChapterToJson(UserPlanChapter row) {
+    return {
+      'id': row.id,
+      'userPlanId': row.userPlanId,
+      'sectionId': row.sectionId,
+      'bookKey': row.bookKey,
+      'chapterNumber': row.chapterNumber,
+      'orderIndex': row.orderIndex,
+      'createdAt': _dateToJson(row.createdAt),
+      'clientRevision': row.clientRevision,
+    };
+  }
+
+  Map<String, dynamic> _syncProgressToJson(ChapterProgressEntry row) {
+    return {
+      'id': row.id,
+      'userPlanId': row.userPlanId,
+      'bookKey': row.bookKey,
+      'chapterNumber': row.chapterNumber,
+      'isCompleted': row.isCompleted,
+      'completedAt': _optionalDateToJson(row.completedAt),
+      'updatedAt': _dateToJson(row.updatedAt),
+      'clientRevision': row.clientRevision,
+    };
+  }
+
+  Map<String, dynamic> _syncActivityToJson(ReadingActivity row) {
+    return {
+      'id': row.id,
+      'userPlanId': row.userPlanId,
+      'bookKey': row.bookKey,
+      'chapterNumber': row.chapterNumber,
+      'action': row.action,
+      'activityDate': row.activityDate,
+      'timezone': row.timezone,
+      'happenedAt': _dateToJson(row.happenedAt),
+      'createdAt': _dateToJson(row.createdAt),
+      'clientRevision': row.clientRevision,
+    };
+  }
+
+  Map<String, dynamic> _syncCompletionToJson(PlanCompletionEvent row) {
+    return {
+      'id': row.id,
+      'userPlanId': row.userPlanId,
+      'templateId': row.templateId,
+      'completionNumber': row.completionNumber,
+      'completedAt': _dateToJson(row.completedAt),
+      'createdAt': _dateToJson(row.createdAt),
+      'clientRevision': row.clientRevision,
+    };
+  }
+
+  Future<void> _markUserReadingPlansSynced(
+    List<HunnySyncRowAck> acks,
+    DateTime syncedAt,
+  ) async {
+    for (final ack in acks.where((ack) => ack.clientId.isNotEmpty)) {
+      await (db.update(db.userReadingPlans)
+            ..where((tbl) => tbl.id.equals(ack.clientId)))
+          .write(
+        UserReadingPlansCompanion(
+          syncStatus: const Value('synced'),
+          serverId: Value(ack.serverId),
+          lastSyncedAt: Value(syncedAt),
+        ),
+      );
+    }
+  }
+
+  Future<void> _markUserPlanChaptersSynced(
+    List<HunnySyncRowAck> acks,
+    DateTime syncedAt,
+  ) async {
+    for (final ack in acks.where((ack) => ack.clientId.isNotEmpty)) {
+      await (db.update(db.userPlanChapters)
+            ..where((tbl) => tbl.id.equals(ack.clientId)))
+          .write(
+        UserPlanChaptersCompanion(
+          syncStatus: const Value('synced'),
+          serverId: Value(ack.serverId),
+          lastSyncedAt: Value(syncedAt),
+        ),
+      );
+    }
+  }
+
+  Future<void> _markChapterProgressSynced(
+    List<HunnySyncRowAck> acks,
+    DateTime syncedAt,
+  ) async {
+    for (final ack in acks.where((ack) => ack.clientId.isNotEmpty)) {
+      await (db.update(db.chapterProgressEntries)
+            ..where((tbl) => tbl.id.equals(ack.clientId)))
+          .write(
+        ChapterProgressEntriesCompanion(
+          syncStatus: const Value('synced'),
+          serverId: Value(ack.serverId),
+          lastSyncedAt: Value(syncedAt),
+        ),
+      );
+    }
+  }
+
+  Future<void> _markReadingActivitiesSynced(
+    List<HunnySyncRowAck> acks,
+    DateTime syncedAt,
+  ) async {
+    for (final ack in acks.where((ack) => ack.clientId.isNotEmpty)) {
+      await (db.update(db.readingActivities)
+            ..where((tbl) => tbl.id.equals(ack.clientId)))
+          .write(
+        ReadingActivitiesCompanion(
+          syncStatus: const Value('synced'),
+          serverId: Value(ack.serverId),
+          lastSyncedAt: Value(syncedAt),
+        ),
+      );
+    }
+  }
+
+  Future<void> _markPlanCompletionEventsSynced(
+    List<HunnySyncRowAck> acks,
+    DateTime syncedAt,
+  ) async {
+    for (final ack in acks.where((ack) => ack.clientId.isNotEmpty)) {
+      await (db.update(db.planCompletionEvents)
+            ..where((tbl) => tbl.id.equals(ack.clientId)))
+          .write(
+        PlanCompletionEventsCompanion(
+          syncStatus: const Value('synced'),
+          serverId: Value(ack.serverId),
+          lastSyncedAt: Value(syncedAt),
+        ),
+      );
+    }
+  }
+
+  String _dateToJson(DateTime date) => date.toUtc().toIso8601String();
+
+  String? _optionalDateToJson(DateTime? date) =>
+      date == null ? null : _dateToJson(date);
+
+  String _readString(
+    Map<String, dynamic> row,
+    String key, {
+    String fallback = '',
+  }) {
+    final value = row[key];
+    return value is String ? value : fallback;
+  }
+
+  String? _readOptionalString(Map<String, dynamic> row, String key) {
+    final value = row[key];
+    return value is String && value.isNotEmpty ? value : null;
+  }
+
+  int _readInt(Map<String, dynamic> row, String key) {
+    final value = row[key];
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return 0;
+  }
+
+  bool _readBool(Map<String, dynamic> row, String key) {
+    final value = row[key];
+    return value is bool ? value : false;
+  }
+
+  DateTime _readDate(Map<String, dynamic> row, String key) {
+    return _readOptionalDate(row, key) ?? DateTime.now();
+  }
+
+  DateTime? _readOptionalDate(Map<String, dynamic> row, String key) {
+    final value = row[key];
+    if (value is DateTime) return value;
+    if (value is String && value.isNotEmpty) return DateTime.tryParse(value);
+    return null;
+  }
 }
 
 class _CompletionCounts {

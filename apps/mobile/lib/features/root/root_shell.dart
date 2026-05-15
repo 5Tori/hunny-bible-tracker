@@ -25,6 +25,7 @@ class RootShell extends StatefulWidget {
 
 class _RootShellState extends State<RootShell> {
   int _selectedIndex = 2;
+  int _readRefreshToken = 0;
   final _homeKey = GlobalKey<HomeScreenState>();
 
   void _selectTab(int index) {
@@ -43,11 +44,18 @@ class _RootShellState extends State<RootShell> {
         onReadTap: () => _selectTab(2),
       ),
       const DiscoverScreen(),
-      ReadScreen(readRepository: widget.readRepository),
+      ReadScreen(
+        key: ValueKey(_readRefreshToken),
+        readRepository: widget.readRepository,
+      ),
       const SavedListScreen(),
       SettingsScreen(
         authRepository: widget.authRepository,
         readRepository: widget.readRepository,
+        onReadingDataRestored: () {
+          setState(() => _readRefreshToken += 1);
+          _homeKey.currentState?.refresh();
+        },
       ),
     ];
 

@@ -1,6 +1,7 @@
 # Sync Strategy
 
-Remote reading-data sync is planned but not implemented.
+Remote reading-data sync is planned. The current MVP direction is a narrow
+push-only backup first, then restore/bootstrap after the upload path is stable.
 
 The current app is offline-first:
 
@@ -9,7 +10,7 @@ User action
   -> SQLite transaction
   -> UI update
   -> row marked local_only/pending
-  -> future sync worker
+  -> sync worker / manual Sync now
   -> Next.js API
   -> Neon Postgres
 ```
@@ -24,7 +25,7 @@ Firebase ID token
   -> Neon auth_users upsert
 ```
 
-Reading plans, chapters, progress, activities, settings, and completion events do not sync to the server yet.
+Reading plans, chapters, progress, activities, settings, and completion events do not sync to the server yet. Server tables for the core reading-data backup path have been added, but API and mobile upload code still need to be implemented.
 
 ## Local Sync Metadata
 
@@ -51,7 +52,7 @@ Feature code already sets `pending` for user-driven mutations in key tables.
 Recommended v1 triggers:
 
 - App start
-- App returns to foreground
+- Existing Firebase session refresh, throttled by last sync time
 - Network reconnect
 - Manual Settings -> Sync now
 - Debounced after local mutations
@@ -133,18 +134,35 @@ Suggested route shape:
 
 All routes should verify Firebase bearer tokens server-side.
 
+MVP implementation order:
+
+```text
+POST /api/v1/sync/push first
+Settings -> Sync now calls push
+GET /api/v1/sync/bootstrap for manual restore
+POST /api/v1/sync/pull only when incremental restore is needed
+```
+
 ## Server Schema Work Required
 
-`apps/web/db/schema.sql` currently supports `auth_users`. It should be expanded before implementing reading-data sync.
+`apps/web/db/schema.sql` now includes reading-data sync tables for:
 
-The server schema should align with the current local model in `docs/DATA_MODEL.md`.
+```text
+- user_reading_plans
+- user_plan_chapters
+- chapter_progress_entries
+- reading_activities
+- plan_completion_events
+- sync_states
+```
+
+The server schema is aligned with the current local model in `docs/DATA_MODEL.md` for backup-first sync. It stores mobile client UUIDs as `client_id` values so API routes can acknowledge uploaded rows back to local Drift rows later.
 
 ## Implementation Order
 
-1. Define server schema for current local model.
-2. Add server ids/cursors/outbox query helpers.
-3. Implement auth-scoped push endpoint.
-4. Implement idempotent activity and completion upserts.
-5. Add pull/bootstrap endpoint.
-6. Add Settings UI for sync status and manual Sync now.
-7. Add conflict telemetry before exposing complex resolution UI.
+1. Implement auth-scoped push endpoint.
+2. Add mobile payload builders for pending local rows.
+3. Mark acknowledged rows as `synced` with server ids and `last_synced_at`.
+4. Add Settings UI for sync status and manual Sync now.
+5. Add idempotent activity and completion upserts.
+6. Add conflict telemetry before exposing complex resolution UI.

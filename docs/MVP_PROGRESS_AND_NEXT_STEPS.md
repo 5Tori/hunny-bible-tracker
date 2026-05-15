@@ -4,12 +4,12 @@
 
 ## 1. Current MVP Status
 
-Hunny Bible Tracker is now beyond the idea/prototype stage. The project has a solid offline-first foundation and a meaningful Read flow.
+Hunny Bible Tracker is now beyond the idea/prototype stage. The project has a solid offline-first foundation and a stabilized Read flow.
 
 Estimated progress:
 
 ```text
-Offline-first Read MVP: 75–85%
+Offline-first Read MVP: 85–90%
 Public-launch MVP: 55–65%
 Cloud backup/sync MVP: 35–45%
 ```
@@ -26,16 +26,16 @@ The most mature areas are:
 - Start Again / new run flow
 - Firebase Google Sign-In
 - Basic Settings account UX
+- Read Flow QA & Stabilization completed
 ```
 
 The main unfinished areas are:
 
 ```text
 - Remote reading-data sync
-- Server schema for reading data
+- Apply/deploy server schema for reading data
 - Plan detail screen
 - More published plans
-- Completed plan polish
 - Home / Discover / List production scope
 - Release readiness
 ```
@@ -367,6 +367,10 @@ This is important because the product direction is closer to “reading packs”
 
 ### Priority 1 — Read Flow QA & Stabilization
 
+Status: completed.
+
+Note: Manual QA/stabilization for the Read flow has already been completed and should not be treated as the next open MVP task. Automated coverage can be added later, but current MVP development is prioritizing fast delivery and deploy readiness.
+
 Goal: make the current Read experience reliable.
 
 Test cases:
@@ -643,6 +647,8 @@ Do not introduce full Bible text storage unless the product scope changes.
 
 ### Priority 7 — Remote Sync v1
 
+Status: ready to start now for MVP as a narrow backup-first scope.
+
 Goal: back up the user’s reading data safely.
 
 Recommended minimum sync scope:
@@ -659,7 +665,7 @@ Recommended triggers:
 
 ```text
 - App start
-- App foreground
+- Existing Firebase session refresh, throttled by last sync time
 - Network reconnect
 - Manual Settings -> Sync now
 - Debounced after local mutations
@@ -668,9 +674,17 @@ Recommended triggers:
 Recommended v1 API:
 
 ```text
-GET  /api/v1/sync/bootstrap
-POST /api/v1/sync/push
-POST /api/v1/sync/pull
+POST /api/v1/sync/push       first
+GET  /api/v1/sync/bootstrap  manual restore
+POST /api/v1/sync/pull       later if needed
+```
+
+Recommended MVP cut:
+
+```text
+Start with push-only backup for signed-in users.
+Do not block launch on full multi-device merge UI.
+Use manual restore/bootstrap before adding automatic merge.
 ```
 
 Conflict policy:
@@ -876,16 +890,16 @@ Do not connect mobile directly to Neon.
 The next best sequence is:
 
 ```text
-1. Read flow QA and bug fixes
-2. Completed Plans polish
+1. Remote Sync v1 push-only backup
+2. Settings Sync now / last synced / restore UX
 3. Plan Detail screen
 4. Add more published plans
 5. Home MVP cleanup
 6. List tab scope decision
-7. Remote Sync v1
+7. Incremental pull/merge sync
 8. Release readiness
 ```
 
 Do not start with complex rewards, admin dashboard, or server-driven content yet.
 
-The product foundation is now strong enough that the best next move is to make the existing Read experience feel complete, trustworthy, and polished.
+The Read flow foundation is complete enough for fast MVP development. The best next move is to add a narrow, reliable backup path for signed-in users without taking on full sync complexity all at once.

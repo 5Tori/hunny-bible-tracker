@@ -29,8 +29,7 @@ Future<void> showPostAuthBackupPromptIfNeeded({
         title: const Text('Back up your progress?'),
         content: Text(
           'Your account is ready. We recommend saving your reading data to the '
-          'server at least once so you can recover it on a new device. '
-          'Full sync is still in progress — this step only checks that backup is reachable.',
+          'server at least once so you can recover it later.',
           style: Theme.of(dialogContext).textTheme.bodyMedium,
         ),
         actions: [
@@ -75,12 +74,14 @@ Future<void> _runBackupNow(
     return;
   }
   try {
-    final me = await authRepository.fetchApiMe();
+    final result = await authRepository.pushReadingSync();
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          'Connected as ${me.email ?? me.sub}. Full data sync will arrive in a later update.',
+          result.totalRows == 0
+              ? 'Backup is up to date.'
+              : 'Backed up ${result.totalRows} reading rows.',
         ),
       ),
     );

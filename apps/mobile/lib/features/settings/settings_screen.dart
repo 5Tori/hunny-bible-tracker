@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 
+import '../../core/api/hunny_api_models.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/auth/auth_models.dart';
 import '../../core/theme/app_theme.dart';
@@ -14,10 +16,12 @@ class SettingsScreen extends StatefulWidget {
     super.key,
     required this.authRepository,
     required this.readRepository,
+    this.onReadingDataRestored,
   });
 
   final AuthRepository authRepository;
   final ReadRepository readRepository;
+  final VoidCallback? onReadingDataRestored;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -25,8 +29,11 @@ class SettingsScreen extends StatefulWidget {
 
 class _SettingsScreenState extends State<SettingsScreen> {
   bool _loading = true;
+  bool _syncing = false;
+  bool _restoring = false;
   LocalUserProfile? _profile;
   AuthSession? _session;
+  DateTime? _lastSyncedAt;
 
   @override
   void initState() {
@@ -38,6 +45,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     setState(() => _loading = true);
     AuthSession? session;
     LocalUserProfile? profile;
+    DateTime? lastSyncedAt;
     try {
       session = await widget.authRepository.refreshRemoteSession();
     } catch (_) {
@@ -48,12 +56,131 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } catch (_) {
       profile = null;
     }
+    try {
+      lastSyncedAt = await widget.readRepository.getLastReadingSyncAt();
+    } catch (_) {
+      lastSyncedAt = null;
+    }
     if (!mounted) return;
     setState(() {
       _session = session;
       _profile = profile;
+      _lastSyncedAt = lastSyncedAt;
       _loading = false;
     });
+  }
+
+  Future<void> _syncNow() async {
+    if (_syncing) return;
+    if (!widget.authRepository.isApiConfigured) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'To enable backup, set HUNNY_API_BASE_URL when you build the app.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    setState(() => _syncing = true);
+    try {
+      final result = await widget.authRepository.pushReadingSync();
+      final lastSyncedAt = await widget.readRepository.getLastReadingSyncAt();
+      if (!mounted) return;
+      setState(() => _lastSyncedAt = lastSyncedAt ?? result.serverTime);
+      widget.onReadingDataRestored?.call();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result.totalRows == 0
+                ? 'Backup is up to date.'
+                : 'Backed up ${result.totalRows} reading rows.',
+          ),
+        ),
+      );
+    } on HunnyApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e')),
+      );
+    } finally {
+      if (mounted) setState(() => _syncing = false);
+    }
+  }
+
+  Future<void> _restoreBackup() async {
+    if (_restoring) return;
+    if (!widget.authRepository.isApiConfigured) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'To enable restore, set HUNNY_API_BASE_URL when you build the app.',
+          ),
+        ),
+      );
+      return;
+    }
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Restore backup?'),
+        content: const Text(
+          'This will download your backed-up reading plans and progress. '
+          'Local-only starter plans may be hidden after restore.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(
+              backgroundColor: AppTheme.ink,
+              foregroundColor: Colors.white,
+            ),
+            child: const Text('Restore'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _restoring = true);
+    try {
+      final result = await widget.authRepository.bootstrapReadingSync();
+      final lastSyncedAt = await widget.readRepository.getLastReadingSyncAt();
+      if (!mounted) return;
+      setState(() => _lastSyncedAt = lastSyncedAt ?? result.serverTime);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            result.totalRows == 0
+                ? 'No backup data found for this account.'
+                : 'Restored ${result.totalRows} reading rows.',
+          ),
+        ),
+      );
+    } on HunnyApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('$e')),
+      );
+    } finally {
+      if (mounted) setState(() => _restoring = false);
+    }
   }
 
   @override
@@ -246,6 +373,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
               ],
             ),
+          ),
+          const SizedBox(height: 28),
+
+          _SectionLabel(title: 'BACKUP'),
+          const SizedBox(height: 12),
+          _BackupCard(
+            signedIn: signedIn,
+            apiConfigured: widget.authRepository.isApiConfigured,
+            syncing: _syncing,
+            restoring: _restoring,
+            lastSyncedAt: _lastSyncedAt,
+            onSyncNow: signedIn ? _syncNow : null,
+            onRestore: signedIn ? _restoreBackup : null,
           ),
           const SizedBox(height: 28),
 
@@ -935,6 +1075,163 @@ String _detectedTimezoneLabel() {
   final minutes = (utcOffset.inMinutes.abs() % 60).toString().padLeft(2, '0');
   final offset = 'UTC$sign$hours:$minutes';
   return timezone.isEmpty ? offset : '$timezone ($offset)';
+}
+
+class _BackupCard extends StatelessWidget {
+  const _BackupCard({
+    required this.signedIn,
+    required this.apiConfigured,
+    required this.syncing,
+    required this.restoring,
+    required this.lastSyncedAt,
+    required this.onSyncNow,
+    required this.onRestore,
+  });
+
+  final bool signedIn;
+  final bool apiConfigured;
+  final bool syncing;
+  final bool restoring;
+  final DateTime? lastSyncedAt;
+  final VoidCallback? onSyncNow;
+  final VoidCallback? onRestore;
+
+  @override
+  Widget build(BuildContext context) {
+    final title =
+        signedIn ? 'Back up reading progress' : 'Sign in to back up progress';
+    final subtitle = signedIn
+        ? 'Save your plans, chapter progress, reading activity, and completed history to your account.'
+        : 'Your progress is saved on this device. Sign in and sync to back it up.';
+    final lastSyncedLabel = lastSyncedAt == null
+        ? 'Not synced yet'
+        : 'Last synced ${DateFormat('MMM d, h:mm a').format(lastSyncedAt!.toLocal())}';
+    final busy = syncing || restoring;
+    final buttonEnabled = signedIn && apiConfigured && !busy;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: AppTheme.softSurface,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+                child: Icon(
+                  Icons.cloud_upload_outlined,
+                  size: 22,
+                  color: AppTheme.mutedInk,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      subtitle,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.mutedInk,
+                            height: 1.35,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            apiConfigured
+                ? lastSyncedLabel
+                : 'Backup server is not configured.',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.mutedInk,
+                  fontWeight: FontWeight.w600,
+                ),
+          ),
+          const SizedBox(height: 14),
+          Row(
+            children: [
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: buttonEnabled ? onSyncNow : null,
+                  icon: syncing
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.sync, size: 16),
+                  label: Text(syncing ? 'Syncing...' : 'Sync now'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppTheme.ink,
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: AppTheme.softSurface,
+                    disabledForegroundColor: AppTheme.mutedInk,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    textStyle: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: buttonEnabled ? onRestore : null,
+                  icon: restoring
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Icon(Icons.restore, size: 16),
+                  label: Text(restoring ? 'Restoring...' : 'Restore'),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.ink,
+                    disabledForegroundColor: AppTheme.mutedInk,
+                    side: BorderSide(color: AppTheme.border),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(3),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    textStyle: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 class _SectionLabel extends StatelessWidget {

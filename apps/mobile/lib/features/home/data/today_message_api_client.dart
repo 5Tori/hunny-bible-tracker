@@ -45,6 +45,48 @@ class TodayMessageApiClient {
     }
     return TodayMessage.fromJson(message);
   }
+
+  Future<TodayMessageEngagement> heartTodayMessage(String id) {
+    return _incrementEngagement(id: id, action: 'heart');
+  }
+
+  Future<TodayMessageEngagement> shareTodayMessage(String id) {
+    return _incrementEngagement(id: id, action: 'share');
+  }
+
+  Future<TodayMessageEngagement> _incrementEngagement({
+    required String id,
+    required String action,
+  }) async {
+    if (!_config.isConfigured) {
+      throw StateError('HUNNY_API_BASE_URL is not set');
+    }
+
+    final dio = Dio(
+      BaseOptions(
+        baseUrl: _config.baseUrl,
+        headers: const {'Accept': 'application/json'},
+        validateStatus: (code) => code != null && code < 600,
+      ),
+    );
+    final response = await dio.post<dynamic>(
+      '/api/v1/today-message/$id/$action',
+      data: const <String, dynamic>{},
+      options: Options(contentType: Headers.jsonContentType),
+    );
+    final code = response.statusCode ?? 0;
+    final data = response.data;
+    if (code < 200 || code >= 300 || data is! Map<String, dynamic>) {
+      throw StateError(
+        'POST /api/v1/today-message/$id/$action failed with status $code',
+      );
+    }
+    final message = data['message'];
+    if (message is! Map<String, dynamic>) {
+      throw const FormatException('Invalid engagement response');
+    }
+    return TodayMessageEngagement.fromJson(message);
+  }
 }
 
 class TodayMessage {
@@ -56,6 +98,9 @@ class TodayMessage {
     required this.verseText,
     required this.message,
     required this.imageUrl,
+    required this.shareUrl,
+    required this.heartCount,
+    required this.shareCount,
   });
 
   final String id;
@@ -65,8 +110,40 @@ class TodayMessage {
   final String? verseText;
   final String? message;
   final String? imageUrl;
+  final String? shareUrl;
+  final int heartCount;
+  final int shareCount;
 
   String get primaryText => verseText ?? message ?? verseReference;
+
+  String get shareTitle => '$verseReference | Hunny Bible Tracker';
+
+  String get shareText {
+    final parts = [
+      primaryText,
+      verseReference,
+      if (shareUrl != null) shareUrl!,
+    ];
+    return parts.where((part) => part.trim().isNotEmpty).join('\n\n');
+  }
+
+  TodayMessage copyWith({
+    int? heartCount,
+    int? shareCount,
+  }) {
+    return TodayMessage(
+      id: id,
+      publishDate: publishDate,
+      language: language,
+      verseReference: verseReference,
+      verseText: verseText,
+      message: message,
+      imageUrl: imageUrl,
+      shareUrl: shareUrl,
+      heartCount: heartCount ?? this.heartCount,
+      shareCount: shareCount ?? this.shareCount,
+    );
+  }
 
   factory TodayMessage.fromJson(Map<String, dynamic> json) {
     return TodayMessage(
@@ -77,6 +154,29 @@ class TodayMessage {
       verseText: _nullableString(json['verse_text']),
       message: _nullableString(json['message']),
       imageUrl: _nullableString(json['image_url']),
+      shareUrl: _nullableString(json['share_url']),
+      heartCount: _intValue(json['heart_count']),
+      shareCount: _intValue(json['share_count']),
+    );
+  }
+}
+
+class TodayMessageEngagement {
+  const TodayMessageEngagement({
+    required this.id,
+    required this.heartCount,
+    required this.shareCount,
+  });
+
+  final String id;
+  final int heartCount;
+  final int shareCount;
+
+  factory TodayMessageEngagement.fromJson(Map<String, dynamic> json) {
+    return TodayMessageEngagement(
+      id: _requiredString(json, 'id'),
+      heartCount: _intValue(json['heart_count']),
+      shareCount: _intValue(json['share_count']),
     );
   }
 }
@@ -97,4 +197,10 @@ String? _nullableString(Object? value) {
   if (value == null) return null;
   final string = value.toString().trim();
   return string.isEmpty ? null : string;
+}
+
+int _intValue(Object? value) {
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return 0;
 }

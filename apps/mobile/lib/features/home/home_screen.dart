@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../../core/theme/app_theme.dart';
 import 'data/today_message_api_client.dart';
@@ -28,6 +29,8 @@ class HomeScreenState extends State<HomeScreen> {
   ReadingPlanView? _plan;
   TodayMessage? _todayMessage;
   var _todayMessageLoading = false;
+  var _todayMessageHearted = false;
+  var _todayMessageActionPending = false;
 
   @override
   void initState() {
@@ -44,11 +47,15 @@ class HomeScreenState extends State<HomeScreen> {
         ? null
         : await widget.readRepository.getReadingOverview(plan.id);
     final todayMessage = await _fetchTodayMessage();
+    final todayMessageHearted = todayMessage == null
+        ? false
+        : await _isTodayMessageHearted(todayMessage.id);
     if (!mounted) return;
     setState(() {
       _plan = plan;
       _readingOverview = overview;
       _todayMessage = todayMessage;
+      _todayMessageHearted = todayMessageHearted;
       _todayMessageLoading = false;
     });
   }
@@ -64,6 +71,91 @@ class HomeScreenState extends State<HomeScreen> {
       return null;
     }
   }
+
+  Future<bool> _isTodayMessageHearted(String id) async {
+    final value =
+        await widget.readRepository.getAppSetting(_heartedSettingKey(id));
+    return value == '1';
+  }
+
+  Future<void> _heartTodayMessage() async {
+    final message = _todayMessage;
+    if (message == null || _todayMessageHearted || _todayMessageActionPending) {
+      return;
+    }
+
+    setState(() {
+      _todayMessageHearted = true;
+      _todayMessageActionPending = true;
+      _todayMessage = message.copyWith(heartCount: message.heartCount + 1);
+    });
+
+    try {
+      final engagement =
+          await widget.todayMessageApiClient.heartTodayMessage(message.id);
+      await widget.readRepository.setAppSetting(
+        _heartedSettingKey(message.id),
+        '1',
+      );
+      if (!mounted) return;
+      setState(() {
+        _todayMessage = _todayMessage?.copyWith(
+          heartCount: engagement.heartCount,
+          shareCount: engagement.shareCount,
+        );
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _todayMessageHearted = false;
+        _todayMessage = message;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not save this heart.')),
+      );
+    } finally {
+      if (mounted) setState(() => _todayMessageActionPending = false);
+    }
+  }
+
+  Future<void> _shareTodayMessage() async {
+    final message = _todayMessage;
+    if (message == null || _todayMessageActionPending) return;
+
+    setState(() => _todayMessageActionPending = true);
+    try {
+      final result = await SharePlus.instance.share(
+        ShareParams(
+          title: message.shareTitle,
+          subject: message.shareTitle,
+          text: message.shareText,
+        ),
+      );
+      if (result.status == ShareResultStatus.dismissed) return;
+
+      setState(() {
+        _todayMessage = message.copyWith(shareCount: message.shareCount + 1);
+      });
+      final engagement =
+          await widget.todayMessageApiClient.shareTodayMessage(message.id);
+      if (!mounted) return;
+      setState(() {
+        _todayMessage = _todayMessage?.copyWith(
+          heartCount: engagement.heartCount,
+          shareCount: engagement.shareCount,
+        );
+      });
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not share this message.')),
+      );
+    } finally {
+      if (mounted) setState(() => _todayMessageActionPending = false);
+    }
+  }
+
+  String _heartedSettingKey(String id) => 'today_message_hearted_$id';
 
   String _greeting() {
     final hour = DateTime.now().hour;
@@ -124,6 +216,10 @@ class HomeScreenState extends State<HomeScreen> {
             TodayMessageCard(
               message: _todayMessage,
               loading: _todayMessageLoading,
+              hearted: _todayMessageHearted,
+              actionPending: _todayMessageActionPending,
+              onHeart: _heartTodayMessage,
+              onShare: _shareTodayMessage,
             ),
             const SizedBox(height: 32),
 
@@ -222,10 +318,18 @@ class TodayMessageCard extends StatelessWidget {
     super.key,
     required this.message,
     required this.loading,
+    required this.hearted,
+    required this.actionPending,
+    required this.onHeart,
+    required this.onShare,
   });
 
   final TodayMessage? message;
   final bool loading;
+  final bool hearted;
+  final bool actionPending;
+  final VoidCallback onHeart;
+  final VoidCallback onShare;
 
   @override
   Widget build(BuildContext context) {
@@ -306,6 +410,24 @@ class TodayMessageCard extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.end,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            Row(
+              children: [
+                _MessageActionButton(
+                  icon: hearted ? Icons.favorite : Icons.favorite_border,
+                  label: _compactCount(current.heartCount),
+                  selected: hearted,
+                  onTap: actionPending || hearted ? null : onHeart,
+                ),
+                const SizedBox(width: 8),
+                _MessageActionButton(
+                  icon: Icons.ios_share,
+                  label: _compactCount(current.shareCount),
+                  selected: false,
+                  onTap: actionPending ? null : onShare,
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
             Text(
               current.primaryText,
               style: Theme.of(context).textTheme.bodyLarge?.copyWith(
@@ -334,6 +456,59 @@ class TodayMessageCard extends StatelessWidget {
                   ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  String _compactCount(int count) {
+    if (count >= 1000000) return '${(count / 1000000).toStringAsFixed(1)}M';
+    if (count >= 1000) return '${(count / 1000).toStringAsFixed(1)}K';
+    return '$count';
+  }
+}
+
+class _MessageActionButton extends StatelessWidget {
+  const _MessageActionButton({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white.withValues(alpha: selected ? 0.96 : 0.18),
+      borderRadius: BorderRadius.circular(999),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(999),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                icon,
+                size: 17,
+                color: selected ? AppTheme.ink : Colors.white,
+              ),
+              const SizedBox(width: 5),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: selected ? AppTheme.ink : Colors.white,
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
+            ],
+          ),
         ),
       ),
     );

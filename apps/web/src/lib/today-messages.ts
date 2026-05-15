@@ -12,6 +12,8 @@ export interface TodayMessageBase {
   image_url: string | null;
   image_public_id: string | null;
   is_published: boolean;
+  heart_count: number;
+  share_count: number;
   created_at: string;
   updated_at: string;
 }
@@ -86,6 +88,16 @@ export async function getAdminTodayMessageById(id: string) {
   const rows = (await sql`
     select * from today_messages
     where id::text = ${id}
+    limit 1
+  `) as TodayMessageBase[];
+  return rows[0] ?? null;
+}
+
+export async function getPublishedTodayMessageById(id: string) {
+  const rows = (await sql`
+    select * from today_messages
+    where id::text = ${id}
+      and is_published = true
     limit 1
   `) as TodayMessageBase[];
   return rows[0] ?? null;
@@ -199,5 +211,29 @@ export async function getPublishedTodayMessage(options?: { date?: string; langua
     limit 1
   `) as TodayMessageBase[];
 
+  return rows[0] ?? null;
+}
+
+export async function incrementTodayMessageHeart(id: string) {
+  const rows = (await sql`
+    update today_messages
+    set heart_count = heart_count + 1,
+        updated_at = now()
+    where id::text = ${id}
+      and is_published = true
+    returning *
+  `) as TodayMessageBase[];
+  return rows[0] ?? null;
+}
+
+export async function incrementTodayMessageShare(id: string) {
+  const rows = (await sql`
+    update today_messages
+    set share_count = share_count + 1,
+        updated_at = now()
+    where id::text = ${id}
+      and is_published = true
+    returning *
+  `) as TodayMessageBase[];
   return rows[0] ?? null;
 }

@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 
-import { getPublishedTodayMessage, TodayMessageValidationError } from '@/lib/today-messages';
+import {
+  getPublishedTodayMessage,
+  TodayMessageBase,
+  TodayMessageValidationError,
+} from '@/lib/today-messages';
 
 export async function GET(req: Request) {
   try {
@@ -8,7 +12,9 @@ export async function GET(req: Request) {
     const date = searchParams.get('date') ?? undefined;
     const language = searchParams.get('language') ?? undefined;
     const message = await getPublishedTodayMessage({ date, language });
-    return NextResponse.json({ message });
+    return NextResponse.json({
+      message: message ? withShareUrl(req, message) : null,
+    });
   } catch (error) {
     if (error instanceof TodayMessageValidationError) {
       return NextResponse.json({ error: 'validation_error', message: error.message }, { status: 400 });
@@ -18,4 +24,14 @@ export async function GET(req: Request) {
     }
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
+}
+
+function withShareUrl(req: Request, message: TodayMessageBase) {
+  const origin =
+    process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ||
+    new URL(req.url).origin;
+  return {
+    ...message,
+    share_url: `${origin}/today-message/${message.id}`,
+  };
 }

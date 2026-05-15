@@ -53,6 +53,7 @@ class AuthRepository {
       return null;
     }
     await _syncSignedInUser(refreshed, allowApiFailure: true);
+    await pushReadingSyncIfDue(allowApiFailure: true);
     return _sessionFromFirebaseUser(refreshed);
   }
 
@@ -86,6 +87,10 @@ class AuthRepository {
         throw AppAuthException('Firebase did not return a user.');
       }
       await _syncSignedInUser(user, allowApiFailure: true);
+      await pushReadingSyncIfDue(
+        minInterval: Duration.zero,
+        allowApiFailure: true,
+      );
       return _sessionFromFirebaseUser(
         user,
         createdNewAccount:
@@ -133,6 +138,60 @@ class AuthRepository {
     if (code < 200 || code >= 300) {
       throw HunnyApiException('POST /api/v1/auth/sync failed',
           statusCode: code);
+    }
+  }
+
+  Future<HunnySyncPushResult> pushReadingSync() async {
+    final token = await _firebaseIdToken();
+    final payload = await _readRepository.buildReadingSyncPushPayload();
+    final res = await _authedDio(token).post<dynamic>(
+      '/api/v1/sync/push',
+      data: payload,
+      options: Options(contentType: Headers.jsonContentType),
+    );
+    final code = res.statusCode ?? 0;
+    final data = res.data;
+    if (code < 200 || code >= 300 || data is! Map<String, dynamic>) {
+      throw HunnyApiException('POST /api/v1/sync/push failed',
+          statusCode: code);
+    }
+    final result = HunnySyncPushResult.fromJson(data);
+    await _readRepository.applyReadingSyncPushResult(result);
+    return result;
+  }
+
+  Future<HunnySyncBootstrapResult> bootstrapReadingSync() async {
+    final token = await _firebaseIdToken();
+    final res = await _authedDio(token).get<dynamic>(
+      '/api/v1/sync/bootstrap',
+    );
+    final code = res.statusCode ?? 0;
+    final data = res.data;
+    if (code < 200 || code >= 300 || data is! Map<String, dynamic>) {
+      throw HunnyApiException('GET /api/v1/sync/bootstrap failed',
+          statusCode: code);
+    }
+    final result = HunnySyncBootstrapResult.fromJson(data);
+    await _readRepository.applyReadingSyncBootstrap(result);
+    return result;
+  }
+
+  Future<HunnySyncPushResult?> pushReadingSyncIfDue({
+    Duration minInterval = const Duration(minutes: 15),
+    bool allowApiFailure = true,
+  }) async {
+    if (!_apiConfig.isConfigured || !isAvailable) return null;
+    final lastSyncedAt = await _readRepository.getLastReadingSyncAt();
+    if (lastSyncedAt != null &&
+        minInterval > Duration.zero &&
+        DateTime.now().difference(lastSyncedAt.toLocal()) < minInterval) {
+      return null;
+    }
+    try {
+      return await pushReadingSync();
+    } catch (_) {
+      if (!allowApiFailure) rethrow;
+      return null;
     }
   }
 
