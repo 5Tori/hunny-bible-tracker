@@ -4,7 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { adminFetch, getAdminToken, clearAdminToken } from '@/lib/admin/client';
+import { adminFetch, getAdminTokenOrRefresh, clearAdminSession } from '@/lib/admin/client';
 import type { PlanTemplateBase } from '@/lib/plans';
 
 type CatalogFilter = 'all' | 'active' | 'archived';
@@ -21,7 +21,7 @@ export default function AdminPlansPage() {
     setLoading(true);
     setError(null);
 
-    const token = getAdminToken();
+    const token = await getAdminTokenOrRefresh();
     if (!token) {
       router.push('/admin/login');
       return;
@@ -30,7 +30,7 @@ export default function AdminPlansPage() {
     const response = await adminFetch('/api/v1/admin/plans');
 
     if (response.status === 401 || response.status === 403) {
-      clearAdminToken();
+      await clearAdminSession();
       router.push('/admin/login');
       return;
     }
@@ -70,7 +70,7 @@ export default function AdminPlansPage() {
       });
 
       if (response.status === 401 || response.status === 403) {
-        clearAdminToken();
+        await clearAdminSession();
         router.push('/admin/login');
         return;
       }
@@ -97,7 +97,7 @@ export default function AdminPlansPage() {
       const response = await adminFetch(`/api/v1/admin/plans/${plan.id}`, { method: 'DELETE' });
 
       if (response.status === 401 || response.status === 403) {
-        clearAdminToken();
+        await clearAdminSession();
         router.push('/admin/login');
         return;
       }
@@ -165,7 +165,7 @@ export default function AdminPlansPage() {
           <Link href="/admin/plans/new" className="btn btn-primary">
             New plan
           </Link>
-          <button type="button" onClick={() => { clearAdminToken(); router.push('/admin/login'); }} className="btn btn-secondary">
+          <button type="button" onClick={() => { void clearAdminSession().then(() => router.push('/admin/login')); }} className="btn btn-secondary">
             Logout
           </button>
         </div>

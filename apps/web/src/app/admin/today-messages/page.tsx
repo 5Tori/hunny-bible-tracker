@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { clearAdminToken, getAdminToken, adminFetch } from '@/lib/admin/client';
+import { getAdminTokenOrRefresh, adminFetch, clearAdminSession } from '@/lib/admin/client';
 import type { TodayMessageBase } from '@/lib/today-messages';
 
 export default function AdminTodayMessagesPage() {
@@ -19,7 +19,7 @@ export default function AdminTodayMessagesPage() {
       setError(null);
 
       try {
-        const token = getAdminToken();
+        const token = await getAdminTokenOrRefresh();
         if (!token) {
           router.push('/admin/login');
           return;
@@ -28,7 +28,7 @@ export default function AdminTodayMessagesPage() {
         const response = await adminFetch('/api/v1/admin/today-messages');
 
         if (response.status === 401 || response.status === 403) {
-          clearAdminToken();
+          await clearAdminSession();
           router.push('/admin/login');
           return;
         }
@@ -69,7 +69,7 @@ export default function AdminTodayMessagesPage() {
           <Link href="/admin/today-messages/new" className="btn btn-primary">
             New message
           </Link>
-          <button type="button" onClick={() => { clearAdminToken(); router.push('/admin/login'); }} className="btn btn-secondary">
+          <button type="button" onClick={() => { void clearAdminSession().then(() => router.push('/admin/login')); }} className="btn btn-secondary">
             Logout
           </button>
         </div>

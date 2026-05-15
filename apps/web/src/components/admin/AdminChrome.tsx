@@ -1,7 +1,12 @@
 'use client';
 
+import { useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { onIdTokenChanged } from 'firebase/auth';
+
+import { firebaseAuth } from '@/lib/firebase/client';
+import { clearAdminToken, setAdminToken } from '@/lib/admin/client';
 
 const NAV_ITEMS = [
   { href: '/admin/plans', label: 'Plan catalog' },
@@ -32,6 +37,18 @@ function isNavActive(href: string, pathname: string) {
 
 export function AdminChrome({ children }: { children: React.ReactNode }) {
   const pathname = usePathname() ?? '';
+
+  useEffect(() => {
+    if (pathname === '/admin/login') return undefined;
+    const unsub = onIdTokenChanged(firebaseAuth, async (user) => {
+      if (user) {
+        setAdminToken(await user.getIdToken());
+      } else {
+        clearAdminToken();
+      }
+    });
+    return () => unsub();
+  }, [pathname]);
 
   if (pathname === '/admin/login') {
     return <>{children}</>;

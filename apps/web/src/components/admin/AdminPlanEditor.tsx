@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 import type { AdminPlanInput, PlanTemplateWithRelations } from '@/lib/plans';
-import { adminFetch, clearAdminToken } from '@/lib/admin/client';
+import { adminFetch, clearAdminSession } from '@/lib/admin/client';
 import { BookKeyCombobox } from '@/components/admin/BookKeyCombobox';
 import { BookChapterRangeSelects } from '@/components/admin/BookChapterRangeSelects';
 import { clampPlanItemChapters } from '@/lib/bible-books';
@@ -141,7 +141,7 @@ export default function AdminPlanEditor({ planId }: AdminPlanEditorProps) {
 
       const response = await adminFetch(`/api/v1/admin/plans/${planId}`);
       if (response.status === 401 || response.status === 403) {
-        clearAdminToken();
+        await clearAdminSession();
         router.push('/admin/login');
         return;
       }
@@ -262,7 +262,7 @@ export default function AdminPlanEditor({ planId }: AdminPlanEditorProps) {
       });
 
       if (response.status === 401 || response.status === 403) {
-        clearAdminToken();
+        await clearAdminSession();
         router.push('/admin/login');
         return;
       }
@@ -309,7 +309,7 @@ export default function AdminPlanEditor({ planId }: AdminPlanEditorProps) {
       });
 
       if (response.status === 401 || response.status === 403) {
-        clearAdminToken();
+        await clearAdminSession();
         router.push('/admin/login');
         return;
       }
@@ -332,8 +332,7 @@ export default function AdminPlanEditor({ planId }: AdminPlanEditorProps) {
   };
 
   const logout = () => {
-    clearAdminToken();
-    router.push('/admin/login');
+    void clearAdminSession().then(() => router.push('/admin/login'));
   };
 
   if (loading) {

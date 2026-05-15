@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 import type { AdminTodayMessageInput, TodayMessageBase } from '@/lib/today-messages';
-import { adminFetch, clearAdminToken } from '@/lib/admin/client';
+import { adminFetch, clearAdminSession } from '@/lib/admin/client';
 
 const emptyForm: AdminTodayMessageInput = {
   publish_date: '',
@@ -60,7 +60,7 @@ export default function AdminTodayMessageEditor({ messageId }: AdminTodayMessage
       const response = await adminFetch(`/api/v1/admin/today-messages/${messageId}`);
 
       if (response.status === 401 || response.status === 403) {
-        clearAdminToken();
+        await clearAdminSession();
         router.push('/admin/login');
         return;
       }
@@ -91,7 +91,7 @@ export default function AdminTodayMessageEditor({ messageId }: AdminTodayMessage
       });
 
       if (response.status === 401 || response.status === 403) {
-        clearAdminToken();
+        await clearAdminSession();
         router.push('/admin/login');
         return;
       }
@@ -132,7 +132,7 @@ export default function AdminTodayMessageEditor({ messageId }: AdminTodayMessage
       );
 
       if (response.status === 401 || response.status === 403) {
-        clearAdminToken();
+        await clearAdminSession();
         router.push('/admin/login');
         return;
       }
@@ -164,7 +164,7 @@ export default function AdminTodayMessageEditor({ messageId }: AdminTodayMessage
     try {
       const response = await adminFetch(`/api/v1/admin/today-messages/${messageId}`, { method: 'DELETE' });
       if (response.status === 401 || response.status === 403) {
-        clearAdminToken();
+        await clearAdminSession();
         router.push('/admin/login');
         return;
       }
@@ -196,7 +196,7 @@ export default function AdminTodayMessageEditor({ messageId }: AdminTodayMessage
           <Link href="/admin/today-messages" className="btn btn-secondary">
             Back to list
           </Link>
-          <button type="button" onClick={() => { clearAdminToken(); router.push('/admin/login'); }} className="btn btn-secondary">
+          <button type="button" onClick={() => { void clearAdminSession().then(() => router.push('/admin/login')); }} className="btn btn-secondary">
             Logout
           </button>
         </div>

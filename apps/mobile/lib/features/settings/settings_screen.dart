@@ -8,6 +8,7 @@ import '../../core/auth/auth_models.dart';
 import '../../core/theme/app_theme.dart';
 import '../read/data/read_repository.dart';
 import '../read/domain/read_models.dart';
+import 'data/feedback_api_client.dart';
 import 'widgets/auth_sheet.dart';
 import 'widgets/post_auth_backup_dialog.dart';
 
@@ -461,7 +462,10 @@ Future<void> _showHelpFeedbackSheet(
         padding: EdgeInsets.only(bottom: viewInsets.bottom),
         child: FractionallySizedBox(
           heightFactor: 0.86,
-          child: _HelpFeedbackSheet(signedInEmail: signedInEmail),
+          child: _HelpFeedbackSheet(
+            signedInEmail: signedInEmail,
+            feedbackApiClient: FeedbackApiClient(),
+          ),
         ),
       );
     },
@@ -531,9 +535,13 @@ const _faqs = [
 ];
 
 class _HelpFeedbackSheet extends StatefulWidget {
-  const _HelpFeedbackSheet({this.signedInEmail});
+  const _HelpFeedbackSheet({
+    this.signedInEmail,
+    required this.feedbackApiClient,
+  });
 
   final String? signedInEmail;
+  final FeedbackApiClient feedbackApiClient;
 
   @override
   State<_HelpFeedbackSheet> createState() => _HelpFeedbackSheetState();
@@ -567,20 +575,37 @@ class _HelpFeedbackSheetState extends State<_HelpFeedbackSheet> {
             : _emailController.text.trim();
     final category = _category.name;
 
-    // TODO: Send category, message, and contactEmail to the feedback API.
-    await Future<void>.delayed(const Duration(milliseconds: 600));
-    if (!mounted) return;
-    Navigator.of(context).pop();
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          contactEmail == null
-              ? 'Thanks for your feedback. We read every message.'
-              : 'Thanks for your feedback. We will follow up if needed.',
+    try {
+      await widget.feedbackApiClient.submitFeedback(
+        category: category,
+        message: message,
+        contactEmail: contactEmail,
+        signedInEmail: widget.signedInEmail,
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            contactEmail == null
+                ? 'Thanks for your feedback. We read every message.'
+                : 'Thanks for your feedback. We will follow up if needed.',
+          ),
         ),
-      ),
-    );
-    debugPrint('Feedback submitted: $category / ${message.length} chars');
+      );
+    } on HunnyApiException catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.message)),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not send feedback.')),
+      );
+    } finally {
+      if (mounted) setState(() => _submitting = false);
+    }
   }
 
   void _switchToFeedback() {
