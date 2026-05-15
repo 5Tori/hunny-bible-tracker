@@ -99,6 +99,14 @@ class TodayMessage {
     required this.message,
     required this.imageUrl,
     required this.shareUrl,
+    required this.hintTitle,
+    required this.hintSummary,
+    required this.articleTitle,
+    required this.articleBody,
+    required this.relatedPlanTemplateKey,
+    required this.relatedPlanTitle,
+    required this.relatedPlanChapters,
+    required this.relatedPlanMinutes,
     required this.heartCount,
     required this.shareCount,
   });
@@ -111,10 +119,40 @@ class TodayMessage {
   final String? message;
   final String? imageUrl;
   final String? shareUrl;
+  final String? hintTitle;
+  final String? hintSummary;
+  final String? articleTitle;
+  final String? articleBody;
+  final String? relatedPlanTemplateKey;
+  final String? relatedPlanTitle;
+  final int? relatedPlanChapters;
+  final int? relatedPlanMinutes;
   final int heartCount;
   final int shareCount;
 
   String get primaryText => verseText ?? message ?? verseReference;
+
+  String get reflectionTitle => hintTitle ?? 'A quick reflection';
+
+  String get reflectionSummary =>
+      hintSummary ??
+      message ??
+      'This verse invites a slower look at how God works through ordinary days.';
+
+  String get articleHeading => articleTitle ?? reflectionTitle;
+
+  String get articleText => articleBody ?? reflectionSummary;
+
+  bool get hasRelatedPlan =>
+      relatedPlanTemplateKey != null && relatedPlanTitle != null;
+
+  String? get planTemplateKey => relatedPlanTemplateKey;
+
+  String get planTitle => relatedPlanTitle ?? 'Related plan';
+
+  int get planChapters => relatedPlanChapters ?? 0;
+
+  int get planMinutes => relatedPlanMinutes ?? 0;
 
   String get shareTitle => '$verseReference | Hunny Bible Tracker';
 
@@ -140,6 +178,14 @@ class TodayMessage {
       message: message,
       imageUrl: imageUrl,
       shareUrl: shareUrl,
+      hintTitle: hintTitle,
+      hintSummary: hintSummary,
+      articleTitle: articleTitle,
+      articleBody: articleBody,
+      relatedPlanTemplateKey: relatedPlanTemplateKey,
+      relatedPlanTitle: relatedPlanTitle,
+      relatedPlanChapters: relatedPlanChapters,
+      relatedPlanMinutes: relatedPlanMinutes,
       heartCount: heartCount ?? this.heartCount,
       shareCount: shareCount ?? this.shareCount,
     );
@@ -155,6 +201,16 @@ class TodayMessage {
       message: _nullableString(json['message']),
       imageUrl: _nullableString(json['image_url']),
       shareUrl: _nullableString(json['share_url']),
+      hintTitle: _nullableString(json['hint_title']),
+      hintSummary: _nullableString(json['hint_summary']),
+      articleTitle: _nullableString(json['article_title']),
+      articleBody: _nullableString(json['article_body']),
+      relatedPlanTemplateKey: _nullableString(
+        json['related_plan_template_key'],
+      ),
+      relatedPlanTitle: _nullableString(json['related_plan_title']),
+      relatedPlanChapters: _nullableInt(json['related_plan_chapters']),
+      relatedPlanMinutes: _nullableInt(json['related_plan_minutes']),
       heartCount: _intValue(json['heart_count']),
       shareCount: _intValue(json['share_count']),
     );
@@ -200,7 +256,11 @@ String? _nullableString(Object? value) {
 }
 
 int _intValue(Object? value) {
+  return _nullableInt(value) ?? 0;
+}
+
+int? _nullableInt(Object? value) {
   if (value is int) return value;
   if (value is num) return value.toInt();
-  return 0;
+  return null;
 }

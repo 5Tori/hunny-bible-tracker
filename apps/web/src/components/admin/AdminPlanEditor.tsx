@@ -8,7 +8,14 @@ import { adminFetch, clearAdminSession } from '@/lib/admin/client';
 import { BookKeyCombobox } from '@/components/admin/BookKeyCombobox';
 import { BookChapterRangeSelects } from '@/components/admin/BookChapterRangeSelects';
 import { clampPlanItemChapters } from '@/lib/bible-books';
-import { DIFFICULTY_OPTIONS, TESTAMENT_SCOPE_OPTIONS, normalizeDifficulty, normalizeTestamentScope } from '@/lib/plan-taxonomy';
+import {
+  DIFFICULTY_OPTIONS,
+  PLAN_TYPE_OPTIONS,
+  TESTAMENT_SCOPE_OPTIONS,
+  normalizeDifficulty,
+  normalizePlanType,
+  normalizeTestamentScope,
+} from '@/lib/plan-taxonomy';
 
 interface AdminPlanEditorProps {
   planId?: string;
@@ -105,7 +112,7 @@ function mapPlanToForm(plan: PlanTemplateWithRelations): AdminPlanInput {
     description: plan.description,
     cover_image_url: plan.cover_image_url,
     cover_image_public_id: plan.cover_image_public_id,
-    plan_type: plan.plan_type,
+    plan_type: normalizePlanType(plan.plan_type ?? '') || '',
     testament_scope: normalizeTestamentScope(plan.testament_scope ?? '') || '',
     difficulty: normalizeDifficulty(plan.difficulty ?? '') || '',
     estimated_minutes: plan.estimated_minutes,
@@ -426,16 +433,24 @@ export default function AdminPlanEditor({ planId }: AdminPlanEditorProps) {
           {uploading ? <p>Uploading cover...</p> : null}
         </div>
 
+        <div className="field-row">
+          <label htmlFor="plan_type">Plan type</label>
+          <select
+            id="plan_type"
+            className="chapter-range-select"
+            value={plan.plan_type ?? ''}
+            onChange={(event) => setPlan({ ...plan, plan_type: event.target.value })}
+            required
+          >
+            {PLAN_TYPE_OPTIONS.map((option) => (
+              <option key={option.value || 'unset'} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
+
         <div className="field-row group-grid">
-          <div>
-            <label htmlFor="plan_type">Plan type</label>
-            <input
-              id="plan_type"
-              value={plan.plan_type ?? ''}
-              onChange={(event) => setPlan({ ...plan, plan_type: event.target.value })}
-              placeholder="e.g. Bible reading, study plan"
-            />
-          </div>
           <div>
             <label htmlFor="testament_scope">Testament scope</label>
             <select

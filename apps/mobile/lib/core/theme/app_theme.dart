@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  static const Color accentYellow = Color(0xFFFFD84D);
-  static const Color accentYellowLight = Color(0xFFFFE98F);
-  static const Color accentYellowDark = Color(0xFFE8BE00);
+  static const Color accentYellow = Color(0xFFFFD500);
+  static const Color accentYellowLight = Color(0xFFFFD500);
+  static const Color accentYellowDark = Color(0xFFFFB700);
   static const Color ink = Color(0xFF111111);
   static const Color mutedInk = Color(0xFF555555);
   static const Color surface = Color(0xFFFFFFFF);

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 
 import { adminFetch, getAdminTokenOrRefresh, clearAdminSession } from '@/lib/admin/client';
 import type { PlanTemplateBase } from '@/lib/plans';
+import { planTypeLabel } from '@/lib/plan-taxonomy';
 
 type CatalogFilter = 'all' | 'active' | 'archived';
 
@@ -210,6 +211,7 @@ export default function AdminPlansPage() {
         <div className="plans-table">
           <div className="plans-table-row plans-table-header">
             <span>Title</span>
+            <span>Type</span>
             <span>Catalog</span>
             <span>Browse</span>
             <span>Updated</span>
@@ -226,6 +228,7 @@ export default function AdminPlansPage() {
                   {plan.title}
                   {builtin ? <span className="plans-badge plans-badge-builtin">Built-in</span> : null}
                 </span>
+                <span className="muted">{planTypeLabel(plan.plan_type)}</span>
                 <span>{catalogLabel(plan)}</span>
                 <span>{browseSummary(plan)}</span>
                 <span className="muted">{new Date(plan.updated_at).toLocaleString()}</span>

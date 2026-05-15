@@ -275,6 +275,21 @@ class ReadRepository {
       throw ArgumentError.value(templateKey, 'templateKey', 'Unknown template');
     }
 
+    final existing = await (db.select(db.userReadingPlans)
+          ..where(
+            (tbl) =>
+                tbl.templateId.equals(template.id) &
+                tbl.archivedAt.isNull() &
+                tbl.status.isIn(['active', 'completion_ready']),
+          )
+          ..orderBy([(tbl) => OrderingTerm.desc(tbl.updatedAt)])
+          ..limit(1))
+        .getSingleOrNull();
+    if (existing != null) {
+      await switchToPlan(existing.id);
+      return existing.id;
+    }
+
     return _createUserPlanFromTemplate(template);
   }
 

@@ -514,7 +514,8 @@ button.btn:disabled,
 
 .plans-table-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr) minmax(0, 1fr) 140px minmax(0, 2.2fr);
+  grid-template-columns:
+    minmax(0, 1.35fr) minmax(0, 0.75fr) minmax(0, 0.95fr) minmax(0, 0.85fr) 140px minmax(0, 2fr);
   gap: 14px;
   align-items: center;
   padding: 14px 18px;

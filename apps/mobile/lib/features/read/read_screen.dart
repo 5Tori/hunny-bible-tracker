@@ -1221,31 +1221,6 @@ class _CompletedPlanSummaryCardState extends State<_CompletedPlanSummaryCard> {
   }
 }
 
-class _CompletedChip extends StatelessWidget {
-  const _CompletedChip({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppTheme.accentYellowLight,
-        borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Text(
-        label.isEmpty ? 'Completed once' : label,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.ink,
-              fontWeight: FontWeight.w800,
-            ),
-      ),
-    );
-  }
-}
-
 class _PlanTemplatePickerSheet extends StatelessWidget {
   const _PlanTemplatePickerSheet({required this.templates});
 
@@ -1296,10 +1271,16 @@ class _PlanTemplatePickerSheet extends StatelessWidget {
                     ? const _PlanPickerEmptyState(
                         message: 'No published plans yet.',
                       )
-                    : ListView.separated(
-                        shrinkWrap: true,
+                    : GridView.builder(
+                        padding: EdgeInsets.zero,
                         itemCount: templates.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 16),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 0.78,
+                        ),
                         itemBuilder: (context, index) {
                           final template = templates[index];
                           return _PlanCatalogCard(
@@ -1338,110 +1319,157 @@ class _PlanCatalogCard extends StatelessWidget {
             ? 'About ${(minutes / 60).round()} hours'
             : 'About $minutes min';
 
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
+    final shortDesc =
+        template.shortDescription.isNotEmpty ? template.shortDescription : template.description;
+
+    final coverUrl = template.coverImageUrl;
+    final hasImage = coverUrl != null && coverUrl.isNotEmpty;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onAdd,
         borderRadius: BorderRadius.circular(3),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
-            decoration: BoxDecoration(
-              color: AppTheme.accentYellowDark,
-              borderRadius: BorderRadius.circular(3),
-            ),
-            child: Text(
-              template.planTypeLabel,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: AppTheme.ink,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.2,
-                  ),
-            ),
+        child: Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(3),
+            border: Border.all(color: AppTheme.border),
           ),
-          if (template.completionCount > 0) ...[
-            const SizedBox(height: 12),
-            _CompletedChip(label: template.completionLabel),
-          ],
-          const SizedBox(height: 18),
-          Text(
-            template.title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 20,
-                ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            template.shortDescription.isNotEmpty
-                ? template.shortDescription
-                : template.description,
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppTheme.mutedInk,
-                  fontSize: 16,
-                  height: 1.35,
-                ),
-          ),
-          const SizedBox(height: 20),
-          Wrap(
-            spacing: 16,
-            runSpacing: 8,
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _CatalogMeta(
-                icon: Icons.menu_book_outlined,
-                text: '${template.totalChapters} chapters',
-              ),
-              if (timeLabel != null)
-                _CatalogMeta(
-                  icon: Icons.schedule,
-                  text: timeLabel,
+              AspectRatio(
+                aspectRatio: 1.12,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    hasImage
+                        ? Image.network(
+                            coverUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) =>
+                                _PlanImagePlaceholder(planTypeLabel: template.planTypeLabel),
+                          )
+                        : _PlanImagePlaceholder(planTypeLabel: template.planTypeLabel),
+                    Positioned(
+                      top: 10,
+                      left: 10,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+                        decoration: BoxDecoration(
+                          color: AppTheme.accentYellowDark,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                        child: Text(
+                          template.planTypeLabel,
+                          style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                                color: AppTheme.ink,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.2,
+                              ),
+                        ),
+                      ),
+                    ),
+                    if (template.isInProgress)
+                      Positioned(
+                        top: 10,
+                        right: 10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: AppTheme.accentYellowLight,
+                            borderRadius: BorderRadius.circular(3),
+                            border: Border.all(color: AppTheme.border),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.check, size: 16, color: AppTheme.ink),
+                              SizedBox(width: 6),
+                              Text(
+                                'ADDED',
+                                style: TextStyle(
+                                  color: AppTheme.ink,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1.1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      template.title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w800,
+                            fontSize: 18,
+                          ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      shortDesc,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.mutedInk,
+                            fontSize: 14,
+                            height: 1.25,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 6,
+                      children: [
+                        _CatalogMeta(
+                          icon: Icons.menu_book_outlined,
+                          text: '${template.totalChapters} chapters',
+                        ),
+                        if (timeLabel != null)
+                          _CatalogMeta(
+                            icon: Icons.schedule,
+                            text: timeLabel,
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
-          const SizedBox(height: 24),
-          SizedBox(
-            width: double.infinity,
-            child: template.isInProgress
-                ? OutlinedButton.icon(
-                    onPressed: null,
-                    icon: const Icon(Icons.check, size: 20),
-                    label: const Text('In Progress'),
-                    style: OutlinedButton.styleFrom(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      textStyle: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  )
-                : FilledButton.icon(
-                    onPressed: onAdd,
-                    icon: const Icon(Icons.add, size: 22),
-                    label: Text(
-                      template.completionCount > 0 ? 'Start Again' : 'Add Plan',
-                    ),
-                    style: FilledButton.styleFrom(
-                      backgroundColor: AppTheme.ink,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      textStyle: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                  ),
-          ),
-        ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PlanImagePlaceholder extends StatelessWidget {
+  const _PlanImagePlaceholder({required this.planTypeLabel});
+
+  final String planTypeLabel;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: AppTheme.softSurface,
+      child: Center(
+        child: Icon(
+          Icons.menu_book_outlined,
+          size: 42,
+          color: AppTheme.mutedInk,
+        ),
       ),
     );
   }

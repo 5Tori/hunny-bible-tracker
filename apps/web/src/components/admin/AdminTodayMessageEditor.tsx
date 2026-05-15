@@ -15,8 +15,21 @@ const emptyForm: AdminTodayMessageInput = {
   message: '',
   image_url: '',
   image_public_id: '',
+  hint_title: '',
+  hint_summary: '',
+  article_title: '',
+  article_body: '',
+  primary_related_plan_template_id: '',
   is_published: false,
 };
+
+interface PlanOption {
+  id: string;
+  title: string;
+  template_key: string;
+  total_chapters: number | null;
+  estimated_minutes: number | null;
+}
 
 function mapToForm(message: TodayMessageBase): AdminTodayMessageInput {
   return {
@@ -27,6 +40,11 @@ function mapToForm(message: TodayMessageBase): AdminTodayMessageInput {
     message: message.message ?? '',
     image_url: message.image_url ?? '',
     image_public_id: message.image_public_id ?? '',
+    hint_title: message.hint_title ?? '',
+    hint_summary: message.hint_summary ?? '',
+    article_title: message.article_title ?? '',
+    article_body: message.article_body ?? '',
+    primary_related_plan_template_id: message.primary_related_plan_template_id ?? '',
     is_published: message.is_published,
   };
 }
@@ -41,8 +59,20 @@ export default function AdminTodayMessageEditor({ messageId }: AdminTodayMessage
   const [loading, setLoading] = useState(Boolean(messageId));
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [planOptions, setPlanOptions] = useState<PlanOption[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  useEffect(() => {
+    const loadPlans = async () => {
+      const response = await fetch('/api/v1/plans?sort=featured');
+      if (!response.ok) return;
+      const json = await response.json();
+      setPlanOptions((json.plans ?? []) as PlanOption[]);
+    };
+
+    void loadPlans();
+  }, []);
 
   useEffect(() => {
     if (!messageId) {
@@ -258,6 +288,67 @@ export default function AdminTodayMessageEditor({ messageId }: AdminTodayMessage
             onChange={(event) => setForm({ ...form, message: event.target.value })}
             rows={3}
             placeholder="Reflection or subtitle for the card"
+          />
+        </div>
+
+        <div className="field-row group-grid">
+          <div>
+            <label htmlFor="hint_title">Hint title</label>
+            <input
+              id="hint_title"
+              value={form.hint_title ?? ''}
+              onChange={(event) => setForm({ ...form, hint_title: event.target.value })}
+              placeholder="A quick reflection"
+            />
+          </div>
+          <div>
+            <label htmlFor="primary_related_plan_template_id">Related plan</label>
+            <select
+              id="primary_related_plan_template_id"
+              value={form.primary_related_plan_template_id ?? ''}
+              onChange={(event) =>
+                setForm({ ...form, primary_related_plan_template_id: event.target.value })
+              }
+            >
+              <option value="">No related plan</option>
+              {planOptions.map((plan) => (
+                <option key={plan.id} value={plan.id}>
+                  {plan.title} ({plan.template_key})
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div className="field-row">
+          <label htmlFor="hint_summary">Hint summary</label>
+          <textarea
+            id="hint_summary"
+            value={form.hint_summary ?? ''}
+            onChange={(event) => setForm({ ...form, hint_summary: event.target.value })}
+            rows={3}
+            placeholder="1-2 lines shown inside the Home card"
+          />
+        </div>
+
+        <div className="field-row">
+          <label htmlFor="article_title">Article title</label>
+          <input
+            id="article_title"
+            value={form.article_title ?? ''}
+            onChange={(event) => setForm({ ...form, article_title: event.target.value })}
+            placeholder="When God turns pain into good"
+          />
+        </div>
+
+        <div className="field-row">
+          <label htmlFor="article_body">Article body</label>
+          <textarea
+            id="article_body"
+            value={form.article_body ?? ''}
+            onChange={(event) => setForm({ ...form, article_body: event.target.value })}
+            rows={10}
+            placeholder="Short 2-5 minute reflection for the Read more modal"
           />
         </div>
 

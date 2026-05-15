@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
 import { sql } from '@/lib/db/neon';
-import { normalizeDifficulty, normalizeTestamentScope } from '@/lib/plan-taxonomy';
+import { normalizeDifficulty, normalizePlanType, normalizeTestamentScope } from '@/lib/plan-taxonomy';
 
 type SqlLike = typeof sql;
 
@@ -152,6 +152,11 @@ function normalizeInput(input: AdminPlanInput): AdminPlanInput {
     throw new PlanValidationError('Plan title is required.');
   }
 
+  const planType = normalizePlanType(String(input.plan_type ?? ''));
+  if (!planType) {
+    throw new PlanValidationError('Plan type is required. Choose one of the standard types.');
+  }
+
   if (!input.sections?.length) {
     throw new PlanValidationError('At least one section is required.');
   }
@@ -202,7 +207,7 @@ function normalizeInput(input: AdminPlanInput): AdminPlanInput {
     description: emptyToNull(input.description),
     cover_image_url: emptyToNull(input.cover_image_url),
     cover_image_public_id: emptyToNull(input.cover_image_public_id),
-    plan_type: emptyToNull(input.plan_type),
+    plan_type: planType,
     testament_scope: emptyToNull(normalizeTestamentScope(String(input.testament_scope ?? ''))),
     difficulty: emptyToNull(normalizeDifficulty(String(input.difficulty ?? ''))),
     estimated_minutes: normalizeNullableNumber(input.estimated_minutes),

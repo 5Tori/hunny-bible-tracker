@@ -30,6 +30,7 @@ class HomeScreenState extends State<HomeScreen> {
   TodayMessage? _todayMessage;
   var _todayMessageLoading = false;
   var _todayMessageHearted = false;
+  var _todayMessageSaved = false;
   var _todayMessageActionPending = false;
 
   @override
@@ -50,12 +51,16 @@ class HomeScreenState extends State<HomeScreen> {
     final todayMessageHearted = todayMessage == null
         ? false
         : await _isTodayMessageHearted(todayMessage.id);
+    final todayMessageSaved = todayMessage == null
+        ? false
+        : await _isTodayMessageSaved(todayMessage.id);
     if (!mounted) return;
     setState(() {
       _plan = plan;
       _readingOverview = overview;
       _todayMessage = todayMessage;
       _todayMessageHearted = todayMessageHearted;
+      _todayMessageSaved = todayMessageSaved;
       _todayMessageLoading = false;
     });
   }
@@ -75,6 +80,12 @@ class HomeScreenState extends State<HomeScreen> {
   Future<bool> _isTodayMessageHearted(String id) async {
     final value =
         await widget.readRepository.getAppSetting(_heartedSettingKey(id));
+    return value == '1';
+  }
+
+  Future<bool> _isTodayMessageSaved(String id) async {
+    final value =
+        await widget.readRepository.getAppSetting(_savedSettingKey(id));
     return value == '1';
   }
 
@@ -118,6 +129,18 @@ class HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _toggleSaveTodayMessage() async {
+    final message = _todayMessage;
+    if (message == null) return;
+
+    final nextValue = !_todayMessageSaved;
+    setState(() => _todayMessageSaved = nextValue);
+    await widget.readRepository.setAppSetting(
+      _savedSettingKey(message.id),
+      nextValue ? '1' : '0',
+    );
+  }
+
   Future<void> _shareTodayMessage() async {
     final message = _todayMessage;
     if (message == null || _todayMessageActionPending) return;
@@ -156,6 +179,28 @@ class HomeScreenState extends State<HomeScreen> {
   }
 
   String _heartedSettingKey(String id) => 'today_message_hearted_$id';
+  String _savedSettingKey(String id) => 'today_message_saved_$id';
+
+  Future<void> _openTodayMessageArticle() async {
+    final message = _todayMessage;
+    if (message == null) return;
+
+    final started = await showModalBottomSheet<bool>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return _TodayMessageArticleSheet(
+          message: message,
+          onStartPlan: widget.readRepository.addPlanFromTemplate,
+        );
+      },
+    );
+
+    if (!mounted || started != true) return;
+    await _load();
+    widget.onReadTap();
+  }
 
   String _greeting() {
     final hour = DateTime.now().hour;
@@ -217,9 +262,12 @@ class HomeScreenState extends State<HomeScreen> {
               message: _todayMessage,
               loading: _todayMessageLoading,
               hearted: _todayMessageHearted,
+              saved: _todayMessageSaved,
               actionPending: _todayMessageActionPending,
               onHeart: _heartTodayMessage,
+              onSave: _toggleSaveTodayMessage,
               onShare: _shareTodayMessage,
+              onReadMore: _openTodayMessageArticle,
             ),
             const SizedBox(height: 32),
 
@@ -319,17 +367,23 @@ class TodayMessageCard extends StatelessWidget {
     required this.message,
     required this.loading,
     required this.hearted,
+    required this.saved,
     required this.actionPending,
     required this.onHeart,
+    required this.onSave,
     required this.onShare,
+    required this.onReadMore,
   });
 
   final TodayMessage? message;
   final bool loading;
   final bool hearted;
+  final bool saved;
   final bool actionPending;
   final VoidCallback onHeart;
+  final VoidCallback onSave;
   final VoidCallback onShare;
+  final VoidCallback onReadMore;
 
   @override
   Widget build(BuildContext context) {
@@ -375,42 +429,74 @@ class TodayMessageCard extends StatelessWidget {
     final hasImage = imageUrl != null;
 
     return Container(
-      width: double.infinity,
-      constraints: const BoxConstraints(minHeight: 200),
       decoration: BoxDecoration(
-        color: AppTheme.ink,
+        color: Colors.white,
         borderRadius: BorderRadius.circular(6),
         border: Border.all(color: AppTheme.border),
-        image: hasImage
-            ? DecorationImage(
-                image: NetworkImage(imageUrl),
-                fit: BoxFit.cover,
-              )
-            : null,
       ),
       clipBehavior: Clip.antiAlias,
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: hasImage
-                ? [
-                    Colors.black.withValues(alpha: 0.10),
-                    Colors.black.withValues(alpha: 0.76),
-                  ]
-                : const [
-                    AppTheme.ink,
-                    Color(0xFF30302A),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          AspectRatio(
+            aspectRatio: 0.86,
+            child: Container(
+              decoration: BoxDecoration(
+                color: AppTheme.ink,
+                image: hasImage
+                    ? DecorationImage(
+                        image: NetworkImage(imageUrl),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(22),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: hasImage
+                        ? [
+                            Colors.black.withValues(alpha: 0.02),
+                            Colors.black.withValues(alpha: 0.82),
+                          ]
+                        : const [
+                            AppTheme.ink,
+                            Color(0xFF30302A),
+                          ],
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '"${current.primaryText}"',
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            height: 1.3,
+                          ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      current.verseReference.toUpperCase(),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.78),
+                            letterSpacing: 2.0,
+                            fontWeight: FontWeight.w800,
+                          ),
+                    ),
                   ],
+                ),
+              ),
+            ),
           ),
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.end,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 14, 18, 12),
+            child: Row(
               children: [
                 _MessageActionButton(
                   icon: hearted ? Icons.favorite : Icons.favorite_border,
@@ -418,45 +504,70 @@ class TodayMessageCard extends StatelessWidget {
                   selected: hearted,
                   onTap: actionPending || hearted ? null : onHeart,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 18),
+                _MessageActionButton(
+                  icon: saved ? Icons.bookmark : Icons.bookmark_border,
+                  label: 'Save',
+                  selected: saved,
+                  onTap: onSave,
+                ),
+                const Spacer(),
                 _MessageActionButton(
                   icon: Icons.ios_share,
-                  label: _compactCount(current.shareCount),
+                  label: current.shareCount > 0
+                      ? _compactCount(current.shareCount)
+                      : '',
                   selected: false,
                   onTap: actionPending ? null : onShare,
+                  compact: true,
                 ),
               ],
             ),
-            const SizedBox(height: 14),
-            Text(
-              current.primaryText,
-              style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                    height: 1.35,
-                  ),
-            ),
-            if (current.verseText != null && current.message != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                current.message!,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white.withValues(alpha: 0.82),
-                      fontWeight: FontWeight.w600,
+          ),
+          const Divider(height: 1, color: AppTheme.border),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  current.reflectionTitle,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.mutedInk,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                      ),
+                ),
+                const SizedBox(height: 7),
+                Text(
+                  current.reflectionSummary,
+                  maxLines: 3,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.ink,
+                        height: 1.4,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+                const SizedBox(height: 14),
+                TextButton(
+                  onPressed: onReadMore,
+                  style: TextButton.styleFrom(
+                    foregroundColor: AppTheme.ink,
+                    padding: EdgeInsets.zero,
+                    minimumSize: const Size(0, 34),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    textStyle: const TextStyle(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 15,
                     ),
-              ),
-            ],
-            const SizedBox(height: 10),
-            Text(
-              current.verseReference.toUpperCase(),
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: Colors.white.withValues(alpha: 0.78),
-                    letterSpacing: 0.7,
-                    fontWeight: FontWeight.w800,
                   ),
+                  child: const Text('Read more'),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -474,42 +585,278 @@ class _MessageActionButton extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.compact = false,
   });
 
   final IconData icon;
   final String label;
   final bool selected;
   final VoidCallback? onTap;
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white.withValues(alpha: selected ? 0.96 : 0.18),
+      color: Colors.transparent,
       borderRadius: BorderRadius.circular(999),
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(999),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          padding: EdgeInsets.symmetric(
+            horizontal: compact ? 4 : 2,
+            vertical: 6,
+          ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(
                 icon,
-                size: 17,
-                color: selected ? AppTheme.ink : Colors.white,
+                size: 25,
+                color: selected ? AppTheme.ink : AppTheme.mutedInk,
               ),
-              const SizedBox(width: 5),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: selected ? AppTheme.ink : Colors.white,
-                      fontWeight: FontWeight.w800,
-                    ),
-              ),
+              if (label.isNotEmpty) ...[
+                const SizedBox(width: 7),
+                Text(
+                  label,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.mutedInk,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                ),
+              ],
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _TodayMessageArticleSheet extends StatefulWidget {
+  const _TodayMessageArticleSheet({
+    required this.message,
+    required this.onStartPlan,
+  });
+
+  final TodayMessage message;
+  final Future<String> Function(String templateKey) onStartPlan;
+
+  @override
+  State<_TodayMessageArticleSheet> createState() =>
+      _TodayMessageArticleSheetState();
+}
+
+class _TodayMessageArticleSheetState extends State<_TodayMessageArticleSheet> {
+  var _startingPlan = false;
+
+  Future<void> _startPlan() async {
+    final templateKey = widget.message.planTemplateKey;
+    if (templateKey == null || _startingPlan) return;
+    setState(() => _startingPlan = true);
+    try {
+      await widget.onStartPlan(templateKey);
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (_) {
+      if (!mounted) return;
+      setState(() => _startingPlan = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not start this plan.')),
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final message = widget.message;
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.86,
+      minChildSize: 0.45,
+      maxChildSize: 0.94,
+      builder: (context, scrollController) {
+        return Container(
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Stack(
+            children: [
+              SingleChildScrollView(
+                controller: scrollController,
+                padding: const EdgeInsets.fromLTRB(24, 44, 24, 34),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 100,
+                        height: 8,
+                        decoration: BoxDecoration(
+                          color: AppTheme.softSurface,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 34),
+                    Text(
+                      message.verseReference.toUpperCase(),
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: AppTheme.mutedInk,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 2.4,
+                          ),
+                    ),
+                    const SizedBox(height: 18),
+                    Text(
+                      message.articleHeading,
+                      style:
+                          Theme.of(context).textTheme.headlineSmall?.copyWith(
+                                color: AppTheme.ink,
+                                fontSize: 29,
+                                fontWeight: FontWeight.w900,
+                                height: 1.16,
+                              ),
+                    ),
+                    const SizedBox(height: 26),
+                    Text(
+                      message.articleText,
+                      style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                            color: AppTheme.ink,
+                            fontSize: 20,
+                            height: 1.55,
+                            fontWeight: FontWeight.w500,
+                          ),
+                    ),
+                    if (message.hasRelatedPlan) ...[
+                      const SizedBox(height: 28),
+                      _RelatedPlanCard(
+                        title: message.planTitle,
+                        chapters: message.planChapters,
+                        minutes: message.planMinutes,
+                        starting: _startingPlan,
+                        onStartPlan: _startPlan,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 12,
+                right: 12,
+                child: IconButton(
+                  onPressed: _startingPlan
+                      ? null
+                      : () => Navigator.of(context).pop(false),
+                  icon: const Icon(Icons.close),
+                  color: AppTheme.ink,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _RelatedPlanCard extends StatelessWidget {
+  const _RelatedPlanCard({
+    required this.title,
+    required this.chapters,
+    required this.minutes,
+    required this.starting,
+    required this.onStartPlan,
+  });
+
+  final String title;
+  final int chapters;
+  final int minutes;
+  final bool starting;
+  final VoidCallback onStartPlan;
+
+  @override
+  Widget build(BuildContext context) {
+    final details = [
+      if (chapters > 0) '$chapters chapters',
+      if (minutes > 0) '~$minutes min',
+    ].join(' · ');
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        border: Border.all(color: AppTheme.border),
+        borderRadius: BorderRadius.circular(3),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'READ IN CONTEXT',
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.mutedInk,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2.0,
+                ),
+          ),
+          const SizedBox(height: 18),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            color: AppTheme.ink,
+                            fontSize: 21,
+                            fontWeight: FontWeight.w900,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    if (details.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        details,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppTheme.mutedInk,
+                              fontSize: 17,
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const SizedBox(width: 16),
+              FilledButton(
+                onPressed: starting ? null : onStartPlan,
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppTheme.ink,
+                  foregroundColor: Colors.white,
+                  disabledBackgroundColor: AppTheme.mutedInk,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 14,
+                  ),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+                child: Text(starting ? 'Starting...' : 'Start plan'),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

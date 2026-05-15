@@ -17,9 +17,13 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     };
   }
 
-  const title = `${message.verse_reference} | Hunny Bible Tracker`;
+  const title = `${message.article_title || message.verse_reference} | Hunny Bible Tracker`;
   const description =
-    message.verse_text || message.message || 'A daily Bible message from Hunny Bible Tracker.';
+    message.hint_summary ||
+    message.article_body ||
+    message.verse_text ||
+    message.message ||
+    'A daily Bible message from Hunny Bible Tracker.';
 
   return {
     title,
@@ -74,6 +78,20 @@ export default async function TodayMessagePage({ params }: PageProps) {
       ) : null}
       {message.verse_text ? <p className="lede">{message.verse_text}</p> : null}
       {message.message ? <p>{message.message}</p> : null}
+      {message.article_title ? <h2>{message.article_title}</h2> : null}
+      {message.article_body
+        ? message.article_body.split('\n\n').map((paragraph) => <p key={paragraph}>{paragraph}</p>)
+        : null}
+      {message.related_plan_title ? (
+        <section>
+          <p className="eyebrow">Read in context</p>
+          <h2>{message.related_plan_title}</h2>
+          <p>
+            {message.related_plan_chapters ?? 0} chapters
+            {message.related_plan_minutes ? ` · ~${message.related_plan_minutes} min` : ''}
+          </p>
+        </section>
+      ) : null}
       <p>
         {message.heart_count} hearts · {message.share_count} shares
       </p>

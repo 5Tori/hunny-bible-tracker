@@ -81,3 +81,57 @@ export function normalizeDifficulty(raw: string | null | undefined): string {
   const mapped = DIFFICULTY_ALIASES[key];
   return mapped ?? '';
 }
+
+/** Product-facing plan categories (stored as `plan_templates.plan_type`). */
+export const PLAN_TYPE_VALUES = [
+  'guided_reading',
+  'story',
+  'character',
+  'theme',
+  'devotional',
+  'prayer',
+  'study',
+  'journey',
+] as const;
+export type PlanTypeValue = (typeof PLAN_TYPE_VALUES)[number];
+
+export const PLAN_TYPE_LABELS: Record<PlanTypeValue, string> = {
+  guided_reading: 'Guided Reading',
+  story: 'Story',
+  character: 'Character',
+  theme: 'Theme',
+  devotional: 'Devotional',
+  prayer: 'Prayer',
+  study: 'Study',
+  journey: 'Journey',
+};
+
+export const PLAN_TYPE_OPTIONS: Array<{ value: string; label: string }> = [
+  { value: '', label: 'Select plan type…' },
+  ...PLAN_TYPE_VALUES.map((value) => ({ value, label: PLAN_TYPE_LABELS[value] })),
+];
+
+const PLAN_TYPE_CANONICAL = new Set<string>(PLAN_TYPE_VALUES);
+
+/** Legacy free-text → canonical type (best-effort). */
+const PLAN_TYPE_ALIASES: Record<string, PlanTypeValue> = {
+  bible_reading: 'guided_reading',
+  reading_plan: 'guided_reading',
+  guided: 'guided_reading',
+  reading: 'guided_reading',
+};
+
+/** Returns a canonical plan type slug or `''` when unset or unrecognized. */
+export function normalizePlanType(raw: string | null | undefined): string {
+  const key = slugKey(String(raw ?? ''));
+  if (!key) return '';
+  if (PLAN_TYPE_CANONICAL.has(key)) return key as PlanTypeValue;
+  const mapped = PLAN_TYPE_ALIASES[key];
+  return mapped ?? '';
+}
+
+export function planTypeLabel(canonical: string | null | undefined): string {
+  const n = normalizePlanType(canonical ?? '');
+  if (!n) return '—';
+  return PLAN_TYPE_LABELS[n as PlanTypeValue];
+}

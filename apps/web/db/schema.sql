@@ -255,6 +255,11 @@ create table if not exists today_messages (
   message text,
   image_url text,
   image_public_id text,
+  hint_title text,
+  hint_summary text,
+  article_title text,
+  article_body text,
+  primary_related_plan_template_id uuid references plan_templates(id),
   is_published boolean not null default false,
   heart_count integer not null default 0,
   share_count integer not null default 0,
@@ -271,6 +276,9 @@ create index if not exists idx_today_messages_published_lookup
 
 create index if not exists idx_today_messages_engagement
   on today_messages (heart_count desc, share_count desc);
+
+create index if not exists idx_today_messages_related_plan
+  on today_messages (primary_related_plan_template_id);
 
 create table if not exists feedback_messages (
   id uuid primary key default gen_random_uuid(),
