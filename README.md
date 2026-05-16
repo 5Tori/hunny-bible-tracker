@@ -29,6 +29,7 @@ apps/
   web/      Next.js web/API/admin app
 
 docs/
+  PROJECT_CONTEXT.md       이 프로젝트에 대한 전체 컨텍스트
   ARCHITECTURE.md          Runtime structure and module map
   DATA_MODEL.md            Local/server schema, plan lifecycle, content tables
   AUTH_AND_API.md          Firebase Auth, API routes, deployment checklist
@@ -101,6 +102,54 @@ flutter build ios --simulator --debug
 pnpm web:build
 pnpm --dir apps/web typecheck
 ```
+
+## Release Builds
+
+The app version comes from the root mobile app file:
+
+```text
+apps/mobile/pubspec.yaml
+```
+
+Use `version: <versionName>+<versionCode>`:
+
+```yaml
+version: 0.1.0+2
+```
+
+For Google Play, every upload must increase the number after `+` (`versionCode`). If Play Console says the version already exists, confirm you edited `apps/mobile/pubspec.yaml`, not a plugin/example `pubspec.yaml` under `ios/.symlinks` or another generated folder.
+
+Android release app bundle:
+
+```bash
+cd apps/mobile
+flutter clean
+flutter pub get
+flutter build appbundle --release --dart-define-from-file=.env.android.json
+```
+
+Output:
+
+```text
+apps/mobile/build/app/outputs/bundle/release/app-release.aab
+```
+
+iOS release archive:
+
+```bash
+cd apps/mobile
+flutter clean
+flutter pub get
+flutter build ipa --release --dart-define-from-file=.env.ios.json
+```
+
+Output:
+
+```text
+apps/mobile/build/ios/ipa/*.ipa
+```
+
+Before release builds, make sure `.env.android.json` and `.env.ios.json` point `HUNNY_API_BASE_URL` to the deployed API, not a local emulator URL.
 
 ## Current Data Boundary
 

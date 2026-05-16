@@ -104,8 +104,8 @@ All current API routes live under `apps/web/src/app/api`.
 | `/api/v1/me` | `GET` | Firebase bearer | Verify token, upsert `auth_users`, return current user summary |
 | `/api/v1/plans` | `GET` | None | Public published plan catalog |
 | `/api/v1/plans/[identifier]` | `GET` | None | Public single published plan by id/key |
-| `/api/v1/sync/push` | `POST` | Firebase bearer | Upload reading backup rows |
-| `/api/v1/sync/bootstrap` | `GET` | Firebase bearer | Download backed-up reading rows |
+| `/api/v1/sync/push` | `POST` | Firebase bearer | Upload compact reading backup snapshot |
+| `/api/v1/sync/bootstrap` | `GET` | Firebase bearer | Download compact reading backup snapshot |
 | `/api/v1/today-message` | `GET` | None | Latest published Today’s Message by date/language |
 | `/api/v1/today-message/[id]/heart` | `POST` | None | Increment Today’s Message heart counter |
 | `/api/v1/today-message/[id]/share` | `POST` | None | Increment Today’s Message share counter |
@@ -173,7 +173,7 @@ Current limitations:
 
 - No automatic multi-device incremental pull loop yet.
 - No end-user conflict resolution UI yet.
-- Restore can hide local-only starter plans when server backup data exists.
+- Restore replaces local reading state with the latest compact backup payload.
 
 ## Deployment Checklist
 
@@ -184,7 +184,7 @@ Current limitations:
 - iOS `Info.plist` has correct `GIDClientID` and reversed URL scheme.
 - Flutter builds include dart-define values.
 - API deployment has `DATABASE_URL`, Firebase Admin env vars, `ADMIN_EMAILS`, and Cloudinary env vars.
-- Neon has `apps/web/db/schema.sql` and subsequent migrations applied.
+- Neon has `apps/web/db/schema.sql` applied.
 - `POST /api/v1/auth/sync` succeeds after mobile login.
 - `POST /api/v1/sync/push` succeeds for a signed-in account.
 - `GET /api/v1/sync/bootstrap` succeeds for a signed-in account.

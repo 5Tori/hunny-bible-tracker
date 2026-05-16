@@ -1,39 +1,28 @@
-import { sql } from '@/lib/db/neon';
+import crypto from 'crypto';
 
-type SqlLike = typeof sql;
+import { sql } from '@/lib/db/neon';
 
 type JsonRecord = Record<string, unknown>;
 
-type SyncRowAck = {
-  clientId: string;
-  serverId: string;
-};
-
 export type ReadingSyncPushResult = {
   serverTime: string;
+  backupVersion: number;
+  payloadHash: string;
+  updatedAt: string;
   counts: {
-    userReadingPlans: number;
-    userPlanChapters: number;
-    chapterProgressEntries: number;
-    readingActivities: number;
-    planCompletionEvents: number;
-  };
-  acknowledgements: {
-    userReadingPlans: SyncRowAck[];
-    userPlanChapters: SyncRowAck[];
-    chapterProgressEntries: SyncRowAck[];
-    readingActivities: SyncRowAck[];
-    planCompletionEvents: SyncRowAck[];
+    plans: number;
+    progress: number;
+    activities: number;
+    completionEvents: number;
   };
 };
 
 export type ReadingSyncBootstrapResult = {
   serverTime: string;
-  userReadingPlans: JsonRecord[];
-  userPlanChapters: JsonRecord[];
-  chapterProgressEntries: JsonRecord[];
-  readingActivities: JsonRecord[];
-  planCompletionEvents: JsonRecord[];
+  backupVersion: number | null;
+  payloadHash: string | null;
+  updatedAt: string | null;
+  payload: JsonRecord | null;
 };
 
 class SyncInputError extends Error {
@@ -51,733 +40,291 @@ export async function pushReadingSync(
   authUserId: string,
   body: unknown,
 ): Promise<ReadingSyncPushResult> {
-  const input = parsePushBody(body);
-  const planAcks = await upsertUserReadingPlans(
-    sql,
-    authUserId,
-    input.userReadingPlans,
-  );
-  const planMap = await getPlanIdMap(sql, authUserId, [
-    ...input.userReadingPlans.map((row) => row.id),
-    ...input.userPlanChapters.map((row) => row.userPlanId),
-    ...input.chapterProgressEntries.map((row) => row.userPlanId),
-    ...input.readingActivities.map((row) => row.userPlanId),
-    ...input.planCompletionEvents.map((row) => row.userPlanId),
-  ]);
+  const snapshot = parseReadingBackupSnapshot(body);
+  const canonicalPayload = canonicalJson(snapshot);
+  const byteLength = Buffer.byteLength(canonicalPayload, 'utf8');
+  if (byteLength > maxBackupPayloadBytes) {
+    throw new SyncInputError('backup_payload_too_large');
+  }
 
-  const chapterAcks = await upsertUserPlanChapters(
-    sql,
-    authUserId,
-    input.userPlanChapters,
-    planMap,
-  );
-  const progressAcks = await upsertChapterProgressEntries(
-    sql,
-    authUserId,
-    input.chapterProgressEntries,
-    planMap,
-  );
-  const activityAcks = await upsertReadingActivities(
-    sql,
-    authUserId,
-    input.readingActivities,
-    planMap,
-  );
-  const completionAcks = await upsertPlanCompletionEvents(
-    sql,
-    authUserId,
-    input.planCompletionEvents,
-    planMap,
-  );
+  const payloadHash = crypto
+    .createHash('sha256')
+    .update(canonicalPayload)
+    .digest('hex');
 
-  await sql`
-    insert into sync_states (auth_user_id, last_push_at, updated_at)
-    values (${authUserId}, now(), now())
+  const rows = (await sql`
+    insert into user_reading_backups (
+      auth_user_id,
+      backup_version,
+      payload_jsonb,
+      payload_hash,
+      updated_at
+    )
+    values (
+      ${authUserId},
+      ${snapshot.v},
+      ${canonicalPayload}::jsonb,
+      ${payloadHash},
+      now()
+    )
     on conflict (auth_user_id)
-    do update set last_push_at = now(), updated_at = now()
-  `;
+    do update set
+      backup_version = excluded.backup_version,
+      payload_jsonb = excluded.payload_jsonb,
+      payload_hash = excluded.payload_hash,
+      updated_at = now()
+    returning backup_version, payload_hash, updated_at
+  `) as Array<{
+    backup_version: number;
+    payload_hash: string;
+    updated_at: string | Date;
+  }>;
+
+  const saved = rows[0];
+  if (!saved) throw new SyncInputError('backup_write_failed');
 
   return {
     serverTime: new Date().toISOString(),
-    counts: {
-      userReadingPlans: planAcks.length,
-      userPlanChapters: chapterAcks.length,
-      chapterProgressEntries: progressAcks.length,
-      readingActivities: activityAcks.length,
-      planCompletionEvents: completionAcks.length,
-    },
-    acknowledgements: {
-      userReadingPlans: planAcks,
-      userPlanChapters: chapterAcks,
-      chapterProgressEntries: progressAcks,
-      readingActivities: activityAcks,
-      planCompletionEvents: completionAcks,
-    },
+    backupVersion: saved.backup_version,
+    payloadHash: saved.payload_hash,
+    updatedAt: toIsoString(saved.updated_at) ?? new Date().toISOString(),
+    counts: countBackupSnapshot(snapshot),
   };
 }
 
 export async function getReadingSyncBootstrap(
   authUserId: string,
 ): Promise<ReadingSyncBootstrapResult> {
-  const plans = (await sql`
+  const rows = (await sql`
     select
-      id::text as server_id,
-      client_id,
-      client_local_user_id,
-      template_id::text as template_id,
-      title,
-      status,
-      subscribed_at,
-      started_at,
-      completed_at,
-      archived_at,
-      is_active,
-      last_opened_section_id,
-      last_opened_book_key,
-      client_created_at,
-      client_updated_at,
-      client_revision
-    from user_reading_plans
+      backup_version,
+      payload_hash,
+      payload_jsonb,
+      updated_at
+    from user_reading_backups
     where auth_user_id = ${authUserId}
-    order by client_updated_at desc nulls last, updated_at desc
-  `) as Array<Record<string, unknown>>;
+    limit 1
+  `) as Array<{
+    backup_version: number;
+    payload_hash: string;
+    payload_jsonb: unknown;
+    updated_at: string | Date;
+  }>;
 
-  const chapters = (await sql`
-    select
-      id::text as server_id,
-      client_id,
-      client_user_plan_id,
-      section_id,
-      book_key,
-      chapter_number,
-      order_index,
-      client_created_at,
-      client_revision
-    from user_plan_chapters
-    where auth_user_id = ${authUserId}
-    order by client_user_plan_id, order_index
-  `) as Array<Record<string, unknown>>;
-
-  const progress = (await sql`
-    select
-      id::text as server_id,
-      client_id,
-      client_user_plan_id,
-      book_key,
-      chapter_number,
-      is_completed,
-      completed_at,
-      client_updated_at,
-      client_revision
-    from chapter_progress_entries
-    where auth_user_id = ${authUserId}
-    order by client_updated_at desc
-  `) as Array<Record<string, unknown>>;
-
-  const activities = (await sql`
-    select
-      id::text as server_id,
-      client_id,
-      client_user_plan_id,
-      book_key,
-      chapter_number,
-      action,
-      activity_date,
-      timezone,
-      happened_at,
-      client_created_at,
-      client_revision
-    from reading_activities
-    where auth_user_id = ${authUserId}
-    order by happened_at desc
-  `) as Array<Record<string, unknown>>;
-
-  const completions = (await sql`
-    select
-      id::text as server_id,
-      client_id,
-      client_user_plan_id,
-      template_id::text as template_id,
-      completion_number,
-      completed_at,
-      client_created_at,
-      client_revision
-    from plan_completion_events
-    where auth_user_id = ${authUserId}
-    order by completed_at desc
-  `) as Array<Record<string, unknown>>;
-
-  await sql`
-    insert into sync_states (auth_user_id, last_bootstrap_at, updated_at)
-    values (${authUserId}, now(), now())
-    on conflict (auth_user_id)
-    do update set last_bootstrap_at = now(), updated_at = now()
-  `;
+  const backup = rows[0];
+  if (!backup) {
+    return {
+      serverTime: new Date().toISOString(),
+      backupVersion: null,
+      payloadHash: null,
+      updatedAt: null,
+      payload: null,
+    };
+  }
 
   return {
     serverTime: new Date().toISOString(),
-    userReadingPlans: plans.map(mapBootstrapPlan),
-    userPlanChapters: chapters.map(mapBootstrapChapter),
-    chapterProgressEntries: progress.map(mapBootstrapProgress),
-    readingActivities: activities.map(mapBootstrapActivity),
-    planCompletionEvents: completions.map(mapBootstrapCompletion),
+    backupVersion: backup.backup_version,
+    payloadHash: backup.payload_hash,
+    updatedAt: toIsoString(backup.updated_at),
+    payload: normalizeStoredPayload(backup.payload_jsonb),
   };
 }
 
-type PushInput = {
-  userReadingPlans: UserReadingPlanInput[];
-  userPlanChapters: UserPlanChapterInput[];
-  chapterProgressEntries: ChapterProgressInput[];
-  readingActivities: ReadingActivityInput[];
-  planCompletionEvents: PlanCompletionEventInput[];
+const supportedBackupVersion = 1;
+const maxBackupPayloadBytes = 1024 * 1024;
+const validPlanStatuses = new Set([
+  'active',
+  'completion_ready',
+  'completed',
+  'archived',
+]);
+const validActivityActions = new Set(['complete']);
+
+type ReadingBackupSnapshotV1 = JsonRecord & {
+  v: 1;
+  exportedAt: string;
+  plans: JsonRecord[];
+  progress: unknown[];
+  activities: unknown[];
+  completionEvents: JsonRecord[];
+  settings: JsonRecord;
 };
 
-type UserReadingPlanInput = {
-  id: string;
-  localUserId: string | null;
-  templateId: string;
-  title: string;
-  status: string;
-  subscribedAt: string;
-  startedAt: string | null;
-  completedAt: string | null;
-  archivedAt: string | null;
-  isActive: boolean;
-  lastOpenedSectionId: string | null;
-  lastOpenedBookKey: string | null;
-  createdAt: string;
-  updatedAt: string;
-  clientRevision: number;
-};
-
-type UserPlanChapterInput = {
-  id: string;
-  userPlanId: string;
-  sectionId: string;
-  bookKey: string;
-  chapterNumber: number;
-  orderIndex: number;
-  createdAt: string;
-  clientRevision: number;
-};
-
-type ChapterProgressInput = {
-  id: string;
-  userPlanId: string;
-  bookKey: string;
-  chapterNumber: number;
-  isCompleted: boolean;
-  completedAt: string | null;
-  updatedAt: string;
-  clientRevision: number;
-};
-
-type ReadingActivityInput = {
-  id: string;
-  userPlanId: string;
-  bookKey: string;
-  chapterNumber: number;
-  action: string;
-  activityDate: string;
-  timezone: string;
-  happenedAt: string;
-  createdAt: string;
-  clientRevision: number;
-};
-
-type PlanCompletionEventInput = {
-  id: string;
-  userPlanId: string;
-  templateId: string;
-  completionNumber: number;
-  completedAt: string;
-  createdAt: string;
-  clientRevision: number;
-};
-
-function parsePushBody(body: unknown): PushInput {
-  if (!isRecord(body)) {
-    throw new SyncInputError('invalid_body');
+function parseReadingBackupSnapshot(body: unknown): ReadingBackupSnapshotV1 {
+  const input = requireRecord(body);
+  const rawSnapshot = isRecord(input.payload) && input.v == null
+    ? input.payload
+    : input;
+  const snapshot = requireRecord(rawSnapshot);
+  const version = readPositiveInteger(snapshot, 'v');
+  if (version !== supportedBackupVersion) {
+    throw new SyncInputError('unsupported_backup_version');
   }
+
+  const exportedAt = readDateString(snapshot, 'exportedAt');
+  const plans = readArray(snapshot, 'plans');
+  const progress = readArray(snapshot, 'progress');
+  const activities = readArray(snapshot, 'activities');
+  const completionEvents = readArray(snapshot, 'completionEvents');
+  const settings = snapshot.settings == null
+    ? {}
+    : requireRecord(snapshot.settings);
+
+  assertMaxArrayLength('plans', plans, 250);
+  assertMaxArrayLength('progress', progress, 5000);
+  assertMaxArrayLength('activities', activities, 10000);
+  assertMaxArrayLength('completionEvents', completionEvents, 1000);
+
+  const planIds = validateBackupPlans(plans);
+  validateBackupProgress(progress, planIds);
+  validateBackupActivities(activities, planIds);
+  validateBackupCompletionEvents(completionEvents, planIds);
+  validateBackupSettings(settings, planIds);
+
   return {
-    userReadingPlans: readArray(body, 'userReadingPlans').map(parsePlan),
-    userPlanChapters: readArray(body, 'userPlanChapters').map(parseChapter),
-    chapterProgressEntries: readArray(body, 'chapterProgressEntries').map(parseProgress),
-    readingActivities: readArray(body, 'readingActivities').map(parseActivity),
-    planCompletionEvents: readArray(body, 'planCompletionEvents').map(parseCompletion),
+    ...snapshot,
+    v: supportedBackupVersion,
+    exportedAt,
+    plans: plans as JsonRecord[],
+    progress,
+    activities,
+    completionEvents: completionEvents as JsonRecord[],
+    settings,
   };
 }
 
-function mapBootstrapPlan(row: Record<string, unknown>): JsonRecord {
-  return {
-    serverId: row.server_id,
-    id: row.client_id,
-    localUserId: row.client_local_user_id,
-    templateId: row.template_id,
-    title: row.title,
-    status: row.status,
-    subscribedAt: toIsoString(row.subscribed_at),
-    startedAt: toIsoString(row.started_at),
-    completedAt: toIsoString(row.completed_at),
-    archivedAt: toIsoString(row.archived_at),
-    isActive: row.is_active,
-    lastOpenedSectionId: row.last_opened_section_id,
-    lastOpenedBookKey: row.last_opened_book_key,
-    createdAt: toIsoString(row.client_created_at),
-    updatedAt: toIsoString(row.client_updated_at),
-    clientRevision: row.client_revision,
-  };
-}
+function validateBackupPlans(plans: unknown[]): Set<string> {
+  const ids = new Set<string>();
+  for (const raw of plans) {
+    const plan = requireRecord(raw);
+    const id = readString(plan, 'id');
+    if (ids.has(id)) throw new SyncInputError('duplicate_plan_id');
+    ids.add(id);
 
-function mapBootstrapChapter(row: Record<string, unknown>): JsonRecord {
-  return {
-    serverId: row.server_id,
-    id: row.client_id,
-    userPlanId: row.client_user_plan_id,
-    sectionId: row.section_id,
-    bookKey: row.book_key,
-    chapterNumber: row.chapter_number,
-    orderIndex: row.order_index,
-    createdAt: toIsoString(row.client_created_at),
-    clientRevision: row.client_revision,
-  };
-}
+    readString(plan, 'templateKey');
+    readOptionalString(plan, 'templateId');
+    readOptionalString(plan, 'title');
+    const status = readString(plan, 'status');
+    if (!validPlanStatuses.has(status)) {
+      throw new SyncInputError('invalid_plan_status');
+    }
 
-function mapBootstrapProgress(row: Record<string, unknown>): JsonRecord {
-  return {
-    serverId: row.server_id,
-    id: row.client_id,
-    userPlanId: row.client_user_plan_id,
-    bookKey: row.book_key,
-    chapterNumber: row.chapter_number,
-    isCompleted: row.is_completed,
-    completedAt: toIsoString(row.completed_at),
-    updatedAt: toIsoString(row.client_updated_at),
-    clientRevision: row.client_revision,
-  };
-}
-
-function mapBootstrapActivity(row: Record<string, unknown>): JsonRecord {
-  return {
-    serverId: row.server_id,
-    id: row.client_id,
-    userPlanId: row.client_user_plan_id,
-    bookKey: row.book_key,
-    chapterNumber: row.chapter_number,
-    action: row.action,
-    activityDate: toDateOnlyString(row.activity_date),
-    timezone: row.timezone,
-    happenedAt: toIsoString(row.happened_at),
-    createdAt: toIsoString(row.client_created_at),
-    clientRevision: row.client_revision,
-  };
-}
-
-function mapBootstrapCompletion(row: Record<string, unknown>): JsonRecord {
-  return {
-    serverId: row.server_id,
-    id: row.client_id,
-    userPlanId: row.client_user_plan_id,
-    templateId: row.template_id,
-    completionNumber: row.completion_number,
-    completedAt: toIsoString(row.completed_at),
-    createdAt: toIsoString(row.client_created_at),
-    clientRevision: row.client_revision,
-  };
-}
-
-function parsePlan(raw: unknown): UserReadingPlanInput {
-  const row = requireRecord(raw);
-  return {
-    id: readString(row, 'id'),
-    localUserId: readOptionalString(row, 'localUserId'),
-    templateId: readString(row, 'templateId'),
-    title: readString(row, 'title'),
-    status: readString(row, 'status'),
-    subscribedAt: readDateString(row, 'subscribedAt'),
-    startedAt: readOptionalDateString(row, 'startedAt'),
-    completedAt: readOptionalDateString(row, 'completedAt'),
-    archivedAt: readOptionalDateString(row, 'archivedAt'),
-    isActive: readBoolean(row, 'isActive'),
-    lastOpenedSectionId: readOptionalString(row, 'lastOpenedSectionId'),
-    lastOpenedBookKey: readOptionalString(row, 'lastOpenedBookKey'),
-    createdAt: readDateString(row, 'createdAt'),
-    updatedAt: readDateString(row, 'updatedAt'),
-    clientRevision: readInteger(row, 'clientRevision'),
-  };
-}
-
-function parseChapter(raw: unknown): UserPlanChapterInput {
-  const row = requireRecord(raw);
-  return {
-    id: readString(row, 'id'),
-    userPlanId: readString(row, 'userPlanId'),
-    sectionId: readString(row, 'sectionId'),
-    bookKey: readString(row, 'bookKey'),
-    chapterNumber: readPositiveInteger(row, 'chapterNumber'),
-    orderIndex: readInteger(row, 'orderIndex'),
-    createdAt: readDateString(row, 'createdAt'),
-    clientRevision: readInteger(row, 'clientRevision'),
-  };
-}
-
-function parseProgress(raw: unknown): ChapterProgressInput {
-  const row = requireRecord(raw);
-  return {
-    id: readString(row, 'id'),
-    userPlanId: readString(row, 'userPlanId'),
-    bookKey: readString(row, 'bookKey'),
-    chapterNumber: readPositiveInteger(row, 'chapterNumber'),
-    isCompleted: readBoolean(row, 'isCompleted'),
-    completedAt: readOptionalDateString(row, 'completedAt'),
-    updatedAt: readDateString(row, 'updatedAt'),
-    clientRevision: readInteger(row, 'clientRevision'),
-  };
-}
-
-function parseActivity(raw: unknown): ReadingActivityInput {
-  const row = requireRecord(raw);
-  return {
-    id: readString(row, 'id'),
-    userPlanId: readString(row, 'userPlanId'),
-    bookKey: readString(row, 'bookKey'),
-    chapterNumber: readPositiveInteger(row, 'chapterNumber'),
-    action: readString(row, 'action'),
-    activityDate: readString(row, 'activityDate'),
-    timezone: readString(row, 'timezone'),
-    happenedAt: readDateString(row, 'happenedAt'),
-    createdAt: readDateString(row, 'createdAt'),
-    clientRevision: readInteger(row, 'clientRevision'),
-  };
-}
-
-function parseCompletion(raw: unknown): PlanCompletionEventInput {
-  const row = requireRecord(raw);
-  return {
-    id: readString(row, 'id'),
-    userPlanId: readString(row, 'userPlanId'),
-    templateId: readString(row, 'templateId'),
-    completionNumber: readPositiveInteger(row, 'completionNumber'),
-    completedAt: readDateString(row, 'completedAt'),
-    createdAt: readDateString(row, 'createdAt'),
-    clientRevision: readInteger(row, 'clientRevision'),
-  };
-}
-
-async function upsertUserReadingPlans(
-  txn: SqlLike,
-  authUserId: string,
-  rows: UserReadingPlanInput[],
-): Promise<SyncRowAck[]> {
-  const acks: SyncRowAck[] = [];
-  for (const row of rows) {
-    const result = (await txn`
-      insert into user_reading_plans (
-        auth_user_id,
-        client_id,
-        client_local_user_id,
-        template_id,
-        title,
-        status,
-        subscribed_at,
-        started_at,
-        completed_at,
-        archived_at,
-        is_active,
-        last_opened_section_id,
-        last_opened_book_key,
-        client_created_at,
-        client_updated_at,
-        client_revision,
-        updated_at
-      )
-      values (
-        ${authUserId},
-        ${row.id},
-        ${row.localUserId},
-        ${row.templateId},
-        ${row.title},
-        ${row.status},
-        ${row.subscribedAt},
-        ${row.startedAt},
-        ${row.completedAt},
-        ${row.archivedAt},
-        ${row.isActive},
-        ${row.lastOpenedSectionId},
-        ${row.lastOpenedBookKey},
-        ${row.createdAt},
-        ${row.updatedAt},
-        ${row.clientRevision},
-        now()
-      )
-      on conflict (auth_user_id, client_id)
-      do update set
-        client_local_user_id = excluded.client_local_user_id,
-        template_id = excluded.template_id,
-        title = excluded.title,
-        status = excluded.status,
-        subscribed_at = excluded.subscribed_at,
-        started_at = excluded.started_at,
-        completed_at = excluded.completed_at,
-        archived_at = excluded.archived_at,
-        is_active = excluded.is_active,
-        last_opened_section_id = excluded.last_opened_section_id,
-        last_opened_book_key = excluded.last_opened_book_key,
-        client_created_at = excluded.client_created_at,
-        client_updated_at = excluded.client_updated_at,
-        client_revision = greatest(user_reading_plans.client_revision, excluded.client_revision),
-        updated_at = now()
-      returning id::text, client_id
-    `) as Array<{ id: string; client_id: string }>;
-    acks.push({ clientId: result[0].client_id, serverId: result[0].id });
+    readOptionalDateString(plan, 'subscribedAt');
+    readOptionalDateString(plan, 'startedAt');
+    readOptionalDateString(plan, 'completedAt');
+    readOptionalDateString(plan, 'archivedAt');
+    readOptionalDateString(plan, 'createdAt');
+    readOptionalDateString(plan, 'updatedAt');
+    readOptionalString(plan, 'lastOpenedSectionKey');
+    readOptionalString(plan, 'lastOpenedSectionId');
+    readOptionalString(plan, 'lastOpenedBookKey');
+    if (plan.isActive != null && typeof plan.isActive !== 'boolean') {
+      throw new SyncInputError('invalid_isActive');
+    }
   }
-  return acks;
+  return ids;
 }
 
-async function upsertUserPlanChapters(
-  txn: SqlLike,
-  authUserId: string,
-  rows: UserPlanChapterInput[],
-  planMap: Map<string, string>,
-): Promise<SyncRowAck[]> {
-  const acks: SyncRowAck[] = [];
-  for (const row of rows) {
-    const serverPlanId = requirePlanMap(planMap, row.userPlanId);
-    const result = (await txn`
-      insert into user_plan_chapters (
-        auth_user_id,
-        user_reading_plan_id,
-        client_id,
-        client_user_plan_id,
-        section_id,
-        book_key,
-        chapter_number,
-        order_index,
-        client_created_at,
-        client_revision,
-        updated_at
-      )
-      values (
-        ${authUserId},
-        ${serverPlanId},
-        ${row.id},
-        ${row.userPlanId},
-        ${row.sectionId},
-        ${row.bookKey},
-        ${row.chapterNumber},
-        ${row.orderIndex},
-        ${row.createdAt},
-        ${row.clientRevision},
-        now()
-      )
-      on conflict (auth_user_id, client_id)
-      do update set
-        user_reading_plan_id = excluded.user_reading_plan_id,
-        client_user_plan_id = excluded.client_user_plan_id,
-        section_id = excluded.section_id,
-        book_key = excluded.book_key,
-        chapter_number = excluded.chapter_number,
-        order_index = excluded.order_index,
-        client_created_at = excluded.client_created_at,
-        client_revision = greatest(user_plan_chapters.client_revision, excluded.client_revision),
-        updated_at = now()
-      returning id::text, client_id
-    `) as Array<{ id: string; client_id: string }>;
-    acks.push({ clientId: result[0].client_id, serverId: result[0].id });
+function validateBackupProgress(progress: unknown[], planIds: Set<string>) {
+  for (const raw of progress) {
+    if (!Array.isArray(raw) || raw.length < 3 || raw.length > 4) {
+      throw new SyncInputError('invalid_progress');
+    }
+    assertKnownPlanId(raw[0], planIds, 'invalid_progress_planId');
+    readTupleString(raw[1], 'invalid_progress_bookKey');
+    readTuplePositiveInteger(raw[2], 'invalid_progress_chapterNumber');
+    if (raw[3] != null) readTupleDateString(raw[3], 'invalid_progress_completedAt');
   }
-  return acks;
 }
 
-async function upsertChapterProgressEntries(
-  txn: SqlLike,
-  authUserId: string,
-  rows: ChapterProgressInput[],
-  planMap: Map<string, string>,
-): Promise<SyncRowAck[]> {
-  const acks: SyncRowAck[] = [];
-  for (const row of rows) {
-    const serverPlanId = requirePlanMap(planMap, row.userPlanId);
-    const result = (await txn`
-      insert into chapter_progress_entries (
-        auth_user_id,
-        user_reading_plan_id,
-        client_id,
-        client_user_plan_id,
-        book_key,
-        chapter_number,
-        is_completed,
-        completed_at,
-        client_updated_at,
-        client_revision,
-        updated_at
-      )
-      values (
-        ${authUserId},
-        ${serverPlanId},
-        ${row.id},
-        ${row.userPlanId},
-        ${row.bookKey},
-        ${row.chapterNumber},
-        ${row.isCompleted},
-        ${row.completedAt},
-        ${row.updatedAt},
-        ${row.clientRevision},
-        now()
-      )
-      on conflict (auth_user_id, client_id)
-      do update set
-        user_reading_plan_id = excluded.user_reading_plan_id,
-        client_user_plan_id = excluded.client_user_plan_id,
-        book_key = excluded.book_key,
-        chapter_number = excluded.chapter_number,
-        is_completed = excluded.is_completed,
-        completed_at = excluded.completed_at,
-        client_updated_at = excluded.client_updated_at,
-        client_revision = greatest(chapter_progress_entries.client_revision, excluded.client_revision),
-        updated_at = now()
-      returning id::text, client_id
-    `) as Array<{ id: string; client_id: string }>;
-    acks.push({ clientId: result[0].client_id, serverId: result[0].id });
+function validateBackupActivities(activities: unknown[], planIds: Set<string>) {
+  for (const raw of activities) {
+    if (!Array.isArray(raw) || raw.length !== 7) {
+      throw new SyncInputError('invalid_activity');
+    }
+    assertKnownPlanId(raw[0], planIds, 'invalid_activity_planId');
+    readTupleString(raw[1], 'invalid_activity_bookKey');
+    readTuplePositiveInteger(raw[2], 'invalid_activity_chapterNumber');
+    readTupleDateOnlyString(raw[3], 'invalid_activity_date');
+    const action = readTupleString(raw[4], 'invalid_activity_action');
+    if (!validActivityActions.has(action)) {
+      throw new SyncInputError('invalid_activity_action');
+    }
+    readTupleString(raw[5], 'invalid_activity_timezone');
+    readTupleDateString(raw[6], 'invalid_activity_happenedAt');
   }
-  return acks;
 }
 
-async function upsertReadingActivities(
-  txn: SqlLike,
-  authUserId: string,
-  rows: ReadingActivityInput[],
-  planMap: Map<string, string>,
-): Promise<SyncRowAck[]> {
-  const acks: SyncRowAck[] = [];
-  for (const row of rows) {
-    const serverPlanId = requirePlanMap(planMap, row.userPlanId);
-    const result = (await txn`
-      insert into reading_activities (
-        auth_user_id,
-        user_reading_plan_id,
-        client_id,
-        client_user_plan_id,
-        book_key,
-        chapter_number,
-        action,
-        activity_date,
-        timezone,
-        happened_at,
-        client_created_at,
-        client_revision,
-        updated_at
-      )
-      values (
-        ${authUserId},
-        ${serverPlanId},
-        ${row.id},
-        ${row.userPlanId},
-        ${row.bookKey},
-        ${row.chapterNumber},
-        ${row.action},
-        ${row.activityDate},
-        ${row.timezone},
-        ${row.happenedAt},
-        ${row.createdAt},
-        ${row.clientRevision},
-        now()
-      )
-      on conflict (auth_user_id, client_id)
-      do update set
-        user_reading_plan_id = excluded.user_reading_plan_id,
-        client_user_plan_id = excluded.client_user_plan_id,
-        book_key = excluded.book_key,
-        chapter_number = excluded.chapter_number,
-        action = excluded.action,
-        activity_date = excluded.activity_date,
-        timezone = excluded.timezone,
-        happened_at = excluded.happened_at,
-        client_created_at = excluded.client_created_at,
-        client_revision = greatest(reading_activities.client_revision, excluded.client_revision),
-        updated_at = now()
-      returning id::text, client_id
-    `) as Array<{ id: string; client_id: string }>;
-    acks.push({ clientId: result[0].client_id, serverId: result[0].id });
+function validateBackupCompletionEvents(
+  completionEvents: unknown[],
+  planIds: Set<string>,
+) {
+  for (const raw of completionEvents) {
+    const event = requireRecord(raw);
+    readOptionalString(event, 'id');
+    assertKnownPlanId(event.planId, planIds, 'invalid_completion_planId');
+    readString(event, 'templateKey');
+    readDateString(event, 'completedAt');
+    readPositiveInteger(event, 'completionNumber');
+    readOptionalDateString(event, 'createdAt');
   }
-  return acks;
 }
 
-async function upsertPlanCompletionEvents(
-  txn: SqlLike,
-  authUserId: string,
-  rows: PlanCompletionEventInput[],
-  planMap: Map<string, string>,
-): Promise<SyncRowAck[]> {
-  const acks: SyncRowAck[] = [];
-  for (const row of rows) {
-    const serverPlanId = requirePlanMap(planMap, row.userPlanId);
-    const result = (await txn`
-      insert into plan_completion_events (
-        auth_user_id,
-        user_reading_plan_id,
-        client_id,
-        client_user_plan_id,
-        template_id,
-        completion_number,
-        completed_at,
-        client_created_at,
-        client_revision,
-        updated_at
-      )
-      values (
-        ${authUserId},
-        ${serverPlanId},
-        ${row.id},
-        ${row.userPlanId},
-        ${row.templateId},
-        ${row.completionNumber},
-        ${row.completedAt},
-        ${row.createdAt},
-        ${row.clientRevision},
-        now()
-      )
-      on conflict (auth_user_id, client_id)
-      do update set
-        user_reading_plan_id = excluded.user_reading_plan_id,
-        client_user_plan_id = excluded.client_user_plan_id,
-        template_id = excluded.template_id,
-        completion_number = excluded.completion_number,
-        completed_at = excluded.completed_at,
-        client_created_at = excluded.client_created_at,
-        client_revision = greatest(plan_completion_events.client_revision, excluded.client_revision),
-        updated_at = now()
-      returning id::text, client_id
-    `) as Array<{ id: string; client_id: string }>;
-    acks.push({ clientId: result[0].client_id, serverId: result[0].id });
-  }
-  return acks;
+function validateBackupSettings(settings: JsonRecord, planIds: Set<string>) {
+  const lastActivePlanId = settings.lastActivePlanId;
+  if (lastActivePlanId == null) return;
+  assertKnownPlanId(lastActivePlanId, planIds, 'invalid_lastActivePlanId');
 }
 
-async function getPlanIdMap(
-  txn: SqlLike,
-  authUserId: string,
-  clientPlanIds: string[],
-): Promise<Map<string, string>> {
-  const uniqueIds = Array.from(new Set(clientPlanIds.filter(Boolean)));
-  const map = new Map<string, string>();
-  for (const clientId of uniqueIds) {
-    const rows = (await txn`
-      select id::text, client_id
-      from user_reading_plans
-      where auth_user_id = ${authUserId} and client_id = ${clientId}
-      limit 1
-    `) as Array<{ id: string; client_id: string }>;
-    if (rows[0]) map.set(rows[0].client_id, rows[0].id);
-  }
-  return map;
+function countBackupSnapshot(snapshot: ReadingBackupSnapshotV1) {
+  return {
+    plans: snapshot.plans.length,
+    progress: snapshot.progress.length,
+    activities: snapshot.activities.length,
+    completionEvents: snapshot.completionEvents.length,
+  };
 }
 
-function requirePlanMap(map: Map<string, string>, clientPlanId: string) {
-  const serverPlanId = map.get(clientPlanId);
-  if (!serverPlanId) {
-    throw new SyncInputError(`missing_user_plan:${clientPlanId}`);
+function normalizeStoredPayload(value: unknown): JsonRecord | null {
+  if (isRecord(value)) return value;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      return isRecord(parsed) ? parsed : null;
+    } catch {
+      return null;
+    }
   }
-  return serverPlanId;
+  return null;
+}
+
+function canonicalJson(value: unknown): string {
+  return JSON.stringify(sortJsonValue(value));
+}
+
+function sortJsonValue(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(sortJsonValue);
+  if (!isRecord(value)) return value;
+  return Object.keys(value)
+    .sort()
+    .reduce<JsonRecord>((result, key) => {
+      result[key] = sortJsonValue(value[key]);
+      return result;
+    }, {});
+}
+
+function assertMaxArrayLength(key: string, rows: unknown[], max: number) {
+  if (rows.length > max) throw new SyncInputError(`${key}_too_large`);
+}
+
+function assertKnownPlanId(
+  value: unknown,
+  planIds: Set<string>,
+  error: string,
+) {
+  const id = readTupleString(value, error);
+  if (!planIds.has(id)) throw new SyncInputError(error);
 }
 
 function readArray(row: JsonRecord, key: string): unknown[] {
@@ -802,23 +349,11 @@ function readOptionalString(row: JsonRecord, key: string): string | null {
   return value;
 }
 
-function readBoolean(row: JsonRecord, key: string): boolean {
+function readPositiveInteger(row: JsonRecord, key: string): number {
   const value = row[key];
-  if (typeof value !== 'boolean') throw new SyncInputError(`invalid_${key}`);
-  return value;
-}
-
-function readInteger(row: JsonRecord, key: string): number {
-  const value = row[key];
-  if (typeof value !== 'number' || !Number.isInteger(value)) {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 1) {
     throw new SyncInputError(`invalid_${key}`);
   }
-  return value;
-}
-
-function readPositiveInteger(row: JsonRecord, key: string): number {
-  const value = readInteger(row, key);
-  if (value < 1) throw new SyncInputError(`invalid_${key}`);
   return value;
 }
 
@@ -837,23 +372,38 @@ function readOptionalDateString(row: JsonRecord, key: string): string | null {
   return value;
 }
 
+function readTupleString(value: unknown, error: string): string {
+  if (typeof value !== 'string' || value.trim().length === 0) {
+    throw new SyncInputError(error);
+  }
+  return value;
+}
+
+function readTuplePositiveInteger(value: unknown, error: string): number {
+  if (typeof value !== 'number' || !Number.isInteger(value) || value < 1) {
+    throw new SyncInputError(error);
+  }
+  return value;
+}
+
+function readTupleDateString(value: unknown, error: string): string {
+  const text = readTupleString(value, error);
+  if (Number.isNaN(Date.parse(text))) throw new SyncInputError(error);
+  return text;
+}
+
+function readTupleDateOnlyString(value: unknown, error: string): string {
+  const text = readTupleString(value, error);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(text)) throw new SyncInputError(error);
+  return text;
+}
+
 function toIsoString(value: unknown): string | null {
   if (value == null) return null;
   if (value instanceof Date) return value.toISOString();
   if (typeof value === 'string') {
     const date = new Date(value);
     if (!Number.isNaN(date.getTime())) return date.toISOString();
-  }
-  return null;
-}
-
-function toDateOnlyString(value: unknown): string | null {
-  if (value == null) return null;
-  if (value instanceof Date) return value.toISOString().slice(0, 10);
-  if (typeof value === 'string') {
-    if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return value;
-    const date = new Date(value);
-    if (!Number.isNaN(date.getTime())) return date.toISOString().slice(0, 10);
   }
   return null;
 }

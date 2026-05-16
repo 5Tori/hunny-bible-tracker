@@ -22,36 +22,45 @@ Firebase ID token
   -> Neon auth_users upsert
 ```
 
-### Reading-data push backup
+### Reading backup push
 
 ```text
 Settings -> Sync now
-  -> ReadRepository.buildReadingSyncPushPayload()
+  -> ReadRepository.exportReadingBackupSnapshot()
   -> POST /api/v1/sync/push
-  -> server upserts rows by auth user + client id
-  -> mobile marks acknowledged rows synced
+  -> server validates snapshot
+  -> server upserts one user_reading_backups row for the auth user
   -> app_settings.last_reading_sync_at updated
 ```
 
 Push scope:
 
-- `user_reading_plans`
-- `user_plan_chapters`
-- `chapter_progress_entries`
-- `reading_activities`
-- `plan_completion_events`
+- plan lifecycle metadata
+- completed progress tuples
+- reading activity tuples
+- completion events
+- backup-relevant settings
 
-### Reading-data restore/bootstrap
+The push payload does not include `user_plan_chapters`, sync metadata, or per-row server ids.
+
+### Reading backup restore/bootstrap
 
 ```text
 Settings -> Restore backup
   -> GET /api/v1/sync/bootstrap
-  -> server returns account snapshot
-  -> mobile insertOnConflictUpdate into Drift
-  -> local-only starter plans may be archived when server data exists
+  -> server returns compact snapshot
+  -> mobile restores user_reading_plans
+  -> mobile regenerates user_plan_chapters from plan templates
+  -> mobile restores progress, activities, completion events, and settings
 ```
 
-Restore scope matches push scope.
+Core invariant:
+
+```text
+user_plan_chapters is local derived data only.
+```
+
+Server backup is for backup/restore, not live collaborative sync. Backup size should scale with actual user state, not with the total chapter count of started plans.
 
 ## Local Sync Metadata
 
@@ -73,18 +82,13 @@ Current values:
 
 Feature code sets `pending` for user-driven mutations in key tables.
 
-## Server Sync Tables
+## Server Backup Table
 
 `apps/web/db/schema.sql` includes:
 
-- `user_reading_plans`
-- `user_plan_chapters`
-- `chapter_progress_entries`
-- `reading_activities`
-- `plan_completion_events`
-- `sync_states`
+- `user_reading_backups`
 
-Server rows are scoped by `auth_user_id`. Mobile local UUIDs are stored as `client_id` values and returned in acknowledgements.
+The server stores one compact backup row per `auth_user_id`. Legacy relational reading sync tables are no longer part of the server schema.
 
 ## Identity Merge
 
@@ -99,7 +103,7 @@ Firebase uid
   -> auth_users.id
 ```
 
-Current behavior preserves local data and pushes it after sign-in. Restore/bootstrap can pull server data into the current local user.
+Current behavior preserves local data and pushes it after sign-in. Restore/bootstrap replaces local reading state from the compact account backup.
 
 ## Data Categories
 
@@ -111,7 +115,7 @@ Published plan templates are server-managed in Neon and downloaded through `GET 
 
 ### User plan runs
 
-`user_reading_plans` and `user_plan_chapters` should upload together. A user plan run is a snapshot and should not be silently rewritten by later template edits.
+Compact backup uploads only plan lifecycle metadata and uses `templateKey` to regenerate local derived chapters on restore.
 
 Archived plans remain syncable. Archive is a status/state update, not a destructive delete.
 
@@ -119,44 +123,17 @@ Archived plans remain syncable. Archive is a status/state update, not a destruct
 
 `chapter_progress_entries` is mutable current state.
 
-Current backup policy:
-
-```text
-unique(auth_user_id, client_id)
-unique(auth_user_id, user_reading_plan_id, book_key, chapter_number)
-```
-
-Future conflict policy:
-
-```text
-latest updated_at / client_revision wins
-```
-
 Explicit uncheck is a real mutation and should sync.
 
 ### Reading activities
 
 `reading_activities` is append-friendly activity history.
 
-Current backup policy:
-
-```text
-unique(auth_user_id, client_id)
-unique(auth_user_id, user_reading_plan_id, book_key, chapter_number, activity_date, action)
-```
-
 Do not delete completion activity when a user unchecks a chapter.
 
 ### Completion events
 
 `plan_completion_events` is one event per finished user plan run.
-
-Current backup policy:
-
-```text
-unique(auth_user_id, client_id)
-unique(user_reading_plan_id)
-```
 
 ## Current API Surface
 
@@ -173,9 +150,10 @@ Do not treat the current sync as full multi-device collaboration. It is a practi
 
 Remaining work:
 
+- Apply `apps/web/db/schema.sql` to the fresh Neon database.
+- Run push/restore E2E smoke tests.
 - Throttled app-start sync UX and telemetry polish.
 - Network reconnect trigger.
 - More explicit sync error state in Settings.
-- Incremental pull cursor if full bootstrap becomes too heavy.
 - Conflict telemetry before exposing conflict resolution UI.
 - Clear policy for cross-device edits to the same chapter before automatic merge is advertised.

@@ -97,7 +97,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           content: Text(
             result.totalRows == 0
                 ? 'Backup is up to date.'
-                : 'Backed up ${result.totalRows} reading rows.',
+                : 'Backed up ${result.totalItems} reading items.',
           ),
         ),
       );
@@ -166,7 +166,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           content: Text(
             result.totalRows == 0
                 ? 'No backup data found for this account.'
-                : 'Restored ${result.totalRows} reading rows.',
+                : 'Restored ${result.totalItems} reading items.',
           ),
         ),
       );

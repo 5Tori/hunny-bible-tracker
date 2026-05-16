@@ -25,24 +25,31 @@ class HunnyApiMe {
 class HunnySyncPushResult {
   const HunnySyncPushResult({
     required this.serverTime,
+    required this.backupVersion,
+    required this.payloadHash,
+    required this.updatedAt,
     required this.counts,
-    required this.acknowledgements,
   });
 
   final DateTime serverTime;
+  final int backupVersion;
+  final String payloadHash;
+  final DateTime updatedAt;
   final HunnySyncPushCounts counts;
-  final HunnySyncAcknowledgements acknowledgements;
 
-  int get totalRows => counts.totalRows;
+  int get totalItems => counts.totalItems;
+  int get totalRows => totalItems;
 
   factory HunnySyncPushResult.fromJson(Map<String, dynamic> json) {
+    final serverTime = DateTime.parse(json['serverTime'] as String);
     return HunnySyncPushResult(
-      serverTime: DateTime.parse(json['serverTime'] as String),
+      serverTime: serverTime,
+      backupVersion: json['backupVersion'] as int? ?? 1,
+      payloadHash: json['payloadHash'] as String? ?? '',
+      updatedAt:
+          DateTime.tryParse(json['updatedAt'] as String? ?? '') ?? serverTime,
       counts: HunnySyncPushCounts.fromJson(
         json['counts'] as Map<String, dynamic>? ?? const {},
-      ),
-      acknowledgements: HunnySyncAcknowledgements.fromJson(
-        json['acknowledgements'] as Map<String, dynamic>? ?? const {},
       ),
     );
   }
@@ -51,37 +58,44 @@ class HunnySyncPushResult {
 class HunnySyncBootstrapResult {
   const HunnySyncBootstrapResult({
     required this.serverTime,
-    required this.userReadingPlans,
-    required this.userPlanChapters,
-    required this.chapterProgressEntries,
-    required this.readingActivities,
-    required this.planCompletionEvents,
+    required this.backupVersion,
+    required this.payloadHash,
+    required this.updatedAt,
+    required this.payload,
   });
 
   final DateTime serverTime;
-  final List<Map<String, dynamic>> userReadingPlans;
-  final List<Map<String, dynamic>> userPlanChapters;
-  final List<Map<String, dynamic>> chapterProgressEntries;
-  final List<Map<String, dynamic>> readingActivities;
-  final List<Map<String, dynamic>> planCompletionEvents;
+  final int? backupVersion;
+  final String? payloadHash;
+  final DateTime? updatedAt;
+  final Map<String, dynamic>? payload;
 
-  int get totalRows =>
-      userReadingPlans.length +
-      userPlanChapters.length +
-      chapterProgressEntries.length +
-      readingActivities.length +
-      planCompletionEvents.length;
+  List<Map<String, dynamic>> get plans => _readRows(payload?['plans']);
+  List<dynamic> get progress => _readList(payload?['progress']);
+  List<dynamic> get activities => _readList(payload?['activities']);
+  List<Map<String, dynamic>> get completionEvents =>
+      _readRows(payload?['completionEvents']);
+
+  int get totalItems =>
+      plans.length +
+      progress.length +
+      activities.length +
+      completionEvents.length;
+  int get totalRows => totalItems;
 
   factory HunnySyncBootstrapResult.fromJson(Map<String, dynamic> json) {
+    final serverTime = DateTime.parse(json['serverTime'] as String);
+    final rawPayload = json['payload'];
     return HunnySyncBootstrapResult(
-      serverTime: DateTime.parse(json['serverTime'] as String),
-      userReadingPlans: _readRows(json['userReadingPlans']),
-      userPlanChapters: _readRows(json['userPlanChapters']),
-      chapterProgressEntries: _readRows(json['chapterProgressEntries']),
-      readingActivities: _readRows(json['readingActivities']),
-      planCompletionEvents: _readRows(json['planCompletionEvents']),
+      serverTime: serverTime,
+      backupVersion: json['backupVersion'] as int?,
+      payloadHash: json['payloadHash'] as String?,
+      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? ''),
+      payload: rawPayload is Map ? Map<String, dynamic>.from(rawPayload) : null,
     );
   }
+
+  bool get hasBackup => payload != null;
 
   static List<Map<String, dynamic>> _readRows(Object? value) {
     if (value is! List) return const [];
@@ -90,88 +104,34 @@ class HunnySyncBootstrapResult {
         .map((row) => Map<String, dynamic>.from(row))
         .toList();
   }
+
+  static List<dynamic> _readList(Object? value) {
+    if (value is! List) return const [];
+    return value;
+  }
 }
 
 class HunnySyncPushCounts {
   const HunnySyncPushCounts({
-    required this.userReadingPlans,
-    required this.userPlanChapters,
-    required this.chapterProgressEntries,
-    required this.readingActivities,
-    required this.planCompletionEvents,
+    required this.plans,
+    required this.progress,
+    required this.activities,
+    required this.completionEvents,
   });
 
-  final int userReadingPlans;
-  final int userPlanChapters;
-  final int chapterProgressEntries;
-  final int readingActivities;
-  final int planCompletionEvents;
+  final int plans;
+  final int progress;
+  final int activities;
+  final int completionEvents;
 
-  int get totalRows =>
-      userReadingPlans +
-      userPlanChapters +
-      chapterProgressEntries +
-      readingActivities +
-      planCompletionEvents;
+  int get totalItems => plans + progress + activities + completionEvents;
 
   factory HunnySyncPushCounts.fromJson(Map<String, dynamic> json) {
     return HunnySyncPushCounts(
-      userReadingPlans: json['userReadingPlans'] as int? ?? 0,
-      userPlanChapters: json['userPlanChapters'] as int? ?? 0,
-      chapterProgressEntries: json['chapterProgressEntries'] as int? ?? 0,
-      readingActivities: json['readingActivities'] as int? ?? 0,
-      planCompletionEvents: json['planCompletionEvents'] as int? ?? 0,
-    );
-  }
-}
-
-class HunnySyncAcknowledgements {
-  const HunnySyncAcknowledgements({
-    required this.userReadingPlans,
-    required this.userPlanChapters,
-    required this.chapterProgressEntries,
-    required this.readingActivities,
-    required this.planCompletionEvents,
-  });
-
-  final List<HunnySyncRowAck> userReadingPlans;
-  final List<HunnySyncRowAck> userPlanChapters;
-  final List<HunnySyncRowAck> chapterProgressEntries;
-  final List<HunnySyncRowAck> readingActivities;
-  final List<HunnySyncRowAck> planCompletionEvents;
-
-  factory HunnySyncAcknowledgements.fromJson(Map<String, dynamic> json) {
-    return HunnySyncAcknowledgements(
-      userReadingPlans: _readAcks(json['userReadingPlans']),
-      userPlanChapters: _readAcks(json['userPlanChapters']),
-      chapterProgressEntries: _readAcks(json['chapterProgressEntries']),
-      readingActivities: _readAcks(json['readingActivities']),
-      planCompletionEvents: _readAcks(json['planCompletionEvents']),
-    );
-  }
-
-  static List<HunnySyncRowAck> _readAcks(Object? value) {
-    if (value is! List) return const [];
-    return value
-        .whereType<Map<String, dynamic>>()
-        .map(HunnySyncRowAck.fromJson)
-        .toList();
-  }
-}
-
-class HunnySyncRowAck {
-  const HunnySyncRowAck({
-    required this.clientId,
-    required this.serverId,
-  });
-
-  final String clientId;
-  final String serverId;
-
-  factory HunnySyncRowAck.fromJson(Map<String, dynamic> json) {
-    return HunnySyncRowAck(
-      clientId: json['clientId'] as String? ?? '',
-      serverId: json['serverId'] as String? ?? '',
+      plans: json['plans'] as int? ?? 0,
+      progress: json['progress'] as int? ?? 0,
+      activities: json['activities'] as int? ?? 0,
+      completionEvents: json['completionEvents'] as int? ?? 0,
     );
   }
 }

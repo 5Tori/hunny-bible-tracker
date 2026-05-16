@@ -61,8 +61,8 @@ The web/API app serves admin tools, public content APIs, Firebase-authenticated 
 | `apps/web/src/app/api/v1/auth/sync/route.ts` | Firebase token verify + Neon auth user upsert |
 | `apps/web/src/app/api/v1/me/route.ts` | Firebase token verify + current user response |
 | `apps/web/src/app/api/v1/plans` | Published plan catalog APIs |
-| `apps/web/src/app/api/v1/sync/push/route.ts` | Authenticated reading-data backup |
-| `apps/web/src/app/api/v1/sync/bootstrap/route.ts` | Authenticated reading-data restore/bootstrap |
+| `apps/web/src/app/api/v1/sync/push/route.ts` | Authenticated reading backup push |
+| `apps/web/src/app/api/v1/sync/bootstrap/route.ts` | Authenticated reading backup restore/bootstrap |
 | `apps/web/src/app/api/v1/today-message` | Public Today’s Message API and engagement routes |
 | `apps/web/src/app/api/v1/feedback/route.ts` | Mobile Help & feedback submission |
 | `apps/web/src/lib/auth/` | Firebase Admin token verification and auth user sync |
@@ -110,7 +110,7 @@ Admin edits/publishes plan
   -> user_plan_chapters snapshot is created locally
 ```
 
-Started plan runs are snapshots. Later template edits should not rewrite existing `user_plan_chapters`.
+Started plan runs create local derived `user_plan_chapters` rows for offline UI and progress denominators. Compact server backup keeps these rows out of Neon and regenerates them from plan templates on restore.
 
 ## Data Flow: Today’s Message
 
@@ -140,7 +140,10 @@ Manual restore:
 ```text
 Settings -> Restore backup
   -> GET /api/v1/sync/bootstrap
-  -> Drift insertOnConflictUpdate for backed-up reading rows
+  -> compact backup payload returned
+  -> Drift restores plan rows
+  -> user_plan_chapters regenerated locally from plan templates
+  -> progress, activities, completion events, and settings restored
 ```
 
 Firebase Auth owns identity. Neon stores application data and server-side user profile rows.
@@ -148,7 +151,8 @@ Firebase Auth owns identity. Neon stores application data and server-side user p
 ## Current Boundaries
 
 - Mobile reads/writes progress locally first.
-- Backup/restore exists, but automatic incremental pull/merge and conflict UI are not implemented.
+- Backup/restore is for account recovery, not live collaborative sync.
+- Automatic incremental pull/merge and conflict UI are not implemented.
 - Mobile must not connect directly to Neon.
 - Discover and Saved/List surfaces are hidden for MVP closed testing.
 

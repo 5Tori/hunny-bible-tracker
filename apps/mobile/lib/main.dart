@@ -17,8 +17,18 @@ Future<void> main() async {
   final firebaseConfig = FirebaseAuthConfig.fromEnvironment();
   var firebaseReady = false;
   if (firebaseConfig.isConfigured) {
-    await Firebase.initializeApp(options: firebaseConfig.toFirebaseOptions());
-    firebaseReady = true;
+    try {
+      await Firebase.initializeApp(
+        options: firebaseConfig.toFirebaseOptions(),
+      );
+      firebaseReady = true;
+    } catch (e, stack) {
+      debugPrint('Firebase.initializeApp failed: $e');
+      debugPrint('$stack');
+      // Mis-matched dart-define (e.g. iOS app id on Android), stale CI secrets, or
+      // native layer issues — keep guest mode instead of crashing at cold start.
+      firebaseReady = false;
+    }
   }
   final authRepository = AuthRepository(
     firebaseConfig: firebaseConfig,

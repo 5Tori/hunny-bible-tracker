@@ -1,11 +1,15 @@
 import type { Metadata } from "next";
-import Link from "next/link";
+
 import "./globals.css";
+import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
-  title: "Hunny Bible Tracker",
-  description:
-    "A simple, offline-first Bible reading tracker. Track chapters, reading plans, and your progress.",
+  metadataBase: new URL(siteConfig.url),
+  title: {
+    default: siteConfig.name,
+    template: `%s | ${siteConfig.name}`,
+  },
+  description: siteConfig.description,
 };
 
 export default function RootLayout({
@@ -15,23 +19,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>
-        <header className="site-header">
-          <span className="dot" aria-hidden />
-          <Link href="/" className="brand">
-            Hunny Bible Tracker
-          </Link>
-        </header>
-        {children}
-        <footer className="site-footer">
-          <Link href="/privacy">Privacy</Link>
-          <Link href="/support">Support</Link>
-          <Link href="/terms">Terms</Link>
-          <span style={{ marginLeft: "auto" }}>
-            © {new Date().getFullYear()} Hunny Bible Tracker
-          </span>
-        </footer>
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

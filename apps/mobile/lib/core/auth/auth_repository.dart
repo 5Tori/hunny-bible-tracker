@@ -143,7 +143,7 @@ class AuthRepository {
 
   Future<HunnySyncPushResult> pushReadingSync() async {
     final token = await _firebaseIdToken();
-    final payload = await _readRepository.buildReadingSyncPushPayload();
+    final payload = await _readRepository.exportReadingBackupSnapshot();
     final res = await _authedDio(token).post<dynamic>(
       '/api/v1/sync/push',
       data: payload,

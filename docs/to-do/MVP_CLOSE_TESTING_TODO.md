@@ -20,8 +20,7 @@ This is the active cleanup checklist before the next closed-test build.
 
 ## Before Closed Testing Build
 
-- Apply any pending Neon migrations in the target environment.
-- Confirm `apps/web/db/schema.sql` matches the deployed database.
+- Apply `apps/web/db/schema.sql` in the target Neon environment.
 - Confirm `ADMIN_EMAILS` includes the admin account.
 - Confirm Cloudinary env vars are set for plan and Today’s Message image upload.
 - Confirm Firebase Android SHA-1 values for debug/release/Play App Signing.

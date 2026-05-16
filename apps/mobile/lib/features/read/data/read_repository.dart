@@ -965,25 +965,21 @@ class ReadRepository {
     await _setSetting('account_mode', 'guest');
   }
 
-  Future<Map<String, dynamic>> buildReadingSyncPushPayload() async {
+  Future<Map<String, dynamic>> exportReadingBackupSnapshot() async {
     final localUserId = await _activeLocalUserId();
     final plans = await (db.select(db.userReadingPlans)
           ..where((tbl) => tbl.localUserId.equals(localUserId)))
         .get();
     final planIds = plans.map((plan) => plan.id).toSet().toList();
 
-    final chapters = planIds.isEmpty
-        ? <UserPlanChapter>[]
-        : await (db.select(db.userPlanChapters)
-              ..where((tbl) => tbl.userPlanId.isIn(planIds)))
-            .get();
     final progress = planIds.isEmpty
         ? <ChapterProgressEntry>[]
         : await (db.select(db.chapterProgressEntries)
               ..where(
                 (tbl) =>
                     tbl.localUserId.equals(localUserId) &
-                    tbl.userPlanId.isIn(planIds),
+                    tbl.userPlanId.isIn(planIds) &
+                    tbl.isCompleted.equals(true),
               ))
             .get();
     final activities = planIds.isEmpty
@@ -1005,93 +1001,93 @@ class ReadRepository {
               ))
             .get();
 
+    final templates = <String, PlanTemplate>{};
+    for (final plan in plans) {
+      final template = await (db.select(db.planTemplates)
+            ..where((tbl) => tbl.id.equals(plan.templateId))
+            ..limit(1))
+          .getSingleOrNull();
+      if (template != null) {
+        templates[plan.templateId] = template;
+      }
+    }
+    final lastActivePlanId = await getAppSetting('last_active_plan_id');
+
     return {
-      'client': {
-        'localUserId': localUserId,
-        'pushedAt': DateTime.now().toUtc().toIso8601String(),
+      'v': 1,
+      'exportedAt': DateTime.now().toUtc().toIso8601String(),
+      'plans': plans
+          .map((plan) => _backupPlanToJson(plan, templates[plan.templateId]))
+          .toList(),
+      'progress': progress.map(_backupProgressToJson).toList(),
+      'activities': activities.map(_backupActivityToJson).toList(),
+      'completionEvents': completionEvents
+          .map(
+            (event) => _backupCompletionToJson(
+              event,
+              templates[event.templateId],
+            ),
+          )
+          .toList(),
+      'settings': {
+        if (lastActivePlanId != null && lastActivePlanId.isNotEmpty)
+          'lastActivePlanId': lastActivePlanId,
       },
-      'userReadingPlans': plans.map(_syncPlanToJson).toList(),
-      'userPlanChapters': chapters.map(_syncChapterToJson).toList(),
-      'chapterProgressEntries': progress.map(_syncProgressToJson).toList(),
-      'readingActivities': activities.map(_syncActivityToJson).toList(),
-      'planCompletionEvents':
-          completionEvents.map(_syncCompletionToJson).toList(),
     };
   }
+
+  @Deprecated('Use exportReadingBackupSnapshot.')
+  Future<Map<String, dynamic>> buildReadingSyncPushPayload() =>
+      exportReadingBackupSnapshot();
 
   Future<void> applyReadingSyncPushResult(
     HunnySyncPushResult result,
   ) async {
-    final now = result.serverTime;
-    await db.transaction(() async {
-      await _markUserReadingPlansSynced(
-        result.acknowledgements.userReadingPlans,
-        now,
-      );
-      await _markUserPlanChaptersSynced(
-        result.acknowledgements.userPlanChapters,
-        now,
-      );
-      await _markChapterProgressSynced(
-        result.acknowledgements.chapterProgressEntries,
-        now,
-      );
-      await _markReadingActivitiesSynced(
-        result.acknowledgements.readingActivities,
-        now,
-      );
-      await _markPlanCompletionEventsSynced(
-        result.acknowledgements.planCompletionEvents,
-        now,
-      );
-      await _setSetting(
-        kAppSettingLastReadingSyncAt,
-        now.toUtc().toIso8601String(),
-      );
-    });
+    await _setSetting(
+      kAppSettingLastReadingSyncAt,
+      result.updatedAt.toUtc().toIso8601String(),
+    );
   }
 
   Future<void> applyReadingSyncBootstrap(
     HunnySyncBootstrapResult result,
   ) async {
+    if (!result.hasBackup) {
+      await _setSetting(
+        kAppSettingLastReadingSyncAt,
+        result.serverTime.toUtc().toIso8601String(),
+      );
+      return;
+    }
+
+    await refreshPlanTemplatesFromRemote(allowFailure: true);
+
     final localUserId = await _activeLocalUserId();
     final syncedAt = result.serverTime;
-    final restoredPlanIds = result.userReadingPlans
+    final restoredPlanIds = result.plans
         .map((row) => _readString(row, 'id'))
         .where((id) => id.isNotEmpty)
         .toSet();
 
     await db.transaction(() async {
-      if (restoredPlanIds.isNotEmpty) {
-        final localOnlyPlans = await (db.select(db.userReadingPlans)
-              ..where(
-                (tbl) =>
-                    tbl.localUserId.equals(localUserId) & tbl.serverId.isNull(),
-              ))
-            .get();
-        final now = DateTime.now();
-        for (final plan in localOnlyPlans) {
-          if (restoredPlanIds.contains(plan.id)) continue;
-          await (db.update(db.userReadingPlans)
-                ..where((tbl) => tbl.id.equals(plan.id)))
-              .write(
-            UserReadingPlansCompanion(
-              isActive: const Value(false),
-              archivedAt: Value(now),
-              updatedAt: Value(now),
-              syncStatus: const Value('local_only'),
-            ),
+      await _clearLocalReadingStateForRestore(localUserId);
+
+      final restoredTemplateIds = <String, String>{};
+      for (final row in result.plans) {
+        final template = await _templateForBackupPlan(row);
+        if (template == null) {
+          throw StateError(
+            'Missing plan template for ${_readString(row, 'templateKey')}',
           );
         }
-      }
-
-      for (final row in result.userReadingPlans) {
+        final planId = _readString(row, 'id');
+        restoredTemplateIds[planId] = template.id;
         await db.into(db.userReadingPlans).insertOnConflictUpdate(
               UserReadingPlansCompanion.insert(
-                id: _readString(row, 'id'),
+                id: planId,
                 localUserId: localUserId,
-                templateId: _readString(row, 'templateId'),
-                title: _readString(row, 'title'),
+                templateId: template.id,
+                title: _readString(row, 'title', fallback: template.title),
                 status: Value(_readString(row, 'status', fallback: 'active')),
                 subscribedAt: _readDate(row, 'subscribedAt'),
                 startedAt: Value(_readOptionalDate(row, 'startedAt')),
@@ -1105,85 +1101,110 @@ class ReadRepository {
                 createdAt: _readDate(row, 'createdAt'),
                 updatedAt: _readDate(row, 'updatedAt'),
                 syncStatus: const Value('synced'),
-                serverId: Value(_readOptionalString(row, 'serverId')),
                 lastSyncedAt: Value(syncedAt),
-                clientRevision: Value(_readInt(row, 'clientRevision')),
               ),
             );
+
+        final chapters = await _resolveTemplateChapters(
+          userPlanId: planId,
+          templateId: template.id,
+        );
+        await db.batch((batch) {
+          batch.insertAll(db.userPlanChapters, chapters);
+        });
       }
 
-      for (final row in result.userPlanChapters) {
-        await db.into(db.userPlanChapters).insertOnConflictUpdate(
-              UserPlanChaptersCompanion.insert(
-                id: _readString(row, 'id'),
-                userPlanId: _readString(row, 'userPlanId'),
-                sectionId: _readString(row, 'sectionId'),
-                bookKey: _readString(row, 'bookKey'),
-                chapterNumber: _readInt(row, 'chapterNumber'),
-                orderIndex: _readInt(row, 'orderIndex'),
-                createdAt: _readDate(row, 'createdAt'),
-                syncStatus: const Value('synced'),
-                serverId: Value(_readOptionalString(row, 'serverId')),
-                lastSyncedAt: Value(syncedAt),
-                clientRevision: Value(_readInt(row, 'clientRevision')),
-              ),
-            );
-      }
-
-      for (final row in result.chapterProgressEntries) {
+      final validChapters = await _chapterKeysForPlans(restoredPlanIds);
+      for (final raw in result.progress) {
+        final item = _backupTuple(raw);
+        if (item.length < 3) continue;
+        final planId = _tupleString(item, 0);
+        final bookKey = _tupleString(item, 1);
+        final chapterNumber = _tupleInt(item, 2);
+        if (!_hasRestoredChapter(
+          validChapters,
+          planId,
+          bookKey,
+          chapterNumber,
+        )) {
+          continue;
+        }
+        final completedAt = item.length > 3 ? _tupleDate(item, 3) : syncedAt;
         await db.into(db.chapterProgressEntries).insertOnConflictUpdate(
               ChapterProgressEntriesCompanion.insert(
-                id: _readString(row, 'id'),
+                id: _backupProgressId(planId, bookKey, chapterNumber),
                 localUserId: localUserId,
-                userPlanId: _readString(row, 'userPlanId'),
-                bookKey: _readString(row, 'bookKey'),
-                chapterNumber: _readInt(row, 'chapterNumber'),
-                isCompleted: Value(_readBool(row, 'isCompleted')),
-                completedAt: Value(_readOptionalDate(row, 'completedAt')),
-                updatedAt: _readDate(row, 'updatedAt'),
+                userPlanId: planId,
+                bookKey: bookKey,
+                chapterNumber: chapterNumber,
+                isCompleted: const Value(true),
+                completedAt: Value(completedAt),
+                updatedAt: completedAt ?? syncedAt,
                 syncStatus: const Value('synced'),
-                serverId: Value(_readOptionalString(row, 'serverId')),
                 lastSyncedAt: Value(syncedAt),
-                clientRevision: Value(_readInt(row, 'clientRevision')),
               ),
             );
       }
 
-      for (final row in result.readingActivities) {
+      for (final raw in result.activities) {
+        final item = _backupTuple(raw);
+        if (item.length != 7) continue;
+        final planId = _tupleString(item, 0);
+        final bookKey = _tupleString(item, 1);
+        final chapterNumber = _tupleInt(item, 2);
+        if (!_hasRestoredChapter(
+          validChapters,
+          planId,
+          bookKey,
+          chapterNumber,
+        )) {
+          continue;
+        }
+        final activityDate = _tupleString(item, 3);
+        final action = _tupleString(item, 4);
         await db.into(db.readingActivities).insertOnConflictUpdate(
               ReadingActivitiesCompanion.insert(
-                id: _readString(row, 'id'),
+                id: _backupActivityId(
+                  planId,
+                  bookKey,
+                  chapterNumber,
+                  activityDate,
+                  action,
+                ),
                 localUserId: localUserId,
-                userPlanId: _readString(row, 'userPlanId'),
-                bookKey: _readString(row, 'bookKey'),
-                chapterNumber: _readInt(row, 'chapterNumber'),
-                action: _readString(row, 'action'),
-                activityDate: _readString(row, 'activityDate'),
-                timezone: _readString(row, 'timezone'),
-                happenedAt: _readDate(row, 'happenedAt'),
-                createdAt: _readDate(row, 'createdAt'),
+                userPlanId: planId,
+                bookKey: bookKey,
+                chapterNumber: chapterNumber,
+                action: action,
+                activityDate: activityDate,
+                timezone: _tupleString(item, 5),
+                happenedAt: _tupleDate(item, 6) ?? syncedAt,
+                createdAt: _tupleDate(item, 6) ?? syncedAt,
                 syncStatus: const Value('synced'),
-                serverId: Value(_readOptionalString(row, 'serverId')),
                 lastSyncedAt: Value(syncedAt),
-                clientRevision: Value(_readInt(row, 'clientRevision')),
               ),
             );
       }
 
-      for (final row in result.planCompletionEvents) {
+      for (final row in result.completionEvents) {
+        final planId = _readString(row, 'planId');
+        final templateId = restoredTemplateIds[planId];
+        if (templateId == null) continue;
         await db.into(db.planCompletionEvents).insertOnConflictUpdate(
               PlanCompletionEventsCompanion.insert(
-                id: _readString(row, 'id'),
+                id: _readString(
+                  row,
+                  'id',
+                  fallback: 'backup:completion:$planId',
+                ),
                 localUserId: localUserId,
-                userPlanId: _readString(row, 'userPlanId'),
-                templateId: _readString(row, 'templateId'),
+                userPlanId: planId,
+                templateId: templateId,
                 completionNumber: _readInt(row, 'completionNumber'),
                 completedAt: _readDate(row, 'completedAt'),
                 createdAt: _readDate(row, 'createdAt'),
                 syncStatus: const Value('synced'),
-                serverId: Value(_readOptionalString(row, 'serverId')),
                 lastSyncedAt: Value(syncedAt),
-                clientRevision: Value(_readInt(row, 'clientRevision')),
               ),
             );
       }
@@ -1193,7 +1214,15 @@ class ReadRepository {
         syncedAt.toUtc().toIso8601String(),
       );
       if (restoredPlanIds.isNotEmpty) {
-        await _setSetting('last_active_plan_id', restoredPlanIds.first);
+        final settings = result.payload?['settings'];
+        final lastActivePlanId =
+            settings is Map ? settings['lastActivePlanId'] as String? : null;
+        await _setSetting(
+          'last_active_plan_id',
+          lastActivePlanId != null && restoredPlanIds.contains(lastActivePlanId)
+              ? lastActivePlanId
+              : restoredPlanIds.first,
+        );
       }
     });
   }
@@ -1563,10 +1592,13 @@ class ReadRepository {
   String _chapterKey(String bookKey, int chapterNumber) =>
       '$bookKey|$chapterNumber';
 
-  Map<String, dynamic> _syncPlanToJson(UserReadingPlan row) {
+  Map<String, dynamic> _backupPlanToJson(
+    UserReadingPlan row,
+    PlanTemplate? template,
+  ) {
     return {
       'id': row.id,
-      'localUserId': row.localUserId,
+      'templateKey': template?.templateKey ?? row.templateId,
       'templateId': row.templateId,
       'title': row.title,
       'status': row.status,
@@ -1579,147 +1611,171 @@ class ReadRepository {
       'lastOpenedBookKey': row.lastOpenedBookKey,
       'createdAt': _dateToJson(row.createdAt),
       'updatedAt': _dateToJson(row.updatedAt),
-      'clientRevision': row.clientRevision,
     };
   }
 
-  Map<String, dynamic> _syncChapterToJson(UserPlanChapter row) {
-    return {
-      'id': row.id,
-      'userPlanId': row.userPlanId,
-      'sectionId': row.sectionId,
-      'bookKey': row.bookKey,
-      'chapterNumber': row.chapterNumber,
-      'orderIndex': row.orderIndex,
-      'createdAt': _dateToJson(row.createdAt),
-      'clientRevision': row.clientRevision,
-    };
+  List<dynamic> _backupProgressToJson(ChapterProgressEntry row) {
+    return [
+      row.userPlanId,
+      row.bookKey,
+      row.chapterNumber,
+      _optionalDateToJson(row.completedAt) ?? _dateToJson(row.updatedAt),
+    ];
   }
 
-  Map<String, dynamic> _syncProgressToJson(ChapterProgressEntry row) {
-    return {
-      'id': row.id,
-      'userPlanId': row.userPlanId,
-      'bookKey': row.bookKey,
-      'chapterNumber': row.chapterNumber,
-      'isCompleted': row.isCompleted,
-      'completedAt': _optionalDateToJson(row.completedAt),
-      'updatedAt': _dateToJson(row.updatedAt),
-      'clientRevision': row.clientRevision,
-    };
+  List<dynamic> _backupActivityToJson(ReadingActivity row) {
+    return [
+      row.userPlanId,
+      row.bookKey,
+      row.chapterNumber,
+      row.activityDate,
+      row.action,
+      row.timezone,
+      _dateToJson(row.happenedAt),
+    ];
   }
 
-  Map<String, dynamic> _syncActivityToJson(ReadingActivity row) {
+  Map<String, dynamic> _backupCompletionToJson(
+    PlanCompletionEvent row,
+    PlanTemplate? template,
+  ) {
     return {
       'id': row.id,
-      'userPlanId': row.userPlanId,
-      'bookKey': row.bookKey,
-      'chapterNumber': row.chapterNumber,
-      'action': row.action,
-      'activityDate': row.activityDate,
-      'timezone': row.timezone,
-      'happenedAt': _dateToJson(row.happenedAt),
-      'createdAt': _dateToJson(row.createdAt),
-      'clientRevision': row.clientRevision,
-    };
-  }
-
-  Map<String, dynamic> _syncCompletionToJson(PlanCompletionEvent row) {
-    return {
-      'id': row.id,
-      'userPlanId': row.userPlanId,
-      'templateId': row.templateId,
-      'completionNumber': row.completionNumber,
+      'planId': row.userPlanId,
+      'templateKey': template?.templateKey ?? row.templateId,
       'completedAt': _dateToJson(row.completedAt),
+      'completionNumber': row.completionNumber,
       'createdAt': _dateToJson(row.createdAt),
-      'clientRevision': row.clientRevision,
     };
   }
 
-  Future<void> _markUserReadingPlansSynced(
-    List<HunnySyncRowAck> acks,
-    DateTime syncedAt,
-  ) async {
-    for (final ack in acks.where((ack) => ack.clientId.isNotEmpty)) {
-      await (db.update(db.userReadingPlans)
-            ..where((tbl) => tbl.id.equals(ack.clientId)))
-          .write(
-        UserReadingPlansCompanion(
-          syncStatus: const Value('synced'),
-          serverId: Value(ack.serverId),
-          lastSyncedAt: Value(syncedAt),
-        ),
-      );
-    }
+  Future<void> _clearLocalReadingStateForRestore(String localUserId) async {
+    final existingPlans = await (db.select(db.userReadingPlans)
+          ..where((tbl) => tbl.localUserId.equals(localUserId)))
+        .get();
+    final existingPlanIds = existingPlans.map((plan) => plan.id).toList();
+    if (existingPlanIds.isEmpty) return;
+
+    await (db.delete(db.planCompletionEvents)
+          ..where(
+            (tbl) =>
+                tbl.localUserId.equals(localUserId) &
+                tbl.userPlanId.isIn(existingPlanIds),
+          ))
+        .go();
+    await (db.delete(db.readingActivities)
+          ..where(
+            (tbl) =>
+                tbl.localUserId.equals(localUserId) &
+                tbl.userPlanId.isIn(existingPlanIds),
+          ))
+        .go();
+    await (db.delete(db.chapterProgressEntries)
+          ..where(
+            (tbl) =>
+                tbl.localUserId.equals(localUserId) &
+                tbl.userPlanId.isIn(existingPlanIds),
+          ))
+        .go();
+    await (db.delete(db.userPlanChapters)
+          ..where((tbl) => tbl.userPlanId.isIn(existingPlanIds)))
+        .go();
+    await (db.delete(db.userReadingPlans)
+          ..where((tbl) => tbl.localUserId.equals(localUserId)))
+        .go();
   }
 
-  Future<void> _markUserPlanChaptersSynced(
-    List<HunnySyncRowAck> acks,
-    DateTime syncedAt,
+  Future<PlanTemplate?> _templateForBackupPlan(
+    Map<String, dynamic> plan,
   ) async {
-    for (final ack in acks.where((ack) => ack.clientId.isNotEmpty)) {
-      await (db.update(db.userPlanChapters)
-            ..where((tbl) => tbl.id.equals(ack.clientId)))
-          .write(
-        UserPlanChaptersCompanion(
-          syncStatus: const Value('synced'),
-          serverId: Value(ack.serverId),
-          lastSyncedAt: Value(syncedAt),
-        ),
-      );
+    final templateKey = _readString(plan, 'templateKey');
+    if (templateKey.isNotEmpty) {
+      final byKey = await (db.select(db.planTemplates)
+            ..where((tbl) => tbl.templateKey.equals(templateKey))
+            ..limit(1))
+          .getSingleOrNull();
+      if (byKey != null) return byKey;
     }
+
+    final templateId = _readString(plan, 'templateId');
+    if (templateId.isEmpty) return null;
+    return (db.select(db.planTemplates)
+          ..where((tbl) => tbl.id.equals(templateId))
+          ..limit(1))
+        .getSingleOrNull();
   }
 
-  Future<void> _markChapterProgressSynced(
-    List<HunnySyncRowAck> acks,
-    DateTime syncedAt,
-  ) async {
-    for (final ack in acks.where((ack) => ack.clientId.isNotEmpty)) {
-      await (db.update(db.chapterProgressEntries)
-            ..where((tbl) => tbl.id.equals(ack.clientId)))
-          .write(
-        ChapterProgressEntriesCompanion(
-          syncStatus: const Value('synced'),
-          serverId: Value(ack.serverId),
-          lastSyncedAt: Value(syncedAt),
-        ),
-      );
-    }
+  Future<Set<String>> _chapterKeysForPlans(Set<String> planIds) async {
+    if (planIds.isEmpty) return const {};
+    final rows = await (db.select(db.userPlanChapters)
+          ..where((tbl) => tbl.userPlanId.isIn(planIds.toList())))
+        .get();
+    return rows
+        .map(
+          (row) => _restoredChapterKey(
+            row.userPlanId,
+            row.bookKey,
+            row.chapterNumber,
+          ),
+        )
+        .toSet();
   }
 
-  Future<void> _markReadingActivitiesSynced(
-    List<HunnySyncRowAck> acks,
-    DateTime syncedAt,
-  ) async {
-    for (final ack in acks.where((ack) => ack.clientId.isNotEmpty)) {
-      await (db.update(db.readingActivities)
-            ..where((tbl) => tbl.id.equals(ack.clientId)))
-          .write(
-        ReadingActivitiesCompanion(
-          syncStatus: const Value('synced'),
-          serverId: Value(ack.serverId),
-          lastSyncedAt: Value(syncedAt),
-        ),
-      );
-    }
+  bool _hasRestoredChapter(
+    Set<String> chapterKeys,
+    String planId,
+    String bookKey,
+    int chapterNumber,
+  ) {
+    return chapterKeys.contains(
+      _restoredChapterKey(planId, bookKey, chapterNumber),
+    );
   }
 
-  Future<void> _markPlanCompletionEventsSynced(
-    List<HunnySyncRowAck> acks,
-    DateTime syncedAt,
-  ) async {
-    for (final ack in acks.where((ack) => ack.clientId.isNotEmpty)) {
-      await (db.update(db.planCompletionEvents)
-            ..where((tbl) => tbl.id.equals(ack.clientId)))
-          .write(
-        PlanCompletionEventsCompanion(
-          syncStatus: const Value('synced'),
-          serverId: Value(ack.serverId),
-          lastSyncedAt: Value(syncedAt),
-        ),
-      );
-    }
+  String _restoredChapterKey(
+    String planId,
+    String bookKey,
+    int chapterNumber,
+  ) =>
+      '$planId|$bookKey|$chapterNumber';
+
+  List<dynamic> _backupTuple(Object? value) =>
+      value is List ? value : const <dynamic>[];
+
+  String _tupleString(List<dynamic> row, int index) {
+    final value = index < row.length ? row[index] : null;
+    return value is String ? value : '';
   }
+
+  int _tupleInt(List<dynamic> row, int index) {
+    final value = index < row.length ? row[index] : null;
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    return 0;
+  }
+
+  DateTime? _tupleDate(List<dynamic> row, int index) {
+    final value = index < row.length ? row[index] : null;
+    if (value is DateTime) return value;
+    if (value is String && value.isNotEmpty) return DateTime.tryParse(value);
+    return null;
+  }
+
+  String _backupProgressId(
+    String planId,
+    String bookKey,
+    int chapterNumber,
+  ) =>
+      'backup:progress:$planId:$bookKey:$chapterNumber';
+
+  String _backupActivityId(
+    String planId,
+    String bookKey,
+    int chapterNumber,
+    String activityDate,
+    String action,
+  ) =>
+      'backup:activity:$planId:$bookKey:$chapterNumber:$activityDate:$action';
 
   String _dateToJson(DateTime date) => date.toUtc().toIso8601String();
 

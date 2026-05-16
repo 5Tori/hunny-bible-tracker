@@ -9,9 +9,10 @@ This document is the current data-model source of truth for the project.
 | Local mobile database | `apps/mobile/lib/core/database/app_database.dart` |
 | Generated Drift code | `apps/mobile/lib/core/database/app_database.g.dart` |
 | Server database | `apps/web/db/schema.sql` |
-| Server migrations | `apps/web/db/migrations/` |
 
 Local Drift schema version is `2`. During active MVP development, stale local data can be cleared by deleting/reinstalling the app or resetting the simulator/emulator build.
+
+During MVP development, the server migration history has been reset. Use `apps/web/db/schema.sql` as the source of truth for fresh Neon setup.
 
 ## Conceptual Model
 
@@ -21,7 +22,7 @@ Plan template
       -> chapter ranges
 
 User reading plan
-  -> resolved user plan chapters
+  -> locally resolved user plan chapters
       -> chapter progress entries
       -> reading activities
       -> completion event
@@ -30,8 +31,10 @@ User reading plan
 The important split:
 
 - Template data defines what a plan is.
-- User plan data snapshots one user's run of that plan.
+- User plan data represents one user's run of that plan.
+- `user_plan_chapters` is local derived data used for offline UI, ordering, sections, and progress denominators.
 - Later template edits should not rewrite already-started plan runs.
+- Remote reading backup should store compact user state, not every derived chapter row.
 
 ## Local Tables
 
@@ -167,6 +170,8 @@ Archive is non-destructive. It updates the plan row and keeps `user_plan_chapter
 
 Resolved chapter snapshot for one user plan run.
 
+This table is local derived data. Starting a plan can create hundreds or thousands of rows here so the offline read UI has a stable denominator and ordering. These rows should not be replicated to server backup in the compact backup architecture.
+
 Unique key:
 
 ```text
@@ -259,16 +264,25 @@ Admin-owned plan content is stored in Neon and published to mobile through `/api
 
 ### Reading backup/restore
 
+Target compact backup table:
+
 ```text
-user_reading_plans
-user_plan_chapters
-chapter_progress_entries
-reading_activities
-plan_completion_events
-sync_states
+user_reading_backups
 ```
 
-Server sync rows are scoped to `auth_users`. Mobile UUIDs are stored as `client_id` values, allowing the API to acknowledge uploaded rows back to local Drift rows.
+One row per authenticated user stores the latest compact reading backup snapshot:
+
+| Column | Role |
+| --- | --- |
+| `auth_user_id` | Unique owner, references `auth_users(id)` |
+| `backup_version` | Snapshot schema version |
+| `payload_jsonb` | Compact JSON backup payload |
+| `payload_hash` | Stable hash of canonical payload JSON |
+| `created_at`, `updated_at` | Backup lifecycle timestamps |
+
+The payload stores plan lifecycle metadata, completed progress, reading activities, completion events, and backup-relevant settings. It does not store `user_plan_chapters`.
+
+Legacy relational sync tables are removed from the server schema. Relational reading tables remain local Drift tables only.
 
 ### Today’s Message
 
@@ -318,5 +332,5 @@ Mobile Settings > Help & feedback posts to the server with:
 - Local Drift code uses `user_plan_id` for plan-run scoped rows.
 - Local denominator table is `user_plan_chapters`.
 - Firebase `uid` is stored locally in `local_users.auth_user_id`.
-- Mobile backup/restore maps local UUIDs to server UUIDs through `client_id` / `server_id`.
+- Compact backup does not depend on per-row `server_id` values.
 - Mobile still writes locally first; backup/restore is an authenticated secondary path.

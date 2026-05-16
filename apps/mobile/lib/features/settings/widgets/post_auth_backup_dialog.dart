@@ -81,7 +81,7 @@ Future<void> _runBackupNow(
         content: Text(
           result.totalRows == 0
               ? 'Backup is up to date.'
-              : 'Backed up ${result.totalRows} reading rows.',
+              : 'Backed up ${result.totalItems} reading items.',
         ),
       ),
     );
