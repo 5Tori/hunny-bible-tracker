@@ -11,6 +11,7 @@ void main() {
     final database = AppDatabase.forTesting(NativeDatabase.memory());
     final readRepository = ReadRepository(database);
     await readRepository.initializeLocalData();
+    await readRepository.completeOnboarding('beginner');
     final authRepository = AuthRepository(
       firebaseConfig: const FirebaseAuthConfig(
         apiKey: '',
@@ -29,7 +30,8 @@ void main() {
         authRepository: authRepository,
       ),
     );
-    await tester.pumpAndSettle();
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
 
     expect(find.text('Read'), findsWidgets);
     expect(find.text('Settings'), findsOneWidget);

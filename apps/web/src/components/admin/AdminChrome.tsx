@@ -11,6 +11,8 @@ import { clearAdminToken, setAdminToken } from '@/lib/admin/client';
 const NAV_ITEMS = [
   { href: '/admin/plans', label: 'Plan catalog' },
   { href: '/admin/plans/new', label: 'New plan' },
+  { href: '/admin/content', label: 'Content catalog' },
+  { href: '/admin/content/new', label: 'New content' },
   { href: '/admin/today-messages', label: 'Today messages' },
   { href: '/admin/today-messages/new', label: 'New today message' },
 ] as const;
@@ -24,6 +26,14 @@ function isNavActive(href: string, pathname: string) {
     return false;
   }
   if (href === '/admin/plans/new') return pathname === '/admin/plans/new';
+  if (href === '/admin/content') {
+    if (pathname === '/admin/content') return true;
+    if (pathname.startsWith('/admin/content/') && pathname !== '/admin/content/new') {
+      return true;
+    }
+    return false;
+  }
+  if (href === '/admin/content/new') return pathname === '/admin/content/new';
   if (href === '/admin/today-messages') {
     if (pathname === '/admin/today-messages') return true;
     if (pathname.startsWith('/admin/today-messages/') && pathname !== '/admin/today-messages/new') {

@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/api/hunny_api_models.dart';
+import '../../../core/bible/bible_com.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/local_user_id.dart';
 import '../domain/read_models.dart';
@@ -25,6 +26,12 @@ class ReadRepository {
   static const kAppSettingInitialBackupPromptDone =
       'initial_backup_prompt_done';
   static const kAppSettingLastReadingSyncAt = 'last_reading_sync_at';
+  static const kAppSettingOnboardingCompleted = 'onboarding_completed_v1';
+  static const kAppSettingOnboardingReadingLevel = 'onboarding_reading_level';
+  static const kAppSettingBibleComVersionId = 'bible_com_version_id';
+  static const kAppSettingBibleComVersionAbbr = 'bible_com_version_abbr';
+
+  BibleComVersion? _cachedBibleComVersion;
 
   Future<void> initializeLocalData() async {
     await db.transaction(() async {
@@ -33,7 +40,6 @@ class ReadRepository {
       await _seedDefaultSettingsIfNeeded();
     });
     await refreshPlanTemplatesFromRemote(allowFailure: true);
-    await _createDefaultUserPlanIfNeeded();
   }
 
   Future<void> refreshPlanTemplatesFromRemote({
@@ -356,6 +362,22 @@ class ReadRepository {
         .toList();
   }
 
+  /// Next catalog plan to suggest after completion (featured order, not in progress).
+  Future<ReadingPlanTemplateView?> getSuggestedNextPlanTemplate({
+    required String excludeTemplateId,
+  }) async {
+    final catalog = await getPlanTemplatesForCatalog();
+    for (final template in catalog) {
+      if (template.isInProgress) continue;
+      if (template.id == excludeTemplateId) continue;
+      return template;
+    }
+    for (final template in catalog) {
+      if (!template.isInProgress) return template;
+    }
+    return null;
+  }
+
   Future<ReadingPlanTemplateView?> getPlanTemplateByIdentifier(
     String identifier,
   ) async {
@@ -470,6 +492,14 @@ class ReadRepository {
           chapter.sectionId;
     }
 
+    final chaptersBySection = <String, List<UserPlanChapter>>{};
+    for (final chapter in planChapters) {
+      chaptersBySection.putIfAbsent(chapter.sectionId, () => []).add(chapter);
+    }
+    for (final sectionChapters in chaptersBySection.values) {
+      sectionChapters.sort((a, b) => a.orderIndex.compareTo(b.orderIndex));
+    }
+
     final completedBySectionBook = <String, int>{};
     final completedBySection = <String, int>{};
     for (final row in progressRows) {
@@ -509,10 +539,18 @@ class ReadRepository {
           ),
         );
       }
+      final sectionChapterList = chaptersBySection[section.id];
+      final firstChapter = sectionChapterList != null && sectionChapterList.isNotEmpty
+          ? sectionChapterList.first
+          : null;
+
       return PlanSectionProgress(
         sectionId: section.id,
         title: section.title,
+        description: section.description,
         orderIndex: section.orderIndex,
+        firstChapterBookKey: firstChapter?.bookKey,
+        firstChapterNumber: firstChapter?.chapterNumber,
         books: sectionBooks,
         completedCount: completedBySection[section.id] ?? 0,
         totalCount: totalBySection[section.id] ?? 0,
@@ -965,6 +1003,31 @@ class ReadRepository {
     await _setSetting('account_mode', 'guest');
   }
 
+  Future<bool> isOnboardingCompleted() async {
+    final value = await getAppSetting(kAppSettingOnboardingCompleted);
+    return value == 'true';
+  }
+
+  Future<bool> hasAnyUserReadingPlan() async {
+    final localUserId = await _activeLocalUserId();
+    final row = await (db.select(db.userReadingPlans)
+          ..where((tbl) => tbl.localUserId.equals(localUserId))
+          ..limit(1))
+        .getSingleOrNull();
+    return row != null;
+  }
+
+  Future<bool> shouldShowOnboarding() async {
+    if (await isOnboardingCompleted()) return false;
+    if (await hasAnyUserReadingPlan()) return false;
+    return true;
+  }
+
+  Future<void> completeOnboarding(String level) async {
+    await _setSetting(kAppSettingOnboardingReadingLevel, level);
+    await _setSetting(kAppSettingOnboardingCompleted, 'true');
+  }
+
   Future<Map<String, dynamic>> exportReadingBackupSnapshot() async {
     final localUserId = await _activeLocalUserId();
     final plans = await (db.select(db.userReadingPlans)
@@ -1030,7 +1093,7 @@ class ReadRepository {
           )
           .toList(),
       'settings': {
-        if (lastActivePlanId != null && lastActivePlanId.isNotEmpty)
+        if (lastActivePlanId != null && planIds.contains(lastActivePlanId))
           'lastActivePlanId': lastActivePlanId,
       },
     };
@@ -1366,28 +1429,6 @@ class ReadRepository {
     });
   }
 
-  Future<void> _createDefaultUserPlanIfNeeded() async {
-    final existing = await (db.select(db.userReadingPlans)
-          ..where((tbl) => tbl.archivedAt.isNull())
-          ..limit(1))
-        .getSingleOrNull();
-    if (existing != null) return;
-
-    final preferred = await (db.select(db.planTemplates)
-          ..where((tbl) => tbl.templateKey.equals('bible_in_a_year'))
-          ..limit(1))
-        .getSingleOrNull();
-    final template = preferred ??
-        await (db.select(db.planTemplates)
-              ..where((tbl) => tbl.isPublished.equals(true))
-              ..orderBy([(tbl) => OrderingTerm.asc(tbl.title)])
-              ..limit(1))
-            .getSingleOrNull();
-    if (template == null) return;
-
-    await _createUserPlanFromTemplate(template);
-  }
-
   Future<String> _createUserPlanFromTemplate(PlanTemplate template) async {
     final now = DateTime.now();
     final planId = _uuid.v4();
@@ -1513,6 +1554,29 @@ class ReadRepository {
     await _setSettingIfMissing('language', 'en');
     await _setSettingIfMissing('timezone', DateTime.now().timeZoneName);
     await _setSettingIfMissing('account_mode', 'guest');
+    await _setSettingIfMissing(
+      kAppSettingBibleComVersionId,
+      BibleComVersion.defaultVersion.id,
+    );
+    await _setSettingIfMissing(
+      kAppSettingBibleComVersionAbbr,
+      BibleComVersion.defaultVersion.abbr,
+    );
+  }
+
+  Future<BibleComVersion> getBibleComVersion() async {
+    if (_cachedBibleComVersion != null) return _cachedBibleComVersion!;
+    final id = await getAppSetting(kAppSettingBibleComVersionId);
+    final abbr = await getAppSetting(kAppSettingBibleComVersionAbbr);
+    _cachedBibleComVersion =
+        BibleComVersion.tryParse(id: id, abbr: abbr) ?? BibleComVersion.defaultVersion;
+    return _cachedBibleComVersion!;
+  }
+
+  Future<void> setBibleComVersion(BibleComVersion version) async {
+    await _setSetting(kAppSettingBibleComVersionId, version.id);
+    await _setSetting(kAppSettingBibleComVersionAbbr, version.abbr);
+    _cachedBibleComVersion = version;
   }
 
   Future<String?> getAppSetting(String key) async {

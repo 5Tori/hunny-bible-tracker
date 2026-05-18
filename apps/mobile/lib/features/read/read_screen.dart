@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../core/bible/bible_com.dart';
 import '../../core/theme/app_theme.dart';
 import '../plans/plans_screen.dart';
 import 'data/read_repository.dart';
 import 'domain/read_models.dart';
 import 'widgets/book_card.dart';
-import 'widgets/chapter_grid.dart';
+import 'widgets/book_chapter_expansion.dart';
 import 'widgets/current_plan_progress_panel.dart';
+import 'widgets/plan_completion_celebration.dart';
+import 'widgets/section_header.dart';
 
 class ReadScreen extends StatefulWidget {
   const ReadScreen({super.key, required this.readRepository});
@@ -25,6 +29,9 @@ class _ReadScreenState extends State<ReadScreen> {
   String? _selectedSectionId;
   String? _selectedBookKey;
   bool _loading = true;
+  bool _loadingChapters = false;
+  String? _chapterEntranceKey;
+  BibleComVersion _bibleVersion = BibleComVersion.defaultVersion;
 
   @override
   void initState() {
@@ -34,6 +41,7 @@ class _ReadScreenState extends State<ReadScreen> {
 
   Future<void> _loadInitialState() async {
     setState(() => _loading = true);
+    final bibleVersion = await widget.readRepository.getBibleComVersion();
     final plan = await widget.readRepository.getCurrentPlan();
     if (plan == null) {
       if (!mounted) return;
@@ -44,6 +52,7 @@ class _ReadScreenState extends State<ReadScreen> {
         _selectedBookKey = null;
         _chapters = const [];
         _readingOverview = null;
+        _bibleVersion = bibleVersion;
         _loading = false;
       });
       return;
@@ -61,6 +70,7 @@ class _ReadScreenState extends State<ReadScreen> {
         _selectedBookKey = null;
         _chapters = const [];
         _readingOverview = overview;
+        _bibleVersion = bibleVersion;
         _loading = false;
       });
       return;
@@ -89,18 +99,56 @@ class _ReadScreenState extends State<ReadScreen> {
       _selectedBookKey = selected.bookKey;
       _chapters = chapters;
       _readingOverview = overview;
+      _bibleVersion = bibleVersion;
       _loading = false;
     });
+  }
+
+  Uri? _sectionOnlineReadUrl(PlanSectionProgress section) {
+    final bookKey = section.firstChapterBookKey;
+    final chapter = section.firstChapterNumber;
+    if (bookKey == null || chapter == null) return null;
+    return BibleCom.chapterUrl(
+      version: _bibleVersion,
+      bookKey: bookKey,
+      chapter: chapter,
+    );
+  }
+
+  Future<void> _openSectionOnline(PlanSectionProgress section) async {
+    final url = _sectionOnlineReadUrl(section);
+    if (url == null) return;
+    final launched = await launchUrl(url, mode: LaunchMode.externalApplication);
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open Bible.com')),
+      );
+    }
   }
 
   Future<void> _selectBook(BookProgress book) async {
     final plan = _plan;
     if (plan == null) return;
 
+    final isSameBook = _selectedSectionId == book.sectionId &&
+        _selectedBookKey == book.bookKey;
+    if (isSameBook) {
+      setState(() {
+        _selectedSectionId = null;
+        _selectedBookKey = null;
+        _chapters = const [];
+        _chapterEntranceKey = null;
+        _loadingChapters = false;
+      });
+      return;
+    }
+
     setState(() {
       _selectedSectionId = book.sectionId;
       _selectedBookKey = book.bookKey;
       _chapters = const [];
+      _chapterEntranceKey = null;
+      _loadingChapters = true;
     });
 
     await widget.readRepository.rememberLastOpenedBook(
@@ -116,7 +164,16 @@ class _ReadScreenState extends State<ReadScreen> {
     );
 
     if (!mounted) return;
-    setState(() => _chapters = chapters);
+    setState(() {
+      _chapters = chapters;
+      _loadingChapters = false;
+      _chapterEntranceKey = '${book.sectionId}|${book.bookKey}';
+    });
+  }
+
+  void _clearChapterEntrance() {
+    if (_chapterEntranceKey == null) return;
+    setState(() => _chapterEntranceKey = null);
   }
 
   Future<void> _toggleChapter(ChapterProgressView chapter) async {
@@ -165,12 +222,41 @@ class _ReadScreenState extends State<ReadScreen> {
     final plan = _plan;
     if (plan == null) return;
 
+    final planTitle = plan.title;
+    final totalChapters = _readingOverview?.plan.totalChapters ?? 0;
+
     await widget.readRepository.finishPlan(plan.id);
-    await _loadInitialState();
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Plan completed')),
+
+    final currentPlans =
+        await widget.readRepository.getCurrentPlanSummaries();
+    if (!mounted) return;
+
+    final outcome = await showPlanCompletionCelebration(
+      context: context,
+      planTitle: planTitle,
+      totalChapters: totalChapters,
+      currentPlans: currentPlans,
     );
+    if (!mounted) return;
+
+    switch (outcome.action) {
+      case PlanCompletionCelebrationAction.continuePlan:
+        final planId = outcome.planId;
+        if (planId != null && planId.isNotEmpty) {
+          await widget.readRepository.switchToPlan(planId);
+        }
+        break;
+      case PlanCompletionCelebrationAction.browseAll:
+        await _loadInitialState();
+        if (!mounted) return;
+        await _openPlansScreen(PlansInitialTab.catalog);
+        return;
+      case PlanCompletionCelebrationAction.dismissed:
+        break;
+    }
+
+    await _loadInitialState();
   }
 
   Future<void> _showPlanPicker() async {
@@ -209,7 +295,7 @@ class _ReadScreenState extends State<ReadScreen> {
   }
 
   Future<void> _openPlansScreen(PlansInitialTab initialTab) async {
-    final changed = await Navigator.of(context).push<bool>(
+    final result = await Navigator.of(context).push<PlansScreenPopResult>(
       MaterialPageRoute(
         builder: (context) => PlansScreen(
           readRepository: widget.readRepository,
@@ -218,7 +304,7 @@ class _ReadScreenState extends State<ReadScreen> {
       ),
     );
     if (!mounted) return;
-    if (changed == true) {
+    if (result?.shouldRefreshRead == true) {
       await _loadInitialState();
     }
   }
@@ -237,56 +323,65 @@ class _ReadScreenState extends State<ReadScreen> {
       final end = (start + columns).clamp(0, books.length);
       final rowBooks = books.sublist(start, end);
 
-      slivers.add(
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(20, row == 0 ? 0 : spacing, 20, 0),
-            child: Row(
-              children: [
-                for (int i = 0; i < columns; i++) ...[
-                  if (i > 0) const SizedBox(width: spacing),
-                  Expanded(
-                    child: i < rowBooks.length
-                        ? AspectRatio(
-                            aspectRatio: 0.96,
-                            child: BookCard(
-                              book: rowBooks[i],
-                              isSelected:
-                                  rowBooks[i].sectionId == _selectedSectionId &&
-                                      rowBooks[i].bookKey == _selectedBookKey,
-                              onTap: () => _selectBook(rowBooks[i]),
-                            ),
-                          )
-                        : const SizedBox(),
-                  ),
-                ],
-              ],
-            ),
-          ),
-        ),
-      );
-
       final selectedBook = _findBook(
         sections: _sections,
         sectionId: sectionId,
         bookKey: _selectedBookKey,
       );
-      final hasSelected = rowBooks.any(
-        (book) =>
-            book.sectionId == _selectedSectionId &&
-            book.bookKey == _selectedBookKey,
-      );
-      if (hasSelected && selectedBook != null) {
-        slivers.add(
-          SliverToBoxAdapter(
-            child: _ChapterSection(
-              book: selectedBook,
-              chapters: _chapters,
-              onChapterTap: _toggleChapter,
+      final isExpanded = selectedBook != null &&
+          rowBooks.any(
+            (book) =>
+                book.sectionId == _selectedSectionId &&
+                book.bookKey == _selectedBookKey,
+          );
+      final expansionKey = selectedBook != null
+          ? '${selectedBook.sectionId}|${selectedBook.bookKey}'
+          : '';
+
+      slivers.add(
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(20, row == 0 ? 0 : spacing, 20, 0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    for (int i = 0; i < columns; i++) ...[
+                      if (i > 0) const SizedBox(width: spacing),
+                      Expanded(
+                        child: i < rowBooks.length
+                            ? AspectRatio(
+                                aspectRatio: 0.96,
+                                child: BookCard(
+                                  book: rowBooks[i],
+                                  isSelected: rowBooks[i].sectionId ==
+                                          _selectedSectionId &&
+                                      rowBooks[i].bookKey == _selectedBookKey,
+                                  onTap: () => _selectBook(rowBooks[i]),
+                                ),
+                              )
+                            : const SizedBox(),
+                      ),
+                    ],
+                  ],
+                ),
+                BookChapterExpansion(
+                  isExpanded: isExpanded,
+                  expansionKey: expansionKey,
+                  chapters: isExpanded ? _chapters : const [],
+                  onChapterTap: _toggleChapter,
+                  animateEntrance:
+                      isExpanded && _chapterEntranceKey == expansionKey,
+                  isLoading: isExpanded && _loadingChapters,
+                  onEntranceComplete: _clearChapterEntrance,
+                ),
+              ],
             ),
           ),
-        );
-      }
+        ),
+      );
     }
 
     return slivers;
@@ -437,7 +532,12 @@ class _ReadScreenState extends State<ReadScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _SectionHeader(title: section.title),
+                SectionHeader(
+                  title: section.title,
+                  description: section.description,
+                  onlineReadUrl: _sectionOnlineReadUrl(section),
+                  onReadOnline: () => _openSectionOnline(section),
+                ),
                 const SizedBox(height: 12),
               ],
             ),
@@ -462,39 +562,47 @@ class _ReadScreenState extends State<ReadScreen> {
         children: [
           RefreshIndicator(
             onRefresh: _loadInitialState,
-            child: CustomScrollView(
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      20,
-                      showCompletionBanner ? 122 : 16,
-                      20,
-                      0,
-                    ),
-                    child: Center(
-                      child: GestureDetector(
-                        onTap: _showPlanPicker,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text(
-                              _plan?.title ?? 'Bible in a Year',
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .titleMedium
-                                  ?.copyWith(fontWeight: FontWeight.w700),
-                            ),
-                            const SizedBox(width: 4),
-                            const Icon(Icons.keyboard_arrow_down, size: 22),
-                          ],
+            child: NotificationListener<ScrollNotification>(
+              onNotification: (notification) {
+                if (notification is ScrollStartNotification) {
+                  dismissOpenSectionDescription();
+                }
+                return false;
+              },
+              child: CustomScrollView(
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: EdgeInsets.fromLTRB(
+                        20,
+                        showCompletionBanner ? 122 : 16,
+                        20,
+                        0,
+                      ),
+                      child: Center(
+                        child: GestureDetector(
+                          onTap: _showPlanPicker,
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                _plan?.title ?? 'Bible in a Year',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .titleMedium
+                                    ?.copyWith(fontWeight: FontWeight.w700),
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(Icons.keyboard_arrow_down, size: 22),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                ...bookSlivers,
-              ],
+                  ...bookSlivers,
+                ],
+              ),
             ),
           ),
           _CompletionBanner(
@@ -521,53 +629,6 @@ class _ReadScreenState extends State<ReadScreen> {
       }
     }
     return null;
-  }
-}
-
-class _ChapterSection extends StatelessWidget {
-  const _ChapterSection({
-    required this.book,
-    required this.chapters,
-    required this.onChapterTap,
-  });
-
-  final BookProgress book;
-  final List<ChapterProgressView> chapters;
-  final ValueChanged<ChapterProgressView> onChapterTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          ChapterGrid(
-            chapters: chapters,
-            onChapterTap: onChapterTap,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(title, style: Theme.of(context).textTheme.titleMedium),
-        const SizedBox(width: 10),
-        const Expanded(
-          child: Divider(color: AppTheme.border),
-        ),
-      ],
-    );
   }
 }
 
@@ -707,15 +768,6 @@ class _PlanPickerSheetState extends State<_PlanPickerSheet> {
                 'My Plans',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.titleLarge,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Switch quickly, or open the full plan manager',
-                textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: AppTheme.mutedInk,
-                      fontSize: 18,
-                    ),
               ),
               const SizedBox(height: 18),
               ConstrainedBox(

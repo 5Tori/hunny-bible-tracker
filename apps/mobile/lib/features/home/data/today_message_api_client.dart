@@ -92,6 +92,7 @@ class TodayMessageApiClient {
 class TodayMessage {
   const TodayMessage({
     required this.id,
+    required this.contentId,
     required this.publishDate,
     required this.language,
     required this.verseReference,
@@ -99,6 +100,8 @@ class TodayMessage {
     required this.verseText,
     required this.message,
     required this.imageUrl,
+    required this.shareImageUrl,
+    required this.shareImagePublicId,
     required this.shareUrl,
     required this.hintTitle,
     required this.hintSummary,
@@ -114,6 +117,7 @@ class TodayMessage {
   });
 
   final String id;
+  final String? contentId;
   final String publishDate;
   final String language;
   final String verseReference;
@@ -121,6 +125,8 @@ class TodayMessage {
   final String? verseText;
   final String? message;
   final String? imageUrl;
+  final String? shareImageUrl;
+  final String? shareImagePublicId;
   final String? shareUrl;
   final String? hintTitle;
   final String? hintSummary;
@@ -182,6 +188,7 @@ class TodayMessage {
   }) {
     return TodayMessage(
       id: id,
+      contentId: contentId,
       publishDate: publishDate,
       language: language,
       verseReference: verseReference,
@@ -189,6 +196,8 @@ class TodayMessage {
       verseText: verseText,
       message: message,
       imageUrl: imageUrl,
+      shareImageUrl: shareImageUrl,
+      shareImagePublicId: shareImagePublicId,
       shareUrl: shareUrl,
       hintTitle: hintTitle,
       hintSummary: hintSummary,
@@ -207,6 +216,7 @@ class TodayMessage {
   factory TodayMessage.fromJson(Map<String, dynamic> json) {
     return TodayMessage(
       id: _requiredString(json, 'id'),
+      contentId: _nullableString(json['content_id']),
       publishDate: _requiredString(json, 'publish_date'),
       language: _stringValue(json['language'], fallback: 'en'),
       verseReference: _requiredString(json, 'verse_reference'),
@@ -214,6 +224,8 @@ class TodayMessage {
       verseText: _nullableString(json['verse_text']),
       message: _nullableString(json['message']),
       imageUrl: _nullableString(json['image_url']),
+      shareImageUrl: _nullableString(json['share_image_url']),
+      shareImagePublicId: _nullableString(json['share_image_public_id']),
       shareUrl: _nullableString(json['share_url']),
       hintTitle: _nullableString(json['hint_title']),
       hintSummary: _nullableString(json['hint_summary']),
@@ -231,6 +243,34 @@ class TodayMessage {
       heartCount: _intValue(json['heart_count']),
       shareCount: _intValue(json['share_count']),
     );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'content_id': contentId,
+      'publish_date': publishDate,
+      'language': language,
+      'verse_reference': verseReference,
+      'bible_version': bibleVersion,
+      'verse_text': verseText,
+      'message': message,
+      'image_url': imageUrl,
+      'share_image_url': shareImageUrl,
+      'share_image_public_id': shareImagePublicId,
+      'share_url': shareUrl,
+      'hint_title': hintTitle,
+      'hint_summary': hintSummary,
+      'article_title': articleTitle,
+      'article_body': articleBody,
+      'related_plan_template_key': relatedPlanTemplateKey,
+      'primary_related_plan_template_id': primaryRelatedPlanTemplateId,
+      'related_plan_title': relatedPlanTitle,
+      'related_plan_chapters': relatedPlanChapters,
+      'related_plan_minutes': relatedPlanMinutes,
+      'heart_count': heartCount,
+      'share_count': shareCount,
+    };
   }
 }
 

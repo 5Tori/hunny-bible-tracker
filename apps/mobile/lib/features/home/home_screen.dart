@@ -1,5 +1,11 @@
+import 'dart:convert';
+import 'dart:math' as math;
+import 'dart:typed_data';
+import 'dart:ui' as ui;
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:dio/dio.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -43,37 +49,109 @@ class HomeScreenState extends State<HomeScreen> {
 
   Future<void> _load() async {
     if (mounted) setState(() => _todayMessageLoading = true);
+    const language = 'en';
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final cachedTodayMessage = await _getCachedTodayMessage(
+      date: today,
+      language: language,
+    );
+    if (mounted && cachedTodayMessage != null) {
+      final cachedTodayMessageHearted =
+          await _isTodayMessageHearted(cachedTodayMessage.id);
+      final cachedTodayMessageSaved =
+          await _isTodayMessageSaved(cachedTodayMessage.id);
+      if (!mounted) return;
+      setState(() {
+        _todayMessage = cachedTodayMessage;
+        _todayMessageHearted = cachedTodayMessageHearted;
+        _todayMessageSaved = cachedTodayMessageSaved;
+        _todayMessageLoading = false;
+      });
+    }
+
     final plan = await widget.readRepository.getCurrentPlan();
     final overview = plan == null
         ? null
         : await widget.readRepository.getReadingOverview(plan.id);
-    final todayMessage = await _fetchTodayMessage();
-    final todayMessageHearted = todayMessage == null
+    final todayMessage = await _fetchTodayMessage(
+      date: today,
+      language: language,
+    );
+    if (todayMessage != null) {
+      await _cacheTodayMessage(
+        todayMessage,
+        cacheDate: today,
+        language: language,
+      );
+    }
+    final displayMessage = todayMessage ?? cachedTodayMessage;
+    final todayMessageHearted = displayMessage == null
         ? false
-        : await _isTodayMessageHearted(todayMessage.id);
-    final todayMessageSaved = todayMessage == null
+        : await _isTodayMessageHearted(displayMessage.id);
+    final todayMessageSaved = displayMessage == null
         ? false
-        : await _isTodayMessageSaved(todayMessage.id);
+        : await _isTodayMessageSaved(displayMessage.id);
     if (!mounted) return;
     setState(() {
       _plan = plan;
       _readingOverview = overview;
-      _todayMessage = todayMessage;
+      _todayMessage = displayMessage;
       _todayMessageHearted = todayMessageHearted;
       _todayMessageSaved = todayMessageSaved;
       _todayMessageLoading = false;
     });
   }
 
-  Future<TodayMessage?> _fetchTodayMessage() async {
+  Future<TodayMessage?> _fetchTodayMessage({
+    required String date,
+    required String language,
+  }) async {
     try {
-      final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
       return await widget.todayMessageApiClient.fetchTodayMessage(
-        date: today,
-        language: 'en',
+        date: date,
+        language: language,
       );
     } catch (_) {
       return null;
+    }
+  }
+
+  Future<TodayMessage?> _getCachedTodayMessage({
+    required String date,
+    required String language,
+  }) async {
+    final value = await widget.readRepository.getAppSetting(
+      _cachedTodayMessageKey(date: date, language: language),
+    );
+    if (value == null) return null;
+
+    try {
+      final decoded = jsonDecode(value);
+      if (decoded is! Map<String, dynamic>) return null;
+      return TodayMessage.fromJson(decoded);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _cacheTodayMessage(
+    TodayMessage message, {
+    String? cacheDate,
+    String? language,
+  }) async {
+    final encoded = jsonEncode(message.toJson());
+    final cacheLanguage = language ?? message.language;
+    final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
+    final cacheDates = {
+      message.publishDate,
+      today,
+      if (cacheDate != null) cacheDate,
+    };
+    for (final date in cacheDates) {
+      await widget.readRepository.setAppSetting(
+        _cachedTodayMessageKey(date: date, language: cacheLanguage),
+        encoded,
+      );
     }
   }
 
@@ -109,11 +187,16 @@ class HomeScreenState extends State<HomeScreen> {
         '1',
       );
       if (!mounted) return;
+      final updatedMessage = _todayMessage?.copyWith(
+        heartCount: engagement.heartCount,
+        shareCount: engagement.shareCount,
+      );
+      if (updatedMessage != null) {
+        await _cacheTodayMessage(updatedMessage);
+      }
+      if (!mounted) return;
       setState(() {
-        _todayMessage = _todayMessage?.copyWith(
-          heartCount: engagement.heartCount,
-          shareCount: engagement.shareCount,
-        );
+        _todayMessage = updatedMessage;
       });
     } catch (_) {
       if (!mounted) return;
@@ -147,26 +230,38 @@ class HomeScreenState extends State<HomeScreen> {
 
     setState(() => _todayMessageActionPending = true);
     try {
+      final sharedImage = await _createTodayMessageShareImage(message);
+      final files = sharedImage == null ? null : [sharedImage.file];
       final result = await SharePlus.instance.share(
         ShareParams(
           title: message.shareTitle,
           subject: message.shareTitle,
           text: message.shareText,
+          files: files,
+          fileNameOverrides:
+              sharedImage == null ? null : [sharedImage.fileName],
         ),
       );
       if (result.status == ShareResultStatus.dismissed) return;
 
-      setState(() {
-        _todayMessage = message.copyWith(shareCount: message.shareCount + 1);
-      });
+      final optimisticallySharedMessage =
+          message.copyWith(shareCount: message.shareCount + 1);
+      await _cacheTodayMessage(optimisticallySharedMessage);
+      if (!mounted) return;
+      setState(() => _todayMessage = optimisticallySharedMessage);
       final engagement =
           await widget.todayMessageApiClient.shareTodayMessage(message.id);
       if (!mounted) return;
+      final updatedMessage = _todayMessage?.copyWith(
+        heartCount: engagement.heartCount,
+        shareCount: engagement.shareCount,
+      );
+      if (updatedMessage != null) {
+        await _cacheTodayMessage(updatedMessage);
+      }
+      if (!mounted) return;
       setState(() {
-        _todayMessage = _todayMessage?.copyWith(
-          heartCount: engagement.heartCount,
-          shareCount: engagement.shareCount,
-        );
+        _todayMessage = updatedMessage;
       });
     } catch (_) {
       if (!mounted) return;
@@ -178,8 +273,195 @@ class HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<_SharedTodayMessageImage?> _createTodayMessageShareImage(
+    TodayMessage message,
+  ) async {
+    try {
+      final sharedImageFromServer =
+          await _downloadServerTodayMessageShareImage(message);
+      if (sharedImageFromServer != null) return sharedImageFromServer;
+
+      final bytes = await _drawTodayMessageShareImage(message);
+      final fileName = 'today-message-${_safeFileNamePart(message.id)}.png';
+      return _SharedTodayMessageImage(
+        file: XFile.fromData(
+          bytes,
+          mimeType: 'image/png',
+          name: fileName,
+        ),
+        fileName: fileName,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<_SharedTodayMessageImage?> _downloadServerTodayMessageShareImage(
+    TodayMessage message,
+  ) async {
+    final shareImageUrl = message.shareImageUrl;
+    if (shareImageUrl == null) return null;
+
+    try {
+      final response = await Dio().get<List<int>>(
+        shareImageUrl,
+        options: Options(responseType: ResponseType.bytes),
+      );
+      final data = response.data;
+      if (data == null || data.isEmpty) return null;
+      final fileName = 'today-message-${_safeFileNamePart(message.id)}.png';
+      return _SharedTodayMessageImage(
+        file: XFile.fromData(
+          Uint8List.fromList(data),
+          mimeType: 'image/png',
+          name: fileName,
+        ),
+        fileName: fileName,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<Uint8List> _drawTodayMessageShareImage(TodayMessage message) async {
+    const width = 1080.0;
+    const height = 1350.0;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final size = const Size(width, height);
+
+    final background = await _loadShareBackgroundImage(message.imageUrl);
+    if (background == null) {
+      canvas.drawRect(
+        Offset.zero & size,
+        Paint()..color = AppTheme.ink,
+      );
+    } else {
+      _drawCoverImage(canvas, background, size);
+    }
+
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()
+        ..shader = const LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [
+            Color(0x22000000),
+            Color(0x33000000),
+            Color(0xDD000000),
+          ],
+          stops: [0, 0.45, 1],
+        ).createShader(Offset.zero & size),
+    );
+
+    const horizontalPadding = 84.0;
+    final textWidth = width - horizontalPadding * 2;
+    final referenceLabel = message.bibleVersion == null
+        ? message.verseReference
+        : '${message.verseReference} · ${message.bibleVersion}';
+
+    final versePainter = TextPainter(
+      text: TextSpan(
+        text: '"${message.primaryText}"',
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 66,
+          fontWeight: FontWeight.w800,
+          height: 1.18,
+        ),
+      ),
+      maxLines: 8,
+      ellipsis: '…',
+      textDirection: ui.TextDirection.ltr,
+    )..layout(maxWidth: textWidth);
+
+    final referencePainter = TextPainter(
+      text: TextSpan(
+        text: referenceLabel.toUpperCase(),
+        style: TextStyle(
+          color: Colors.white.withValues(alpha: 0.78),
+          fontSize: 32,
+          fontWeight: FontWeight.w800,
+          letterSpacing: 3.2,
+          height: 1.3,
+        ),
+      ),
+      maxLines: 2,
+      ellipsis: '…',
+      textDirection: ui.TextDirection.ltr,
+    )..layout(maxWidth: textWidth);
+
+    const bottomPadding = 112.0;
+    final referenceTop = height - bottomPadding - referencePainter.height;
+    final verseTop = referenceTop - 38 - versePainter.height;
+    versePainter.paint(canvas, Offset(horizontalPadding, verseTop));
+    referencePainter.paint(canvas, Offset(horizontalPadding, referenceTop));
+
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(width.toInt(), height.toInt());
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    picture.dispose();
+    image.dispose();
+    background?.dispose();
+    if (byteData == null) {
+      throw StateError('Could not encode today message share image.');
+    }
+    return byteData.buffer.asUint8List();
+  }
+
+  Future<ui.Image?> _loadShareBackgroundImage(String? imageUrl) async {
+    if (imageUrl == null) return null;
+    try {
+      final response = await Dio().get<List<int>>(
+        imageUrl,
+        options: Options(responseType: ResponseType.bytes),
+      );
+      final data = response.data;
+      if (data == null || data.isEmpty) return null;
+      final bytes = Uint8List.fromList(data);
+      final codec = await ui.instantiateImageCodec(bytes);
+      final frame = await codec.getNextFrame();
+      return frame.image;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  void _drawCoverImage(Canvas canvas, ui.Image image, Size outputSize) {
+    final imageSize = Size(image.width.toDouble(), image.height.toDouble());
+    final scale = math.max(
+      outputSize.width / imageSize.width,
+      outputSize.height / imageSize.height,
+    );
+    final sourceSize = Size(
+      outputSize.width / scale,
+      outputSize.height / scale,
+    );
+    final sourceRect = Rect.fromCenter(
+      center: Offset(imageSize.width / 2, imageSize.height / 2),
+      width: sourceSize.width,
+      height: sourceSize.height,
+    );
+    canvas.drawImageRect(
+      image,
+      sourceRect,
+      Offset.zero & outputSize,
+      Paint()..filterQuality = FilterQuality.high,
+    );
+  }
+
+  String _safeFileNamePart(String value) {
+    return value.replaceAll(RegExp(r'[^a-zA-Z0-9._-]'), '-');
+  }
+
   String _heartedSettingKey(String id) => 'today_message_hearted_$id';
   String _savedSettingKey(String id) => 'today_message_saved_$id';
+  String _cachedTodayMessageKey({
+    required String date,
+    required String language,
+  }) =>
+      'today_message_cache_${language}_$date';
 
   Future<void> _openTodayMessageArticle() async {
     final message = _todayMessage;
@@ -324,6 +606,16 @@ class _SectionLabel extends StatelessWidget {
           ),
     );
   }
+}
+
+class _SharedTodayMessageImage {
+  const _SharedTodayMessageImage({
+    required this.file,
+    required this.fileName,
+  });
+
+  final XFile file;
+  final String fileName;
 }
 
 class TodayMessageCard extends StatelessWidget {
@@ -577,16 +869,16 @@ class _MessageActionButton extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                size: 25,
+                size: 18,
                 color: selected ? AppTheme.ink : AppTheme.mutedInk,
               ),
               if (label.isNotEmpty) ...[
-                const SizedBox(width: 7),
+                const SizedBox(width: 5),
                 Text(
                   label,
                   style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                         color: AppTheme.mutedInk,
-                        fontSize: 18,
+                        fontSize: 14,
                         fontWeight: FontWeight.w800,
                       ),
                 ),

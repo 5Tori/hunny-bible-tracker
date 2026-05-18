@@ -31,7 +31,7 @@ apps/web
 |   |   |   +-- layout.tsx         # Site header/footer (not used by /admin)
 |   |   |   +-- page.tsx           # /
 |   |   |   +-- privacy|terms|support
-|   |   |   +-- today-message/[id]
+|   |   |   +-- today-message/[slug]
 |   |   +-- admin/                 # Admin dashboard (AdminChrome in admin/layout.tsx)
 |   |   +-- api/                   # API route handlers (no shared page layout)
 |   +-- components/admin           # Admin dashboard client/server components
@@ -66,7 +66,7 @@ GET /                    # Landing page
 GET /privacy
 GET /terms
 GET /support
-GET /today-message/[id]  # Public share page for a published today message
+GET /today-message/[slug]  # Public share page for a published today message, e.g. /today-message/2026-05-15
 ```
 
 The root layout lives in `src/app/layout.tsx` (document shell only). Public chrome (header/footer) lives in `src/app/(public)/layout.tsx`; global styles are in `src/app/globals.css`.
@@ -138,7 +138,7 @@ POST /api/v1/today-message/[id]/heart
 POST /api/v1/today-message/[id]/share
 ```
 
-The public lookup returns the latest published message for the requested language on or before the requested date. When `date` is omitted, the server uses today's UTC date. The response includes `share_url`, built from `NEXT_PUBLIC_SITE_URL` when present and otherwise from the request origin.
+The public lookup returns the latest published message for the requested language on or before the requested date. When `date` is omitted, the server uses today's UTC date. The response includes `share_url`, built from `NEXT_PUBLIC_SITE_URL` when present and otherwise from the request origin, using `/today-message/YYYY-MM-DD`.
 
 Heart/share endpoints increment counters and return the updated counts.
 
@@ -212,6 +212,7 @@ Today-message notes:
 
 - `today_messages` has a unique `(publish_date, language)` slot.
 - A message can optionally reference a primary related plan through `primary_related_plan_template_id`.
+- `share_image_url` is generated from the uploaded Cloudinary image plus verse text/reference as a 4:5 (1080 x 1350) share card.
 - Published public reads should use `src/lib/today-messages.ts`.
 
 Reading-sync notes:

@@ -152,8 +152,13 @@ class AuthRepository {
     final code = res.statusCode ?? 0;
     final data = res.data;
     if (code < 200 || code >= 300 || data is! Map<String, dynamic>) {
-      throw HunnyApiException('POST /api/v1/sync/push failed',
-          statusCode: code);
+      throw HunnyApiException(
+        _apiFailureMessage(
+          'POST /api/v1/sync/push failed',
+          data,
+        ),
+        statusCode: code,
+      );
     }
     final result = HunnySyncPushResult.fromJson(data);
     await _readRepository.applyReadingSyncPushResult(result);
@@ -222,6 +227,16 @@ class AuthRepository {
         validateStatus: (code) => code != null && code < 600,
       ),
     );
+  }
+
+  String _apiFailureMessage(String fallback, Object? data) {
+    if (data is Map) {
+      final error = data['error'];
+      if (error is String && error.isNotEmpty) {
+        return '$fallback: $error';
+      }
+    }
+    return fallback;
   }
 
   Future<String> _firebaseIdToken() async {

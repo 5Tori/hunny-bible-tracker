@@ -47,12 +47,12 @@ Short release notes for Google Play.
 
 ---
 
-## v0.1.0+2 — Android Closed Testing
+## v0.1.0+5 — Android Closed Testing
 
 - **Date:** 2026-05-14
 - **Platform:** Android
 - **Track:** Closed testing
-- **Release name:** `v0.1.0+3 - Android closed testing`
+- **Release name:** `v0.1.0+5 - Android closed testing`
 - **Build artifact:** `app-release.aab`
 - **Package ID:** `com.hunnybibletracker.app`
 

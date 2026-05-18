@@ -7,6 +7,19 @@ import '../read/domain/read_models.dart';
 
 enum PlansInitialTab { myPlans, catalog }
 
+/// Result when [PlansScreen] is popped.
+class PlansScreenPopResult {
+  const PlansScreenPopResult({
+    this.dataChanged = false,
+    this.openOnRead = false,
+  });
+
+  final bool dataChanged;
+  final bool openOnRead;
+
+  bool get shouldRefreshRead => dataChanged || openOnRead;
+}
+
 class PlansScreen extends StatefulWidget {
   const PlansScreen({
     super.key,
@@ -62,13 +75,11 @@ class _PlansScreenState extends State<PlansScreen> {
     });
   }
 
-  Future<void> _switchToPlan(String planId) async {
+  Future<void> _continueToRead(String planId) async {
     await widget.readRepository.switchToPlan(planId);
-    _changed = true;
-    await _load();
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Plan activated')),
+    Navigator.of(context).pop(
+      const PlansScreenPopResult(dataChanged: true, openOnRead: true),
     );
   }
 
@@ -124,11 +135,19 @@ class _PlansScreenState extends State<PlansScreen> {
     );
   }
 
-  void _close() => Navigator.of(context).pop(_changed);
+  void _close() {
+    if (_changed) {
+      Navigator.of(context).pop(
+        const PlansScreenPopResult(dataChanged: true),
+      );
+    } else {
+      Navigator.of(context).pop();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return PopScope<bool>(
+    return PopScope<PlansScreenPopResult?>(
       canPop: false,
       onPopInvokedWithResult: (didPop, _) {
         if (!didPop) _close();
@@ -164,7 +183,7 @@ class _PlansScreenState extends State<PlansScreen> {
                           currentPlans: _currentPlans,
                           archivedPlans: _archivedPlans,
                           completedPlans: _completedPlans,
-                          onContinue: _switchToPlan,
+                          onContinue: _continueToRead,
                           onArchive: _archivePlan,
                           onRestore: _restorePlan,
                           onStartAgain: _startPlan,
@@ -173,9 +192,8 @@ class _PlansScreenState extends State<PlansScreen> {
                         _CatalogView(
                           currentPlanId: _currentPlan?.id,
                           currentPlans: _currentPlans,
-                          completedPlans: _completedPlans,
                           templates: _catalog,
-                          onContinue: _switchToPlan,
+                          onContinue: _continueToRead,
                           onStartPlan: _startPlan,
                         ),
                     ],
@@ -287,6 +305,9 @@ class _MyPlansView extends StatelessWidget {
     final activeTemplateIds = {
       for (final summary in currentPlans) summary.plan.templateId,
     };
+    final activeByTemplateId = {
+      for (final summary in currentPlans) summary.plan.templateId: summary,
+    };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -315,6 +336,11 @@ class _MyPlansView extends StatelessWidget {
             _CompletedPlanCard(
               summary: summary,
               hasActiveRun: activeTemplateIds.contains(summary.templateId),
+              onContinue: activeByTemplateId[summary.templateId] == null
+                  ? null
+                  : () => onContinue(
+                        activeByTemplateId[summary.templateId]!.plan.id,
+                      ),
               onStartAgain: summary.templateKey.isEmpty
                   ? null
                   : () => onStartAgain(summary.templateKey),
@@ -342,7 +368,6 @@ class _CatalogView extends StatelessWidget {
   const _CatalogView({
     required this.currentPlanId,
     required this.currentPlans,
-    required this.completedPlans,
     required this.templates,
     required this.onContinue,
     required this.onStartPlan,
@@ -350,7 +375,6 @@ class _CatalogView extends StatelessWidget {
 
   final String? currentPlanId;
   final List<ReadingPlanSummary> currentPlans;
-  final List<CompletedPlanSummary> completedPlans;
   final List<ReadingPlanTemplateView> templates;
   final ValueChanged<String> onContinue;
   final ValueChanged<String> onStartPlan;
@@ -364,9 +388,6 @@ class _CatalogView extends StatelessWidget {
     final activeByTemplateId = {
       for (final summary in currentPlans) summary.plan.templateId: summary,
     };
-    final completedTemplateIds = {
-      for (final summary in completedPlans) summary.templateId,
-    };
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -377,7 +398,6 @@ class _CatalogView extends StatelessWidget {
           _CatalogPlanCard(
             template: template,
             activeSummary: activeByTemplateId[template.id],
-            hasCompletedBefore: completedTemplateIds.contains(template.id),
             currentPlanId: currentPlanId,
             onContinue: onContinue,
             onStartPlan: onStartPlan,
@@ -467,11 +487,13 @@ class _CompletedPlanCard extends StatelessWidget {
   const _CompletedPlanCard({
     required this.summary,
     required this.hasActiveRun,
+    required this.onContinue,
     required this.onStartAgain,
   });
 
   final CompletedPlanSummary summary;
   final bool hasActiveRun;
+  final VoidCallback? onContinue;
   final VoidCallback? onStartAgain;
 
   @override
@@ -479,20 +501,29 @@ class _CompletedPlanCard extends StatelessWidget {
     final completedAt = summary.lastCompletedAt;
     final dateLabel =
         completedAt == null ? null : DateFormat('MMM d').format(completedAt);
-    final meta = [
-      summary.completionLabel,
-      if (dateLabel != null) dateLabel,
-    ].join(' · ');
+    // Completion count is on the title badge; meta keeps the last-run date only.
+    final meta = dateLabel ?? summary.completionLabel;
 
     return _PlanCardFrame(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            summary.title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  summary.title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
                 ),
+              ),
+              if (summary.completionCount > 0) ...[
+                const SizedBox(width: 10),
+                _PlanCompletionBadge(label: summary.completionBadgeLabel),
+              ],
+            ],
           ),
           const SizedBox(height: 8),
           Text(
@@ -507,7 +538,7 @@ class _CompletedPlanCard extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: _PlanActionButton(
               label: hasActiveRun ? 'Continue' : 'Start Again',
-              onPressed: onStartAgain,
+              onPressed: hasActiveRun ? onContinue : onStartAgain,
             ),
           ),
         ],
@@ -573,7 +604,6 @@ class _CatalogPlanCard extends StatelessWidget {
   const _CatalogPlanCard({
     required this.template,
     required this.activeSummary,
-    required this.hasCompletedBefore,
     required this.currentPlanId,
     required this.onContinue,
     required this.onStartPlan,
@@ -581,7 +611,6 @@ class _CatalogPlanCard extends StatelessWidget {
 
   final ReadingPlanTemplateView template;
   final ReadingPlanSummary? activeSummary;
-  final bool hasCompletedBefore;
   final String? currentPlanId;
   final ValueChanged<String> onContinue;
   final ValueChanged<String> onStartPlan;
@@ -602,23 +631,35 @@ class _CatalogPlanCard extends StatelessWidget {
 
     final ctaLabel = active != null
         ? 'Continue'
-        : hasCompletedBefore
+        : template.completionCount > 0
             ? 'Start Again'
             : 'Start Plan';
     final ctaAction = active != null
         ? () => onContinue(active.plan.id)
         : () => onStartPlan(template.templateKey);
+    final showCompletionBadge = template.completionCount > 0;
 
     return _PlanCardFrame(
       highlighted: active?.plan.id == currentPlanId,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            template.title,
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w900,
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Expanded(
+                child: Text(
+                  template.title,
+                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
                 ),
+              ),
+              if (showCompletionBadge) ...[
+                const SizedBox(width: 10),
+                _PlanCompletionBadge(label: template.completionBadgeLabel),
+              ],
+            ],
           ),
           const SizedBox(height: 8),
           Text(
@@ -670,6 +711,33 @@ class _CatalogPlanCard extends StatelessWidget {
         .where((part) => part.isNotEmpty)
         .map((part) => part[0].toUpperCase() + part.substring(1))
         .join(' ');
+  }
+}
+
+class _PlanCompletionBadge extends StatelessWidget {
+  const _PlanCompletionBadge({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppTheme.accentYellowLight,
+        borderRadius: BorderRadius.circular(3),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Text(
+        label,
+        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: AppTheme.ink,
+              fontWeight: FontWeight.w800,
+              fontSize: 11,
+              height: 1.1,
+            ),
+      ),
+    );
   }
 }
 

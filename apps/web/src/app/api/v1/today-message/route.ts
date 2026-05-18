@@ -32,6 +32,6 @@ function withShareUrl(req: Request, message: TodayMessageBase) {
     new URL(req.url).origin;
   return {
     ...message,
-    share_url: `${origin}/today-message/${message.id}`,
+    share_url: `${origin}/today-message/${message.publish_date}`,
   };
 }

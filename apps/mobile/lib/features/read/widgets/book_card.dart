@@ -15,19 +15,46 @@ class BookCard extends StatelessWidget {
   final bool isSelected;
   final VoidCallback onTap;
 
+  Color get _fillColor {
+    Color base;
+    if (book.chapterCount == 0 || book.completedCount == 0) {
+      base = Colors.white;
+    } else if (book.completedCount >= book.chapterCount) {
+      base = AppTheme.accentYellowDark;
+    } else {
+      base = Color.lerp(Colors.white, AppTheme.accentYellowDark, 0.5)!;
+    }
+
+    if (!isSelected) return base;
+    if (base == Colors.white) return AppTheme.softSurface;
+    return Color.alphaBlend(
+      AppTheme.softSurface.withValues(alpha: 0.28),
+      base,
+    );
+  }
+
+  Color get _borderColor {
+    if (isSelected) return AppTheme.ink;
+    if (book.chapterCount > 0 && book.completedCount >= book.chapterCount) {
+      return AppTheme.ink;
+    }
+    return AppTheme.border;
+  }
+
   @override
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(3),
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 160),
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOutCubic,
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: isSelected ? AppTheme.softSurface : Colors.white,
+          color: _fillColor,
           borderRadius: BorderRadius.circular(3),
           border: Border.all(
-            color: isSelected ? AppTheme.ink : AppTheme.border,
+            color: _borderColor,
             width: isSelected ? 1.5 : 1,
           ),
         ),

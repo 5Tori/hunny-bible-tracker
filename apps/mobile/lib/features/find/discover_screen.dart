@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
-import 'discover_mock.dart';
-import 'discover_models.dart';
+import '../content/data/content_api_client.dart';
 
 class DiscoverScreen extends StatefulWidget {
-  const DiscoverScreen({super.key});
+  DiscoverScreen({
+    super.key,
+    ContentApiClient? contentApiClient,
+  }) : contentApiClient = contentApiClient ?? ContentApiClient();
+
+  final ContentApiClient contentApiClient;
 
   @override
   State<DiscoverScreen> createState() => _DiscoverScreenState();
@@ -14,9 +18,17 @@ class DiscoverScreen extends StatefulWidget {
 class _DiscoverScreenState extends State<DiscoverScreen> {
   final TextEditingController _search = TextEditingController();
 
-  final Set<String> _keywords = {};
-  final Set<String> _topics = {};
-  final Set<DiscoverLength> _lengths = {};
+  List<RemoteContent> _contents = const [];
+  var _loading = true;
+  String? _error;
+  String? _selectedType;
+  String? _selectedTagKey;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadContent();
+  }
 
   @override
   void dispose() {
@@ -24,252 +36,289 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     super.dispose();
   }
 
+  Future<void> _loadContent() async {
+    if (!widget.contentApiClient.isConfigured) {
+      if (!mounted) return;
+      setState(() {
+        _contents = const [];
+        _loading = false;
+        _error = null;
+      });
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+
+    try {
+      final contents = await widget.contentApiClient.fetchPublishedContent(
+        sort: 'featured',
+        language: 'en',
+        limit: 50,
+      );
+      if (!mounted) return;
+      setState(() {
+        _contents = contents;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = 'Could not load content.';
+      });
+    }
+  }
+
   bool get _hasActiveFilters =>
       _search.text.trim().isNotEmpty ||
-      _keywords.isNotEmpty ||
-      _topics.isNotEmpty ||
-      _lengths.isNotEmpty;
+      _selectedType != null ||
+      _selectedTagKey != null;
 
-  List<DiscoverContentItem> get _filtered {
-    return discoverCatalog.where(_matches).toList();
+  List<String> get _contentTypes {
+    final types = _contents.map((content) => content.contentType).toSet()
+      ..removeWhere((type) => type.trim().isEmpty);
+    final sorted = types.toList()..sort();
+    return sorted;
   }
 
-  bool _matches(DiscoverContentItem item) {
-    final q = _search.text.trim().toLowerCase();
-    if (q.isNotEmpty) {
-      final inTitle = item.title.toLowerCase().contains(q);
-      final inRef = item.reference.toLowerCase().contains(q);
-      final inTags = item.allTags.any((t) => t.toLowerCase().contains(q));
-      if (!inTitle && !inRef && !inTags) return false;
+  List<RemoteContentTag> get _tags {
+    final byKey = <String, RemoteContentTag>{};
+    for (final content in _contents) {
+      for (final tag in content.tags) {
+        byKey['${tag.type}:${tag.key}'] = tag;
+      }
     }
-    for (final k in _keywords) {
-      if (!item.keywordTags.contains(k)) return false;
-    }
-    for (final t in _topics) {
-      if (!item.topicTags.contains(t)) return false;
-    }
-    if (_lengths.isNotEmpty && !_lengths.contains(item.length)) {
-      return false;
-    }
-    return true;
+    final tags = byKey.values.toList()
+      ..sort((a, b) {
+        final typeCompare = a.type.compareTo(b.type);
+        if (typeCompare != 0) return typeCompare;
+        return a.name.compareTo(b.name);
+      });
+    return tags;
   }
 
-  bool _tagHighlighted(DiscoverContentItem item, String tag) {
-    if (_keywords.contains(tag) || _topics.contains(tag)) return true;
-    if (!_hasActiveFilters && tag == item.highlightTag) return true;
-    return false;
+  List<RemoteContent> get _filteredContents {
+    final query = _search.text.trim().toLowerCase();
+    return _contents.where((content) {
+      if (_selectedType != null && content.contentType != _selectedType) {
+        return false;
+      }
+      if (_selectedTagKey != null &&
+          !content.tags
+              .any((tag) => '${tag.type}:${tag.key}' == _selectedTagKey)) {
+        return false;
+      }
+      if (query.isEmpty) return true;
+
+      final fields = [
+        content.title,
+        content.subtitle,
+        content.summary,
+        content.body,
+        content.primaryVerseReference,
+        content.author?.displayName,
+        ...content.tags.map((tag) => tag.name),
+        ...content.relatedPlans.map((plan) => plan.title),
+      ].whereType<String>().map((value) => value.toLowerCase());
+
+      return fields.any((field) => field.contains(query));
+    }).toList();
   }
 
-  void _clearAll() {
+  void _clearFilters() {
     setState(() {
       _search.clear();
-      _keywords.clear();
-      _topics.clear();
-      _lengths.clear();
+      _selectedType = null;
+      _selectedTagKey = null;
     });
   }
 
-  void _removeKeyword(String k) => setState(() => _keywords.remove(k));
-  void _removeTopic(String t) => setState(() => _topics.remove(t));
-  void _removeLength(DiscoverLength l) => setState(() => _lengths.remove(l));
+  void _openContent(RemoteContent content) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
+      backgroundColor: AppTheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => _ContentDetailSheet(content: content),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final filtered = _filtered;
+    final filtered = _filteredContents;
 
     return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-        children: [
-          Text('Discover', style: Theme.of(context).textTheme.headlineMedium),
-          const SizedBox(height: 6),
-          Text(
-            'Browse by what you need today.',
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
-          const SizedBox(height: 20),
-
-          TextField(
-            controller: _search,
-            onChanged: (_) => setState(() {}),
-            style: Theme.of(context).textTheme.bodyLarge,
-            decoration: InputDecoration(
-              hintText: 'Search verses, topics, content...',
-              hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.mutedInk.withAlpha(153),
-                  ),
-              prefixIcon: const Icon(Icons.search, color: AppTheme.mutedInk),
-              filled: true,
-              fillColor: Colors.white,
-              contentPadding: const EdgeInsets.symmetric(
-                horizontal: 8,
-                vertical: 14,
-              ),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppTheme.border),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppTheme.border),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: const BorderSide(color: AppTheme.ink, width: 1.5),
+      child: RefreshIndicator(
+        onRefresh: _loadContent,
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+          children: [
+            Text('Discover', style: Theme.of(context).textTheme.headlineMedium),
+            const SizedBox(height: 6),
+            Text(
+              'Find messages, videos, essays, and visual stories.',
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+            const SizedBox(height: 20),
+            TextField(
+              controller: _search,
+              onChanged: (_) => setState(() {}),
+              style: Theme.of(context).textTheme.bodyLarge,
+              decoration: InputDecoration(
+                hintText: 'Search topics, references, authors...',
+                hintStyle: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.mutedInk.withAlpha(153),
+                    ),
+                prefixIcon: const Icon(Icons.search, color: AppTheme.mutedInk),
+                suffixIcon: _search.text.trim().isEmpty
+                    ? null
+                    : IconButton(
+                        icon: const Icon(Icons.close),
+                        onPressed: () {
+                          setState(() => _search.clear());
+                        },
+                      ),
+                filled: true,
+                fillColor: Colors.white,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 8,
+                  vertical: 14,
+                ),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppTheme.border),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppTheme.border),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: AppTheme.ink, width: 1.5),
+                ),
               ),
             ),
-          ),
-
-          if (_hasActiveFilters) ...[
-            const SizedBox(height: 14),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            const SizedBox(height: 18),
+            _SectionLabel(title: 'TYPE'),
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
               children: [
-                Expanded(
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final k in _keywords)
-                        _ActiveFilterChip(
-                          label: k,
-                          onRemove: () => _removeKeyword(k),
-                        ),
-                      for (final t in _topics)
-                        _ActiveFilterChip(
-                          label: t,
-                          onRemove: () => _removeTopic(t),
-                        ),
-                      for (final l in _lengths)
-                        _ActiveFilterChip(
-                          label: l.label,
-                          onRemove: () => _removeLength(l),
-                        ),
-                    ],
-                  ),
+                _FilterChip(
+                  label: 'All',
+                  selected: _selectedType == null,
+                  onTap: () => setState(() => _selectedType = null),
                 ),
-                TextButton(
-                  onPressed: _clearAll,
-                  child: Text(
-                    'Clear all',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppTheme.ink,
-                        ),
+                for (final type in _contentTypes)
+                  _FilterChip(
+                    label: _typeLabel(type),
+                    selected: _selectedType == type,
+                    onTap: () => setState(() => _selectedType = type),
                   ),
-                ),
               ],
             ),
-          ],
-
-          const SizedBox(height: 28),
-          _SectionLabel(title: 'BY KEYWORD'),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final label in discoverKeywordOptions)
-                _KeywordChip(
-                  label: label,
-                  selected: _keywords.contains(label),
-                  onTap: () => setState(() {
-                    if (_keywords.contains(label)) {
-                      _keywords.remove(label);
-                    } else {
-                      _keywords.add(label);
+            if (_tags.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              _SectionLabel(title: 'TAGS'),
+              const SizedBox(height: 10),
+              SizedBox(
+                height: 42,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _tags.length + 1,
+                  separatorBuilder: (_, __) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return _FilterChip(
+                        label: 'All tags',
+                        selected: _selectedTagKey == null,
+                        onTap: () => setState(() => _selectedTagKey = null),
+                      );
                     }
-                  }),
+                    final tag = _tags[index - 1];
+                    final key = '${tag.type}:${tag.key}';
+                    return _FilterChip(
+                      label: '${tag.name} · ${tag.type}',
+                      selected: _selectedTagKey == key,
+                      onTap: () => setState(() => _selectedTagKey = key),
+                    );
+                  },
                 ),
-            ],
-          ),
-
-          const SizedBox(height: 28),
-          _SectionLabel(title: 'BY SITUATION / TOPIC'),
-          const SizedBox(height: 12),
-          for (final topic in discoverTopicOptions)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: _TopicTile(
-                title: topic,
-                count: discoverTopicCount(topic),
-                selected: _topics.contains(topic),
-                onTap: () => setState(() {
-                  if (_topics.contains(topic)) {
-                    _topics.remove(topic);
-                  } else {
-                    _topics.add(topic);
-                  }
-                }),
               ),
-            ),
-
-          const SizedBox(height: 20),
-          _SectionLabel(title: 'BY LENGTH'),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              for (var i = 0; i < discoverLengthOptions.length; i++) ...[
-                if (i > 0) const SizedBox(width: 10),
-                Expanded(
-                  child: _LengthCard(
-                    length: discoverLengthOptions[i],
-                    count: discoverLengthCount(discoverLengthOptions[i]),
-                    selected: _lengths.contains(discoverLengthOptions[i]),
-                    onTap: () => setState(() {
-                      final l = discoverLengthOptions[i];
-                      if (_lengths.contains(l)) {
-                        _lengths.remove(l);
-                      } else {
-                        _lengths.add(l);
-                      }
-                    }),
-                  ),
-                ),
-              ],
             ],
-          ),
-
-          if (_hasActiveFilters) ...[
-            const SizedBox(height: 28),
-            _SectionLabel(title: 'RESULTS (${filtered.length})'),
-            const SizedBox(height: 12),
-            if (filtered.isEmpty)
-              Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Center(
-                  child: Text(
-                    'No matches. Try clearing a filter or search.',
-                    textAlign: TextAlign.center,
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                          color: AppTheme.mutedInk,
-                        ),
+            if (_hasActiveFilters) ...[
+              const SizedBox(height: 14),
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      '${filtered.length} result${filtered.length == 1 ? '' : 's'}',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.ink,
+                          ),
+                    ),
                   ),
-                ),
+                  TextButton(
+                    onPressed: _clearFilters,
+                    child: Text(
+                      'Clear all',
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: AppTheme.ink,
+                          ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+            const SizedBox(height: 24),
+            _SectionLabel(title: _hasActiveFilters ? 'RESULTS' : 'ALL CONTENT'),
+            const SizedBox(height: 12),
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 36),
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+              )
+            else if (_error != null)
+              _StatePanel(
+                title: _error!,
+                message: 'Pull to refresh or check the API connection.',
+                actionLabel: 'Try again',
+                onAction: _loadContent,
+              )
+            else if (!widget.contentApiClient.isConfigured)
+              const _StatePanel(
+                title: 'Content API is not configured.',
+                message:
+                    'Run the app with HUNNY_API_BASE_URL to load Discover content.',
+              )
+            else if (filtered.isEmpty)
+              _StatePanel(
+                title: 'No content found.',
+                message: _hasActiveFilters
+                    ? 'Try a different search or clear filters.'
+                    : 'Publish content in the admin dashboard to fill this list.',
               )
             else
-              for (final item in filtered)
+              for (final content in filtered)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
-                  child: _ResultCard(
-                    item: item,
-                    tagHighlighted: (t) => _tagHighlighted(item, t),
+                  child: _ContentCard(
+                    content: content,
+                    selectedTagKey: _selectedTagKey,
+                    onTap: () => _openContent(content),
                   ),
                 ),
           ],
-
-          const SizedBox(height: 28),
-          _SectionLabel(title: 'ALL CONTENT'),
-          const SizedBox(height: 12),
-          for (final item in discoverCatalog)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 10),
-              child: _ResultCard(
-                item: item,
-                tagHighlighted: (t) => _tagHighlighted(item, t),
-              ),
-            ),
-        ],
+        ),
       ),
     );
   }
@@ -277,6 +326,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
 class _SectionLabel extends StatelessWidget {
   const _SectionLabel({required this.title});
+
   final String title;
 
   @override
@@ -292,47 +342,13 @@ class _SectionLabel extends StatelessWidget {
   }
 }
 
-class _ActiveFilterChip extends StatelessWidget {
-  const _ActiveFilterChip({required this.label, required this.onRemove});
-  final String label;
-  final VoidCallback onRemove;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppTheme.ink,
-      borderRadius: BorderRadius.circular(20),
-      child: InkWell(
-        onTap: onRemove,
-        borderRadius: BorderRadius.circular(20),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                label,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-              ),
-              const SizedBox(width: 6),
-              Icon(Icons.close, size: 16, color: Colors.white.withAlpha(230)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _KeywordChip extends StatelessWidget {
-  const _KeywordChip({
+class _FilterChip extends StatelessWidget {
+  const _FilterChip({
     required this.label,
     required this.selected,
     required this.onTap,
   });
+
   final String label;
   final bool selected;
   final VoidCallback onTap;
@@ -341,21 +357,26 @@ class _KeywordChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: selected ? AppTheme.ink : Colors.white,
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(999),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(999),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+          height: 40,
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+          alignment: Alignment.center,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: AppTheme.ink),
+            borderRadius: BorderRadius.circular(999),
+            border: Border.all(
+              color: selected ? AppTheme.ink : AppTheme.border,
+            ),
           ),
           child: Text(
             label,
+            overflow: TextOverflow.ellipsis,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                   color: selected ? Colors.white : AppTheme.ink,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                 ),
           ),
         ),
@@ -364,231 +385,453 @@ class _KeywordChip extends StatelessWidget {
   }
 }
 
-class _TopicTile extends StatelessWidget {
-  const _TopicTile({
-    required this.title,
-    required this.count,
-    required this.selected,
+class _ContentCard extends StatelessWidget {
+  const _ContentCard({
+    required this.content,
+    required this.selectedTagKey,
     required this.onTap,
   });
-  final String title;
-  final int count;
-  final bool selected;
+
+  final RemoteContent content;
+  final String? selectedTagKey;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = content.coverImageUrl;
+    final reference = content.primaryVerseReference;
+
     return Material(
-      color: selected ? AppTheme.ink : Colors.white,
-      borderRadius: BorderRadius.circular(10),
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
-            border: Border.all(color: AppTheme.border),
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: selected ? Colors.white : AppTheme.ink,
-                      ),
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: selected
-                      ? Colors.white.withAlpha(38)
-                      : AppTheme.softSurface,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '$count',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: selected ? Colors.white : AppTheme.ink,
-                      ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _LengthCard extends StatelessWidget {
-  const _LengthCard({
-    required this.length,
-    required this.count,
-    required this.selected,
-    required this.onTap,
-  });
-  final DiscoverLength length;
-  final int count;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: selected ? AppTheme.ink : Colors.white,
-      borderRadius: BorderRadius.circular(10),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(12),
             border: Border.all(color: AppTheme.border),
           ),
-          child: Column(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                length.label,
-                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      fontWeight: FontWeight.w800,
-                      color: selected ? Colors.white : AppTheme.ink,
-                    ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                length.subtitle,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: selected ? Colors.white70 : AppTheme.mutedInk,
-                    ),
-              ),
-              const SizedBox(height: 10),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: AppTheme.accentYellow,
-                  borderRadius: BorderRadius.circular(4),
+              if (imageUrl != null) ...[
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.network(
+                    imageUrl,
+                    width: 76,
+                    height: 76,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const _ImageFallback(),
+                  ),
                 ),
-                child: Text(
-                  '$count',
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        fontWeight: FontWeight.w800,
-                        color: AppTheme.ink,
-                      ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ResultCard extends StatelessWidget {
-  const _ResultCard({
-    required this.item,
-    required this.tagHighlighted,
-  });
-
-  final DiscoverContentItem item;
-  final bool Function(String tag) tagHighlighted;
-
-  @override
-  Widget build(BuildContext context) {
-    final tags = item.allTags.toList()..sort();
-
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+                const SizedBox(width: 12),
+              ],
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Row(
+                      children: [
+                        _TypePill(type: content.contentType),
+                        if (content.durationSeconds != null) ...[
+                          const SizedBox(width: 8),
+                          Text(
+                            _durationLabel(content.durationSeconds!),
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(color: AppTheme.mutedInk),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 8),
                     Text(
-                      item.title,
+                      content.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             fontWeight: FontWeight.w800,
                           ),
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      item.reference,
+                      content.summary ??
+                          reference ??
+                          content.author?.displayName ??
+                          'Open to read more.',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             color: AppTheme.mutedInk,
                           ),
                     ),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppTheme.softSurface,
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.schedule, size: 14, color: AppTheme.mutedInk),
-                    const SizedBox(width: 4),
-                    Text(
-                      item.durationLabel,
-                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.w700,
-                          ),
-                    ),
+                    if (content.tags.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 6,
+                        runSpacing: 6,
+                        children: [
+                          for (final tag in content.tags.take(4))
+                            _SmallTag(
+                              tag: tag,
+                              selected:
+                                  '${tag.type}:${tag.key}' == selectedTagKey,
+                            ),
+                        ],
+                      ),
+                    ],
                   ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 12),
-          Wrap(
-            spacing: 6,
-            runSpacing: 6,
-            children: [
-              for (final t in tags)
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: tagHighlighted(t)
-                        ? AppTheme.accentYellow
-                        : Colors.white,
-                    borderRadius: BorderRadius.circular(999),
-                    border: Border.all(
-                      color: tagHighlighted(t) ? AppTheme.ink : AppTheme.border,
+        ),
+      ),
+    );
+  }
+}
+
+class _ContentDetailSheet extends StatelessWidget {
+  const _ContentDetailSheet({required this.content});
+
+  final RemoteContent content;
+
+  @override
+  Widget build(BuildContext context) {
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.82,
+      maxChildSize: 0.95,
+      minChildSize: 0.4,
+      builder: (context, controller) {
+        return ListView(
+          controller: controller,
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 32),
+          children: [
+            Row(
+              children: [
+                _TypePill(type: content.contentType),
+                const Spacer(),
+                IconButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            if (content.coverImageUrl != null) ...[
+              ClipRRect(
+                borderRadius: BorderRadius.circular(14),
+                child: Image.network(
+                  content.coverImageUrl!,
+                  height: 210,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              ),
+              const SizedBox(height: 18),
+            ],
+            Text(
+              content.title,
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            if (content.author != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                'By ${content.author!.displayName}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.ink,
                     ),
+              ),
+            ],
+            if (content.primaryVerseReference != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                content.bibleVersion == null
+                    ? content.primaryVerseReference!
+                    : '${content.primaryVerseReference!} · ${content.bibleVersion!}',
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.mutedInk,
+                    ),
+              ),
+            ],
+            if (content.summary != null) ...[
+              const SizedBox(height: 18),
+              Text(
+                content.summary!,
+                style: Theme.of(context).textTheme.bodyLarge,
+              ),
+            ],
+            if (content.body != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                content.body!,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: AppTheme.ink,
+                      height: 1.55,
+                    ),
+              ),
+            ],
+            if (content.assets.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              const _SectionLabel(title: 'ASSETS'),
+              const SizedBox(height: 10),
+              for (final asset in content.assets)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _AssetRow(asset: asset),
+                ),
+            ],
+            if (content.relatedPlans.isNotEmpty) ...[
+              const SizedBox(height: 24),
+              const _SectionLabel(title: 'RELATED PLANS'),
+              const SizedBox(height: 10),
+              for (final plan in content.relatedPlans)
+                Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: AppTheme.softSurface,
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: AppTheme.border),
                   ),
-                  child: Text(
-                    t,
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.ink,
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              plan.title,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyLarge
+                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                            Text(
+                              [
+                                if (plan.totalChapters != null)
+                                  '${plan.totalChapters} chapters',
+                                if (plan.estimatedMinutes != null)
+                                  '${plan.estimatedMinutes} min',
+                              ].join(' · '),
+                              style: Theme.of(context).textTheme.bodySmall,
+                            ),
+                          ],
                         ),
+                      ),
+                      const Icon(Icons.arrow_forward_ios, size: 14),
+                    ],
                   ),
                 ),
             ],
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _AssetRow extends StatelessWidget {
+  const _AssetRow({required this.asset});
+
+  final RemoteContentAsset asset;
+
+  @override
+  Widget build(BuildContext context) {
+    final isImage = asset.assetType == 'image' ||
+        asset.mimeType?.startsWith('image/') == true;
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Row(
+        children: [
+          if (isImage)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                asset.url,
+                width: 52,
+                height: 52,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => const _ImageFallback(size: 52),
+              ),
+            )
+          else
+            const _ImageFallback(size: 52),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  asset.title ?? asset.assetRole,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  asset.caption ?? asset.assetType,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+class _TypePill extends StatelessWidget {
+  const _TypePill({required this.type});
+
+  final String type;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: AppTheme.accentYellow,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text(
+        _typeLabel(type),
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              color: AppTheme.ink,
+              fontWeight: FontWeight.w800,
+            ),
+      ),
+    );
+  }
+}
+
+class _SmallTag extends StatelessWidget {
+  const _SmallTag({
+    required this.tag,
+    required this.selected,
+  });
+
+  final RemoteContentTag tag;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: selected ? AppTheme.accentYellow : Colors.white,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: selected ? AppTheme.ink : AppTheme.border),
+      ),
+      child: Text(
+        tag.name,
+        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+              fontWeight: FontWeight.w700,
+              color: AppTheme.ink,
+            ),
+      ),
+    );
+  }
+}
+
+class _ImageFallback extends StatelessWidget {
+  const _ImageFallback({this.size = 76});
+
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: AppTheme.softSurface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: const Icon(Icons.auto_stories_outlined, color: AppTheme.mutedInk),
+    );
+  }
+}
+
+class _StatePanel extends StatelessWidget {
+  const _StatePanel({
+    required this.title,
+    required this.message,
+    this.actionLabel,
+    this.onAction,
+  });
+
+  final String title;
+  final String message;
+  final String? actionLabel;
+  final VoidCallback? onAction;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: AppTheme.softSurface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Column(
+        children: [
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
+          const SizedBox(height: 6),
+          Text(
+            message,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodyMedium,
+          ),
+          if (actionLabel != null && onAction != null) ...[
+            const SizedBox(height: 12),
+            OutlinedButton(
+              onPressed: onAction,
+              child: Text(actionLabel!),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+String _typeLabel(String type) {
+  return switch (type) {
+    'message' => 'Message',
+    'video' => 'Video',
+    'essay' => 'Essay',
+    'webtoon' => 'Webtoon',
+    _ => type,
+  };
+}
+
+String _durationLabel(int seconds) {
+  final minutes = (seconds / 60).round();
+  if (minutes < 1) return '<1m';
+  if (minutes < 60) return '${minutes}m';
+  final hours = minutes ~/ 60;
+  final rest = minutes % 60;
+  return rest == 0 ? '${hours}h' : '${hours}h ${rest}m';
 }

@@ -14,6 +14,8 @@ export interface CloudinaryUploadResponse {
 }
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
+const TODAY_MESSAGE_UPLOAD_TRANSFORMATION =
+  'c_fill,g_auto,w_1080,h_1350,q_auto';
 
 function cloudinaryConfig() {
   const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
@@ -27,8 +29,32 @@ function cloudinaryConfig() {
   return { cloudName, apiKey, apiSecret };
 }
 
+function encodeCloudinaryText(value: string) {
+  return encodeURIComponent(value)
+    .replace(/%2C/g, '%252C')
+    .replace(/%2F/g, '%252F');
+}
+
+function truncateCloudinaryText(value: string, maxLength: number) {
+  const normalized = value.replace(/\s+/g, ' ').trim();
+  if (normalized.length <= maxLength) return normalized;
+  return `${normalized.slice(0, maxLength - 1).trimEnd()}…`;
+}
+
 function createSignature(payload: string, secret: string) {
   return crypto.createHash('sha1').update(`${payload}${secret}`).digest('hex');
+}
+
+function createUploadSignature(
+  params: Record<string, string | number | undefined>,
+  secret: string,
+) {
+  const payload = Object.entries(params)
+    .filter(([, value]) => value !== undefined && value !== '')
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([key, value]) => `${key}=${value}`)
+    .join('&');
+  return createSignature(payload, secret);
 }
 
 function validateImageFile(file: File) {
@@ -41,13 +67,23 @@ function validateImageFile(file: File) {
   }
 }
 
-export async function uploadImageToCloudinary(file: File, folder: string) {
+export async function uploadImageToCloudinary(
+  file: File,
+  folder: string,
+  options?: { transformation?: string },
+) {
   validateImageFile(file);
 
   const { cloudName, apiKey, apiSecret } = cloudinaryConfig();
   const timestamp = Math.floor(Date.now() / 1000);
-  const payload = `folder=${folder}&timestamp=${timestamp}`;
-  const signature = createSignature(payload, apiSecret);
+  const signature = createUploadSignature(
+    {
+      folder,
+      timestamp,
+      transformation: options?.transformation,
+    },
+    apiSecret,
+  );
 
   const uploadForm = new FormData();
   uploadForm.append('file', file);
@@ -55,6 +91,9 @@ export async function uploadImageToCloudinary(file: File, folder: string) {
   uploadForm.append('timestamp', String(timestamp));
   uploadForm.append('signature', signature);
   uploadForm.append('folder', folder);
+  if (options?.transformation) {
+    uploadForm.append('transformation', options.transformation);
+  }
 
   const response = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
     method: 'POST',
@@ -112,5 +151,51 @@ export async function uploadPlanCoverImage(file: File) {
 }
 
 export async function uploadTodayMessageImage(file: File) {
-  return uploadImageToCloudinary(file, 'hunny-bible-tracker/today-messages');
+  return uploadImageToCloudinary(file, 'hunny-bible-tracker/today-messages', {
+    transformation: TODAY_MESSAGE_UPLOAD_TRANSFORMATION,
+  });
+}
+
+export async function uploadContentImage(file: File) {
+  return uploadImageToCloudinary(file, 'hunny-bible-tracker/content');
+}
+
+export function buildTodayMessageShareImageUrl(options: {
+  imagePublicId: string | null;
+  verseText: string | null;
+  verseReference: string;
+  bibleVersion: string | null;
+}) {
+  const imagePublicId = options.imagePublicId?.trim();
+  if (!imagePublicId) return null;
+
+  const { cloudName } = cloudinaryConfig();
+  const referenceLabel = options.bibleVersion
+    ? `${options.verseReference} · ${options.bibleVersion}`
+    : options.verseReference;
+  const verseText = truncateCloudinaryText(
+    options.verseText?.trim() || options.verseReference,
+    420,
+  );
+  const transformations = [
+    'c_fill,g_auto,w_1080,h_1350',
+    'e_brightness:-12',
+    'e_colorize,co_rgb:000000,o_28',
+    [
+      `l_text:Arial_66_bold:${encodeCloudinaryText(`"${verseText}"`)}`,
+      'co_rgb:ffffff',
+      'c_fit,w_912',
+      'fl_layer_apply,g_south_west,x_84,y_210',
+    ].join('/'),
+    [
+      `l_text:Arial_32_bold:${encodeCloudinaryText(referenceLabel.toUpperCase())}`,
+      'co_rgb:ffffff',
+      'o_78',
+      'c_fit,w_912',
+      'fl_layer_apply,g_south_west,x_84,y_112',
+    ].join('/'),
+    'f_png,q_auto',
+  ];
+
+  return `https://res.cloudinary.com/${cloudName}/image/upload/${transformations.join('/')}/${imagePublicId}`;
 }

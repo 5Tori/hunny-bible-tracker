@@ -37,12 +37,13 @@ The web/API app serves admin tools, public content APIs, Firebase-authenticated 
 | `lib/core/database/app_database.g.dart` | Generated Drift code |
 | `lib/core/auth/` | Firebase Auth config, auth repository, auth DTOs |
 | `lib/core/api/` | API config and sync response models |
-| `lib/features/root/root_shell.dart` | MVP bottom tab shell: Home, Read, Settings |
+| `lib/features/root/root_shell.dart` | Bottom tab shell: Home, Discover, Read, Settings |
+| `lib/features/content/` | Content API client and shared content DTOs |
 | `lib/features/home/` | Home tab, Today’s Message, current progress card |
+| `lib/features/find/` | Discover tab backed by the public content API |
 | `lib/features/read/` | Read tab, repository, sync payloads, domain models, widgets |
 | `lib/features/plans/` | Full-screen Plan Manager / Plan Library |
 | `lib/features/settings/` | Account, backup/restore, plan entrypoint, feedback UI |
-| `lib/features/find/` | Hidden Discover prototype retained for later |
 | `lib/features/list/` | Hidden Saved/List prototype retained for later |
 | `assets/data/bible_books.en.json` | Canonical book metadata seed |
 | `assets/brand/google_g.svg` | Google sign-in mark used in auth sheet |
@@ -56,17 +57,20 @@ The web/API app serves admin tools, public content APIs, Firebase-authenticated 
 | `apps/web/src/app/terms/page.tsx` | Terms page |
 | `apps/web/src/app/support/page.tsx` | Support page |
 | `apps/web/src/app/admin` | Admin dashboard pages |
-| `apps/web/src/app/today-message/[id]/page.tsx` | Public share page for Today’s Message |
+| `apps/web/src/app/(public)/today-message/[slug]/page.tsx` | Public share page for Today’s Message |
 | `apps/web/src/app/api/health/route.ts` | Health check |
 | `apps/web/src/app/api/v1/auth/sync/route.ts` | Firebase token verify + Neon auth user upsert |
 | `apps/web/src/app/api/v1/me/route.ts` | Firebase token verify + current user response |
 | `apps/web/src/app/api/v1/plans` | Published plan catalog APIs |
+| `apps/web/src/app/api/v1/content` | Published content catalog APIs |
+| `apps/web/src/app/api/v1/admin/content` | Admin content CRUD and content upload APIs |
 | `apps/web/src/app/api/v1/sync/push/route.ts` | Authenticated reading backup push |
 | `apps/web/src/app/api/v1/sync/bootstrap/route.ts` | Authenticated reading backup restore/bootstrap |
 | `apps/web/src/app/api/v1/today-message` | Public Today’s Message API and engagement routes |
 | `apps/web/src/app/api/v1/feedback/route.ts` | Mobile Help & feedback submission |
 | `apps/web/src/lib/auth/` | Firebase Admin token verification and auth user sync |
 | `apps/web/src/lib/plans.ts` | Plan template CRUD and public serialization |
+| `apps/web/src/lib/content.ts` | General content CRUD, public lookup, authors, tags, assets, related plans |
 | `apps/web/src/lib/today-messages.ts` | Today’s Message CRUD, public lookup, engagement counters |
 | `apps/web/src/lib/sync/reading-sync.ts` | Reading backup/restore server logic |
 | `apps/web/src/lib/feedback.ts` | Feedback validation and insert logic |
@@ -124,6 +128,18 @@ Admin creates/publishes Today’s Message
 
 The public API returns the latest published message where `publish_date <= date`, so the mobile app can still show a message if today’s date does not have a dedicated row.
 
+## Data Flow: General Content / Discover
+
+```text
+Admin creates/publishes content
+  -> Neon contents / content_assets / content_tags / content_plan_links
+  -> GET /api/v1/content?sort=featured&language=en
+  -> mobile Discover loads content through ContentApiClient
+  -> user searches, filters by type/tag, and opens a content detail sheet
+```
+
+Discover is a finder/list surface. It does not write content locally yet. Home featured content and Saved/List are separate follow-up surfaces.
+
 ## Data Flow: Authentication and Backup
 
 ```text
@@ -154,7 +170,8 @@ Firebase Auth owns identity. Neon stores application data and server-side user p
 - Backup/restore is for account recovery, not live collaborative sync.
 - Automatic incremental pull/merge and conflict UI are not implemented.
 - Mobile must not connect directly to Neon.
-- Discover and Saved/List surfaces are hidden for MVP closed testing.
+- Discover is enabled as a public-content finder/list.
+- Saved/List remains hidden for MVP closed testing.
 
 ## Related Docs
 

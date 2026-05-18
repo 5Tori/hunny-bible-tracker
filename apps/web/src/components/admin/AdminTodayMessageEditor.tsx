@@ -8,6 +8,7 @@ import type { AdminTodayMessageInput, TodayMessageBase } from '@/lib/today-messa
 import { adminFetch, clearAdminSession } from '@/lib/admin/client';
 
 const emptyForm: AdminTodayMessageInput = {
+  content_id: '',
   publish_date: '',
   language: 'en',
   verse_reference: '',
@@ -34,6 +35,7 @@ interface PlanOption {
 
 function mapToForm(message: TodayMessageBase): AdminTodayMessageInput {
   return {
+    content_id: message.content_id ?? '',
     publish_date: message.publish_date,
     language: message.language,
     verse_reference: message.verse_reference,
@@ -377,6 +379,11 @@ export default function AdminTodayMessageEditor({ messageId }: AdminTodayMessage
             }}
           />
           <p className="muted">Uploaded to Cloudinary folder hunny-bible-tracker/today-messages.</p>
+          <p className="muted">
+            Best for sharing: 4:5 portrait image, 1080 × 1350 px. Uploads are automatically cropped and
+            compressed to that size. Keep important content away from the bottom area because verse text and
+            reference are added there in the shared card.
+          </p>
           {uploading ? <p>Uploading…</p> : null}
           {form.image_url ? (
             <img src={form.image_url} alt="Message preview" className="cover-preview" />

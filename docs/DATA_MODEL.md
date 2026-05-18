@@ -21,6 +21,12 @@ Plan template
   -> sections
       -> chapter ranges
 
+Content
+  -> author
+  -> tags
+  -> related plan templates
+  -> ordered assets/blocks
+
 User reading plan
   -> locally resolved user plan chapters
       -> chapter progress entries
@@ -31,10 +37,12 @@ User reading plan
 The important split:
 
 - Template data defines what a plan is.
+- Content data defines what can be consumed or discovered around plans.
 - User plan data represents one user's run of that plan.
 - `user_plan_chapters` is local derived data used for offline UI, ordering, sections, and progress denominators.
 - Later template edits should not rewrite already-started plan runs.
 - Remote reading backup should store compact user state, not every derived chapter row.
+- Today’s Message is a daily Home slot. It remains separate from the general content catalog for now, with an optional `content_id` reserved for linking to a reusable `contents` row later.
 
 ## Local Tables
 
@@ -262,6 +270,97 @@ plan_template_tags
 
 Admin-owned plan content is stored in Neon and published to mobile through `/api/v1/plans`.
 
+### Content catalog
+
+```text
+content_authors
+contents
+content_assets
+content_tags
+content_tag_links
+content_plan_links
+```
+
+General content is server-managed and currently powers Discover/Find. It is also designed to power future Home featured content, Saved, and content detail screens.
+
+`contents` is the canonical content record. Initial supported `content_type` values are:
+
+- `message`
+- `video`
+- `essay`
+- `webtoon`
+
+Important `contents` fields:
+
+- `slug`
+- `content_type`
+- `language`
+- `title`
+- `subtitle`
+- `summary`
+- `body`
+- `cover_image_url`
+- `cover_image_public_id`
+- `author_id`
+- `primary_verse_reference`
+- `bible_version`
+- `verse_text`
+- `duration_seconds`
+- `external_url`
+- `is_published`
+- `is_archived`
+- `published_at`
+- `featured_rank`
+- `browse_visible`
+- `metadata`
+
+`content_authors` is intentionally lightweight. It supports one-person publishing today and future multi-author expansion later.
+
+Important `content_authors` fields:
+
+- `slug`
+- `display_name`
+- `bio`
+- `avatar_image_url`
+- `avatar_image_public_id`
+- `website_url`
+- `is_active`
+
+`content_assets` stores ordered supporting media for content. Examples:
+
+- video thumbnail
+- embedded video URL
+- webtoon slide images
+- article inline images
+- share image
+
+`content_tags` supports multiple tag categories through the `type` field instead of hard-coding a fixed taxonomy. Early likely categories:
+
+- `topic`
+- `situation`
+- `person`
+- `book`
+- `theme`
+- `format`
+- `length`
+
+`content_plan_links` connects content to one or more plan templates. This allows Home and Discover cards to say “start this related plan” without forcing every content item to own a plan.
+
+Published content is served through:
+
+```text
+GET /api/v1/content
+GET /api/v1/content/:identifier
+```
+
+Today’s Message remains in `today_messages` because its date/language uniqueness, fallback lookup, and engagement behavior are special Home-slot behavior. The schema reserves this optional bridge:
+
+```text
+today_messages.content_id -> contents.id
+```
+
+When product code starts using that link, Today’s Message can reuse the general content renderer while preserving the daily publishing policy.
+
 ### Reading backup/restore
 
 Target compact backup table:
@@ -293,6 +392,7 @@ today_messages
 
 Important `today_messages` fields:
 
+- `content_id`
 - `publish_date`
 - `language`
 - `verse_reference`
@@ -301,6 +401,8 @@ Important `today_messages` fields:
 - `message`
 - `image_url`
 - `image_public_id`
+- `share_image_url`
+- `share_image_public_id`
 - `hint_title`
 - `hint_summary`
 - `article_title`

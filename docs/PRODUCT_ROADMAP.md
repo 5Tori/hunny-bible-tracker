@@ -7,7 +7,8 @@ This document explains what the product is today and what should be built next.
 Hunny Bible Tracker is becoming a guided Bible reading pack app, not just a chapter checklist.
 
 ```text
-Home prompt / Plan Catalog
+Home prompt / Featured Content / Discover / Plan Catalog
+  -> consume short content
   -> start a reading journey
   -> read section/book/chapter progress
   -> finish a plan
@@ -15,24 +16,24 @@ Home prompt / Plan Catalog
   -> archive/restore or start again when desired
 ```
 
-The app is not a full Bible text reader in v0.1. It tracks references, progress, plans, and short admin-managed message content.
+The app is not a full Bible text reader in v0.1. It tracks references, progress, plans, and short admin-managed content that can point users toward approachable reading journeys.
 
 ## MVP Tabs
 
 | Tab | Current state |
 | --- | --- |
 | Home | Greeting, Today’s Message, Read More modal, related plan CTA, current reading progress |
+| Discover | Content-backed finder/list with search, type filters, tag filters, and content detail sheet |
 | Read | Main reading surface and quick plan switcher |
 | Settings | Account, backup/restore, Manage reading plans, Help & feedback |
 
-Hidden for MVP:
+Hidden/deferred for MVP:
 
-- Discover/Find prototype
 - Saved/List prototype
 
 ## Home Current UX
 
-Today’s Message is a small content unit:
+Today’s Message is a daily Home slot:
 
 - Image
 - Verse text
@@ -45,6 +46,30 @@ Today’s Message is a small content unit:
 Public lookup returns the latest published message on or before the requested date. This prevents a blank Home card when today’s content has not been published yet.
 
 Heart/share counts are server counters. Save is local for now.
+
+Today’s Message remains separate from the general content catalog during the MVP because it has daily date/language fallback behavior. The schema reserves an optional `today_messages.content_id` link so a Today’s Message can later point to a reusable `contents` row.
+
+## Content Direction
+
+General content is the next product layer around plans. It should support:
+
+- Message
+- Video with explanatory text
+- Article/essay
+- Webtoon with ordered image slides
+
+Content should be able to appear in:
+
+- Home featured content, not implemented yet
+- Discover/Find results, implemented as a content-backed finder/list
+- Saved/List
+- Related plan entry points
+
+The core content model should include optional author metadata from the beginning. This keeps the current one-person workflow simple while avoiding a later migration when contributors or named series are added.
+
+Content tags should be category-based rather than a single flat label list. Expected categories include topic, situation, related person, book, theme, format, and length.
+
+Plan relationships should be many-to-many. A content item can recommend multiple plans, and a plan can be promoted by multiple content items.
 
 ## Read Current UX
 
@@ -116,6 +141,9 @@ The web admin dashboard supports:
 - Plan template create/edit/publish/archive
 - Plan sections and chapter ranges
 - Cloudinary cover image upload
+- General content create/edit/publish/archive
+- Content author reuse/lightweight creation from the content editor
+- Content assets, category tags, and related plan selection
 - Today’s Message create/edit/publish/delete
 - Today’s Message image upload
 - Today’s Message article fields and related plan selection
@@ -145,8 +173,9 @@ Closed-test MVP should include:
 - Home Today’s Message working with published server content.
 - Read flow stable for at least one active plan.
 - Plans screen can start, continue, archive, restore, and start again.
+- Discover shows published content and supports search/type/tag filtering.
 - Settings sign-in, Sync now, Restore backup, and Help & feedback work.
-- Discover/Saved remain hidden.
+- Saved/List remains hidden.
 - Privacy, Terms, and Support pages exist.
 - Android closed testing build passes basic manual QA.
 
@@ -210,11 +239,14 @@ The backup/restore foundation exists. Next work should improve:
 
 ### 6. Saved / Discover Scope
 
-Do not re-enable Discover/Saved until there is a real content source or a very small committed scope.
+Discover is enabled as a content-backed finder/list. Keep its scope narrow until real content volume justifies more complex UX.
+
+Do not re-enable Saved/List until there is a committed saved-item scope.
 
 Possible first Saved scope:
 
 - saved Today’s Messages
+- saved content
 - saved plans
 
 Avoid full Bible text storage unless product scope changes.
@@ -223,6 +255,8 @@ Avoid full Bible text storage unless product scope changes.
 
 - Plan detail media
 - Plan tags and filtering in Catalog
+- Home featured content
+- Content detail route/deep link
 - Reflection prompts
 - Section intro content
 - Completion messages

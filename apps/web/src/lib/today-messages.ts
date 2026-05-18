@@ -1,9 +1,11 @@
 import crypto from 'crypto';
 
+import { buildTodayMessageShareImageUrl } from '@/lib/cloudinary';
 import { sql } from '@/lib/db/neon';
 
 export interface TodayMessageBase {
   id: string;
+  content_id: string | null;
   publish_date: string;
   language: string;
   verse_reference: string;
@@ -12,6 +14,8 @@ export interface TodayMessageBase {
   message: string | null;
   image_url: string | null;
   image_public_id: string | null;
+  share_image_url: string | null;
+  share_image_public_id: string | null;
   hint_title: string | null;
   hint_summary: string | null;
   article_title: string | null;
@@ -29,6 +33,7 @@ export interface TodayMessageBase {
 }
 
 export interface AdminTodayMessageInput {
+  content_id?: string | null;
   publish_date: string;
   language?: string | null;
   verse_reference: string;
@@ -69,17 +74,31 @@ function normalizeDate(value: string) {
   return trimmed;
 }
 
-function normalizeOptionalUuid(value?: string | null) {
+function normalizeOptionalUuid(value?: string | null, label = 'Value') {
   const trimmed = value?.trim();
   if (!trimmed) return null;
   if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(trimmed)) {
-    throw new TodayMessageValidationError('Related plan must be a valid plan template id.');
+    throw new TodayMessageValidationError(`${label} must be a valid UUID.`);
   }
   return trimmed;
 }
 
 interface NormalizedAdminTodayMessageInput extends Omit<AdminTodayMessageInput, 'language'> {
   language: string;
+}
+
+function buildShareImageFields(input: NormalizedAdminTodayMessageInput) {
+  const shareImageUrl = buildTodayMessageShareImageUrl({
+    imagePublicId: input.image_public_id ?? null,
+    verseText: input.verse_text ?? input.message ?? null,
+    verseReference: input.verse_reference,
+    bibleVersion: input.bible_version ?? null,
+  });
+
+  return {
+    share_image_url: shareImageUrl,
+    share_image_public_id: shareImageUrl ? input.image_public_id ?? null : null,
+  };
 }
 
 function normalizeInput(input: AdminTodayMessageInput): NormalizedAdminTodayMessageInput {
@@ -103,7 +122,11 @@ function normalizeInput(input: AdminTodayMessageInput): NormalizedAdminTodayMess
     hint_summary: emptyToNull(input.hint_summary),
     article_title: emptyToNull(input.article_title),
     article_body: emptyToNull(input.article_body),
-    primary_related_plan_template_id: normalizeOptionalUuid(input.primary_related_plan_template_id),
+    content_id: normalizeOptionalUuid(input.content_id, 'Content'),
+    primary_related_plan_template_id: normalizeOptionalUuid(
+      input.primary_related_plan_template_id,
+      'Related plan',
+    ),
     is_published: Boolean(input.is_published),
   };
 }
@@ -155,6 +178,32 @@ export async function getPublishedTodayMessageById(id: string) {
   return rows[0] ?? null;
 }
 
+export async function getPublishedTodayMessageByShareSlug(
+  slug: string,
+  language = 'en',
+) {
+  const normalizedSlug = slug.trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalizedSlug)) {
+    const rows = (await sql`
+      select
+        tm.*,
+        pt.template_key as related_plan_template_key,
+        pt.title as related_plan_title,
+        pt.total_chapters as related_plan_chapters,
+        pt.estimated_minutes as related_plan_minutes
+      from today_messages tm
+      left join plan_templates pt on pt.id = tm.primary_related_plan_template_id
+      where tm.publish_date = ${normalizedSlug}::date
+        and tm.language = ${normalizeLanguage(language)}
+        and tm.is_published = true
+      limit 1
+    `) as TodayMessageBase[];
+    return rows[0] ?? null;
+  }
+
+  return getPublishedTodayMessageById(normalizedSlug);
+}
+
 async function assertNoDuplicatePublishSlot(
   publishDate: string,
   language: string,
@@ -182,12 +231,14 @@ async function assertNoDuplicatePublishSlot(
 
 export async function createAdminTodayMessage(rawInput: AdminTodayMessageInput) {
   const input = normalizeInput(rawInput);
+  const shareImage = buildShareImageFields(input);
   await assertNoDuplicatePublishSlot(input.publish_date, input.language);
   const id = crypto.randomUUID();
 
   const rows = (await sql`
     insert into today_messages (
       id,
+      content_id,
       publish_date,
       language,
       verse_reference,
@@ -196,6 +247,8 @@ export async function createAdminTodayMessage(rawInput: AdminTodayMessageInput) 
       message,
       image_url,
       image_public_id,
+      share_image_url,
+      share_image_public_id,
       hint_title,
       hint_summary,
       article_title,
@@ -206,6 +259,7 @@ export async function createAdminTodayMessage(rawInput: AdminTodayMessageInput) 
       updated_at
     ) values (
       ${id},
+      ${input.content_id ?? null},
       ${input.publish_date},
       ${input.language},
       ${input.verse_reference},
@@ -214,6 +268,8 @@ export async function createAdminTodayMessage(rawInput: AdminTodayMessageInput) 
       ${input.message ?? null},
       ${input.image_url ?? null},
       ${input.image_public_id ?? null},
+      ${shareImage.share_image_url},
+      ${shareImage.share_image_public_id},
       ${input.hint_title ?? null},
       ${input.hint_summary ?? null},
       ${input.article_title ?? null},
@@ -231,10 +287,12 @@ export async function createAdminTodayMessage(rawInput: AdminTodayMessageInput) 
 
 export async function updateAdminTodayMessage(id: string, rawInput: AdminTodayMessageInput) {
   const input = normalizeInput(rawInput);
+  const shareImage = buildShareImageFields(input);
   await assertNoDuplicatePublishSlot(input.publish_date, input.language, id);
 
   const rows = (await sql`
     update today_messages set
+      content_id = ${input.content_id ?? null},
       publish_date = ${input.publish_date},
       language = ${input.language},
       verse_reference = ${input.verse_reference},
@@ -243,6 +301,8 @@ export async function updateAdminTodayMessage(id: string, rawInput: AdminTodayMe
       message = ${input.message ?? null},
       image_url = ${input.image_url ?? null},
       image_public_id = ${input.image_public_id ?? null},
+      share_image_url = ${shareImage.share_image_url},
+      share_image_public_id = ${shareImage.share_image_public_id},
       hint_title = ${input.hint_title ?? null},
       hint_summary = ${input.hint_summary ?? null},
       article_title = ${input.article_title ?? null},

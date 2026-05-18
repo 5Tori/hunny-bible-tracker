@@ -1,15 +1,15 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 
-import { getPublishedTodayMessageById } from '@/lib/today-messages';
+import { getPublishedTodayMessageByShareSlug } from '@/lib/today-messages';
 
 interface PageProps {
-  params: Promise<{ id: string }>;
+  params: Promise<{ slug: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params;
-  const message = await getPublishedTodayMessageById(id);
+  const { slug } = await params;
+  const message = await getPublishedTodayMessageByShareSlug(slug);
   if (!message) {
     return {
       title: 'Today’s Message | Hunny Bible Tracker',
@@ -27,6 +27,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     message.verse_text ||
     message.message ||
     'A daily Bible message from Hunny Bible Tracker.';
+  const previewImage = message.share_image_url || message.image_url;
 
   return {
     title,
@@ -35,20 +36,20 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
       title,
       description,
       type: 'article',
-      images: message.image_url ? [{ url: message.image_url }] : undefined,
+      images: previewImage ? [{ url: previewImage }] : undefined,
     },
     twitter: {
-      card: message.image_url ? 'summary_large_image' : 'summary',
+      card: previewImage ? 'summary_large_image' : 'summary',
       title,
       description,
-      images: message.image_url ? [message.image_url] : undefined,
+      images: previewImage ? [previewImage] : undefined,
     },
   };
 }
 
 export default async function TodayMessagePage({ params }: PageProps) {
-  const { id } = await params;
-  const message = await getPublishedTodayMessageById(id);
+  const { slug } = await params;
+  const message = await getPublishedTodayMessageByShareSlug(slug);
 
   if (!message) {
     return (

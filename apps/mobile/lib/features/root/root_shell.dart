@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/auth/auth_repository.dart';
 import '../../core/theme/app_theme.dart';
+import '../find/discover_screen.dart';
 import '../home/home_screen.dart';
 import '../read/data/read_repository.dart';
 import '../read/read_screen.dart';
@@ -12,17 +13,19 @@ class RootShell extends StatefulWidget {
     super.key,
     required this.readRepository,
     required this.authRepository,
+    this.initialIndex = 0,
   });
 
   final ReadRepository readRepository;
   final AuthRepository authRepository;
+  final int initialIndex;
 
   @override
   State<RootShell> createState() => _RootShellState();
 }
 
 class _RootShellState extends State<RootShell> {
-  int _selectedIndex = 0;
+  late int _selectedIndex = widget.initialIndex;
   int _readRefreshToken = 0;
   final _homeKey = GlobalKey<HomeScreenState>();
 
@@ -33,14 +36,23 @@ class _RootShellState extends State<RootShell> {
     }
   }
 
+  void _openReadTab({bool refreshRead = true}) {
+    setState(() {
+      _selectedIndex = 2;
+      if (refreshRead) _readRefreshToken += 1;
+    });
+    _homeKey.currentState?.refresh();
+  }
+
   @override
   Widget build(BuildContext context) {
     final screens = [
       HomeScreen(
         key: _homeKey,
         readRepository: widget.readRepository,
-        onReadTap: () => _selectTab(1),
+        onReadTap: () => _selectTab(2),
       ),
+      DiscoverScreen(),
       ReadScreen(
         key: ValueKey(_readRefreshToken),
         readRepository: widget.readRepository,
@@ -52,6 +64,8 @@ class _RootShellState extends State<RootShell> {
           setState(() => _readRefreshToken += 1);
           _homeKey.currentState?.refresh();
         },
+        onNavigateToRead: _openReadTab,
+        onPreferencesChanged: () => setState(() => _readRefreshToken += 1),
       ),
     ];
 
@@ -85,19 +99,28 @@ class _RootShellState extends State<RootShell> {
                 Expanded(
                   child: _BottomNavItem(
                     selected: _selectedIndex == 1,
-                    icon: Icons.menu_book_outlined,
-                    selectedIcon: Icons.menu_book,
-                    label: 'Read',
+                    icon: Icons.explore_outlined,
+                    selectedIcon: Icons.explore,
+                    label: 'Discover',
                     onTap: () => _selectTab(1),
                   ),
                 ),
                 Expanded(
                   child: _BottomNavItem(
                     selected: _selectedIndex == 2,
+                    icon: Icons.menu_book_outlined,
+                    selectedIcon: Icons.menu_book,
+                    label: 'Read',
+                    onTap: () => _selectTab(2),
+                  ),
+                ),
+                Expanded(
+                  child: _BottomNavItem(
+                    selected: _selectedIndex == 3,
                     icon: Icons.settings_outlined,
                     selectedIcon: Icons.settings,
                     label: 'Settings',
-                    onTap: () => _selectTab(2),
+                    onTap: () => _selectTab(3),
                   ),
                 ),
               ],

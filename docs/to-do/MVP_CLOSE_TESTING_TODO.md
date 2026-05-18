@@ -5,8 +5,10 @@ This is the active cleanup checklist before the next closed-test build.
 ## Done / Do Not Re-open As Next Task
 
 - Read Flow QA & Stabilization is complete.
-- Discover and Saved/List are hidden from the MVP bottom tabs.
+- Discover is enabled as a content-backed finder/list.
+- Saved/List is hidden from the MVP bottom tabs.
 - Home Today’s Message frontend is implemented.
+- General content admin CRUD and public content API are implemented.
 - Today’s Message admin fields are implemented:
   - hint title/summary
   - article title/body
@@ -21,8 +23,9 @@ This is the active cleanup checklist before the next closed-test build.
 ## Before Closed Testing Build
 
 - Apply `apps/web/db/schema.sql` in the target Neon environment.
+- Apply required existing-environment migrations in `apps/web/db/migrations/`.
 - Confirm `ADMIN_EMAILS` includes the admin account.
-- Confirm Cloudinary env vars are set for plan and Today’s Message image upload.
+- Confirm Cloudinary env vars are set for plan, content, and Today’s Message image upload.
 - Confirm Firebase Android SHA-1 values for debug/release/Play App Signing.
 - Confirm iOS Bundle ID before any iOS external testing.
 - Confirm `HUNNY_API_BASE_URL` points to the deployed API for release builds.
@@ -35,6 +38,9 @@ This is the active cleanup checklist before the next closed-test build.
 - Publish at least one valid Today’s Message for closed testing.
 - Verify fallback behavior: if today has no row, the latest earlier published message appears.
 - Remove Bible version text from `verse_text`; use `bible_version`.
+- Publish at least a small set of general content for Discover.
+- For local smoke testing, `apps/web/db/seeds/content_test_seed.sql` can seed sample content, tags, and assets.
+- Verify `GET /api/v1/content?sort=featured&language=en` returns published content.
 - Publish a minimum useful plan catalog:
   - Bible in a Year
   - The Story of Joseph
@@ -48,6 +54,10 @@ This is the active cleanup checklist before the next closed-test build.
 
 - Fresh install opens Home without account.
 - Home shows Today’s Message and current plan progress.
+- Discover loads published content.
+- Discover search filters content by title, summary, body, verse reference, author, tags, and related plan title.
+- Discover type and tag filters work.
+- Discover content detail sheet opens without layout overflow.
 - Today’s Message heart/share update counters.
 - Today’s Message save persists locally.
 - Read More modal shows article and related plan card.
@@ -69,12 +79,14 @@ This is the active cleanup checklist before the next closed-test build.
 ## Known Deferred Work
 
 - Plan Detail screen.
-- Rich Saved/Discover product surfaces.
+- Saved/List product surface.
+- Home featured content section.
+- Content detail route/deep link.
 - Push notifications.
 - Automatic multi-device incremental merge.
 - Conflict resolution UI.
 - More robust automated test coverage.
-- In-app admin/content preview tooling.
+- In-app admin/content preview tooling beyond the current admin CRUD forms.
 
 ## Release Notes Prep
 

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 
 import '../../core/api/hunny_api_models.dart';
+import '../../core/bible/bible_com.dart';
 import '../../core/auth/auth_repository.dart';
 import '../../core/auth/auth_models.dart';
 import '../../core/theme/app_theme.dart';
@@ -19,11 +19,15 @@ class SettingsScreen extends StatefulWidget {
     required this.authRepository,
     required this.readRepository,
     this.onReadingDataRestored,
+    this.onNavigateToRead,
+    this.onPreferencesChanged,
   });
 
   final AuthRepository authRepository;
   final ReadRepository readRepository;
   final VoidCallback? onReadingDataRestored;
+  final VoidCallback? onNavigateToRead;
+  final VoidCallback? onPreferencesChanged;
 
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
@@ -36,6 +40,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   LocalUserProfile? _profile;
   AuthSession? _session;
   DateTime? _lastSyncedAt;
+  BibleComVersion _bibleVersion = BibleComVersion.defaultVersion;
 
   @override
   void initState() {
@@ -63,13 +68,85 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } catch (_) {
       lastSyncedAt = null;
     }
+    final bibleVersion = await widget.readRepository.getBibleComVersion();
     if (!mounted) return;
     setState(() {
       _session = session;
       _profile = profile;
       _lastSyncedAt = lastSyncedAt;
+      _bibleVersion = bibleVersion;
       _loading = false;
     });
+  }
+
+  Future<void> _showBibleVersionSheet() async {
+    final selected = await showModalBottomSheet<BibleComVersion>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppTheme.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'Bible version',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(sheetContext)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Used for Read online links on Bible.com.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(sheetContext).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.mutedInk,
+                      ),
+                ),
+                const SizedBox(height: 16),
+                for (final version in BibleComVersion.selectable) ...[
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(version.label),
+                    trailing: _bibleVersion.id == version.id &&
+                            _bibleVersion.abbr == version.abbr
+                        ? const Icon(Icons.check, color: AppTheme.ink)
+                        : null,
+                    onTap: () => Navigator.of(sheetContext).pop(version),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (selected == null || !mounted) return;
+    if (selected.id == _bibleVersion.id && selected.abbr == _bibleVersion.abbr) {
+      return;
+    }
+    await widget.readRepository.setBibleComVersion(selected);
+    setState(() => _bibleVersion = selected);
+    widget.onPreferencesChanged?.call();
   }
 
   Future<void> _syncNow() async {
@@ -186,7 +263,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   Future<void> _openPlans() async {
-    final changed = await Navigator.of(context).push<bool>(
+    final result = await Navigator.of(context).push<PlansScreenPopResult>(
       MaterialPageRoute(
         builder: (context) => PlansScreen(
           readRepository: widget.readRepository,
@@ -194,7 +271,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
       ),
     );
-    if (changed == true) widget.onReadingDataRestored?.call();
+    if (result == null) return;
+    if (result.openOnRead) {
+      widget.onNavigateToRead?.call();
+    } else if (result.dataChanged) {
+      widget.onReadingDataRestored?.call();
+    }
   }
 
   @override
@@ -259,43 +341,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                               ?.copyWith(fontWeight: FontWeight.w700),
                         )
                       else
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            Expanded(
-                              child: SelectableText(
-                                accountTitle,
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .titleMedium
-                                    ?.copyWith(
-                                      fontFamily: 'monospace',
-                                      fontWeight: FontWeight.w700,
-                                    ),
+                        SelectableText(
+                          accountTitle,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(
+                                fontSize: 15,
+                                fontFamily: 'monospace',
+                                fontWeight: FontWeight.w700,
                               ),
-                            ),
-                            if (profile != null && !_loading)
-                              IconButton(
-                                visualDensity: VisualDensity.compact,
-                                tooltip: 'Copy local ID',
-                                onPressed: () async {
-                                  await Clipboard.setData(
-                                    ClipboardData(text: profile.localUserId),
-                                  );
-                                  if (!context.mounted) return;
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('Local device ID copied'),
-                                    ),
-                                  );
-                                },
-                                icon: Icon(
-                                  Icons.copy_outlined,
-                                  size: 18,
-                                  color: AppTheme.mutedInk,
-                                ),
-                              ),
-                          ],
                         ),
                       if (!signedIn) ...[
                         const SizedBox(height: 4),
@@ -417,6 +472,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: 'Timezone',
             trailing: _detectedTimezoneLabel(),
             showChevron: false,
+          ),
+          _SettingsRow(
+            icon: Icons.menu_book_outlined,
+            title: 'Bible version',
+            trailing: _bibleVersion.label,
+            onTap: _showBibleVersionSheet,
           ),
           _SettingsRow(
             icon: Icons.translate,

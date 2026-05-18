@@ -26,7 +26,10 @@ class PlanSectionProgress {
   const PlanSectionProgress({
     required this.sectionId,
     required this.title,
+    required this.description,
     required this.orderIndex,
+    required this.firstChapterBookKey,
+    required this.firstChapterNumber,
     required this.books,
     required this.completedCount,
     required this.totalCount,
@@ -34,7 +37,10 @@ class PlanSectionProgress {
 
   final String sectionId;
   final String title;
+  final String description;
   final int orderIndex;
+  final String? firstChapterBookKey;
+  final int? firstChapterNumber;
   final List<BookProgress> books;
   final int completedCount;
   final int totalCount;
@@ -122,6 +128,13 @@ class CompletedPlanSummary {
   String get completionLabel {
     if (completionCount <= 1) return 'Completed once';
     return 'Completed $completionCount times';
+  }
+
+  /// Compact label for inline badges on plan cards.
+  String get completionBadgeLabel {
+    if (completionCount <= 0) return '';
+    if (completionCount == 1) return 'Completed';
+    return 'Completed · $completionCount';
   }
 
   /// Short label for optional catalog-style meta row (e.g. "About 2 hours").
@@ -213,6 +226,13 @@ class ReadingPlanTemplateView {
     if (completionCount <= 0) return '';
     if (completionCount == 1) return 'Completed once';
     return 'Completed $completionCount times';
+  }
+
+  /// Compact label for inline badges on plan cards.
+  String get completionBadgeLabel {
+    if (completionCount <= 0) return '';
+    if (completionCount == 1) return 'Completed';
+    return 'Completed · $completionCount';
   }
 }
 

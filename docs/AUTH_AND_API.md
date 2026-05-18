@@ -104,6 +104,8 @@ All current API routes live under `apps/web/src/app/api`.
 | `/api/v1/me` | `GET` | Firebase bearer | Verify token, upsert `auth_users`, return current user summary |
 | `/api/v1/plans` | `GET` | None | Public published plan catalog |
 | `/api/v1/plans/[identifier]` | `GET` | None | Public single published plan by id/key |
+| `/api/v1/content` | `GET` | None | Public published content catalog with author, assets, tags, and related plans |
+| `/api/v1/content/[identifier]` | `GET` | None | Public single published content item by id/slug |
 | `/api/v1/sync/push` | `POST` | Firebase bearer | Upload compact reading backup snapshot |
 | `/api/v1/sync/bootstrap` | `GET` | Firebase bearer | Download compact reading backup snapshot |
 | `/api/v1/today-message` | `GET` | None | Latest published Today’s Message by date/language |
@@ -114,6 +116,10 @@ All current API routes live under `apps/web/src/app/api`.
 | `/api/v1/admin/plans` | `GET/POST` | Admin Firebase bearer | Plan template list/create |
 | `/api/v1/admin/plans/[id]` | `GET/PUT/DELETE` | Admin Firebase bearer | Plan template read/update/delete |
 | `/api/v1/admin/plans/upload` | `POST` | Admin Firebase bearer | Upload plan cover image |
+| `/api/v1/admin/content` | `GET/POST` | Admin Firebase bearer | Content list/create |
+| `/api/v1/admin/content/[id]` | `GET/PUT/DELETE` | Admin Firebase bearer | Content read/update/delete |
+| `/api/v1/admin/content/authors` | `GET` | Admin Firebase bearer | Content author options |
+| `/api/v1/admin/content/upload` | `POST` | Admin Firebase bearer | Upload content image |
 | `/api/v1/admin/today-messages` | `GET/POST` | Admin Firebase bearer | Today’s Message list/create |
 | `/api/v1/admin/today-messages/[id]` | `GET/PUT/DELETE` | Admin Firebase bearer | Today’s Message read/update/delete |
 | `/api/v1/admin/today-messages/upload` | `POST` | Admin Firebase bearer | Upload Today’s Message image |
@@ -185,10 +191,12 @@ Current limitations:
 - Flutter builds include dart-define values.
 - API deployment has `DATABASE_URL`, Firebase Admin env vars, `ADMIN_EMAILS`, and Cloudinary env vars.
 - Neon has `apps/web/db/schema.sql` applied.
+- Neon has any needed files from `apps/web/db/migrations/` applied to existing environments.
 - `POST /api/v1/auth/sync` succeeds after mobile login.
 - `POST /api/v1/sync/push` succeeds for a signed-in account.
 - `GET /api/v1/sync/bootstrap` succeeds for a signed-in account.
 - `GET /api/v1/today-message?date=YYYY-MM-DD&language=en` returns published content when available.
+- `GET /api/v1/content?sort=featured&language=en` returns published content when available.
 - `POST /api/v1/feedback` accepts valid mobile feedback.
 
 ## Release Build Examples
