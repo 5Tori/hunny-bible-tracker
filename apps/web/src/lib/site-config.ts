@@ -6,7 +6,7 @@ export const siteConfig = {
     "Start with short, approachable Bible stories, track your progress, and build a gentle Bible reading habit at your own pace.",
   url: "https://hunny-bible-tracker.vercel.app",
   supportEmail: "hunnybibletracker@gmail.com",
-  googlePlayUrl: "#", // TODO: Replace with the real Google Play listing URL.
+  googlePlayUrl: "https://play.google.com/store/apps/details?id=com.hunnybibletracker.app",
   iosStatusLabel: "iOS coming soon",
 } as const;
 

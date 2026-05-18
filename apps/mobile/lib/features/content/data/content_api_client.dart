@@ -1,14 +1,24 @@
 import 'package:dio/dio.dart';
 
+import '../../../core/api/hunny_api_client.dart';
 import '../../../core/api/hunny_api_config.dart';
 
 class ContentApiClient {
-  ContentApiClient({HunnyApiConfig? config})
-      : _config = config ?? HunnyApiConfig.fromEnvironment();
+  ContentApiClient({
+    HunnyApiConfig? config,
+    HunnyApiReachability? reachability,
+  })  : _config = config ?? HunnyApiConfig.fromEnvironment(),
+        _reachability = reachability ??
+            HunnyApiReachability(
+              config: config ?? HunnyApiConfig.fromEnvironment(),
+            );
 
   final HunnyApiConfig _config;
+  final HunnyApiReachability _reachability;
 
   bool get isConfigured => _config.isConfigured;
+
+  Future<bool> canReachApi() => _reachability.canReachApi();
 
   Future<List<RemoteContent>> fetchPublishedContent({
     String sort = 'featured',
@@ -18,6 +28,7 @@ class ContentApiClient {
     int? limit,
   }) async {
     if (!_config.isConfigured) return const [];
+    if (!await _reachability.canReachApi()) return const [];
 
     final query = <String, dynamic>{
       'sort': sort,
@@ -28,17 +39,18 @@ class ContentApiClient {
       if (limit != null) 'limit': limit,
     };
 
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: _config.baseUrl,
-        headers: const {'Accept': 'application/json'},
-        validateStatus: (code) => code != null && code < 600,
-      ),
-    );
-    final response = await dio.get<dynamic>(
-      '/api/v1/content',
-      queryParameters: query,
-    );
+    late final Response<dynamic> response;
+    try {
+      final dio = HunnyApiClient.create(_config);
+      response = await dio.get<dynamic>(
+        '/api/v1/content',
+        queryParameters: query,
+      );
+      _reachability.markSuccess();
+    } catch (error) {
+      _reachability.markFailure(error);
+      rethrow;
+    }
     final code = response.statusCode ?? 0;
     final data = response.data;
     if (code < 200 || code >= 300 || data is! Map<String, dynamic>) {
@@ -62,18 +74,20 @@ class ContentApiClient {
     String language = 'en',
   }) async {
     if (!_config.isConfigured) return null;
+    if (!await _reachability.canReachApi()) return null;
 
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: _config.baseUrl,
-        headers: const {'Accept': 'application/json'},
-        validateStatus: (code) => code != null && code < 600,
-      ),
-    );
-    final response = await dio.get<dynamic>(
-      '/api/v1/content/${Uri.encodeComponent(identifier)}',
-      queryParameters: {'language': language},
-    );
+    late final Response<dynamic> response;
+    try {
+      final dio = HunnyApiClient.create(_config);
+      response = await dio.get<dynamic>(
+        '/api/v1/content/${Uri.encodeComponent(identifier)}',
+        queryParameters: {'language': language},
+      );
+      _reachability.markSuccess();
+    } catch (error) {
+      _reachability.markFailure(error);
+      rethrow;
+    }
     final code = response.statusCode ?? 0;
     final data = response.data;
     if (code == 404) return null;

@@ -50,6 +50,44 @@ Short English release notes for Google Play.
 
 ---
 
+## v0.3.0+7 — Android Closed Testing
+
+- **Date:** 2026-05-18
+- **Platform:** Android
+- **Track:** Closed testing
+- **Release name:** `v0.3.0+7 - Android closed testing`
+- **Build artifact:** `app-release.aab`
+- **Package ID:** `com.hunnybibletracker.app`
+
+#### Summary
+
+세 번째 Android 클로즈 테스트용 릴리즈. 공개 웹사이트 정리, 오프라인 실행 흐름 개선, 앱 시작 화면과 기본 에셋을 배포 전 상태에 맞춰 다듬은 빌드다.
+
+#### Included
+
+- 오프라인 앱 시작과 Home/Read 로딩 흐름 개선
+- Discover 오프라인 안내 상태 추가
+- Today’s Message 오프라인 폴백과 캐시 동작 개선
+- Google Play 다운로드 링크와 공개 웹사이트 CTA 정리
+- 앱 아이콘과 시작 화면 이미지 업데이트
+- 공개 웹사이트 리팩토링과 Tailwind v4 기반 정리
+
+#### Notes
+
+- Google Play 클로즈 테스트용 빌드다.
+- 테스트 중점은 오프라인 실행, Home progress, Read 탭, Discover 온라인/오프라인 상태, Today’s Message 폴백, 앱 시작 화면이다.
+- Android 네이티브 리소스는 로컬 생성 파일이 포함될 수 있으므로 빌드 전 실제 스플래시/아이콘 결과를 확인한다.
+
+#### Play Console Release Notes
+
+```text
+Closed testing update for Hunny Bible Tracker.
+
+Includes offline startup improvements, Home and Read reliability updates, Discover offline messaging, refreshed app launch visuals, and public website updates.
+```
+
+---
+
 ## v0.2.0+6 — Android Closed Testing
 
 - **Date:** 2026-05-18
@@ -134,7 +172,7 @@ Includes offline-first Bible reading progress tracking, reading plans, chapter c
 ### Release name
 
 ```text
-v0.2.0+6 - Android closed testing
+v0.3.0+7 - Android closed testing
 ```
 
 ### Release notes
@@ -142,5 +180,5 @@ v0.2.0+6 - Android closed testing
 ```text
 Closed testing update for Hunny Bible Tracker.
 
-Includes improvements to Home, reading plans, Discover content, content detail views, video playback, backup and restore, and general app stability.
+Includes offline startup improvements, Home and Read reliability updates, Discover offline messaging, refreshed app launch visuals, and public website updates.
 ```

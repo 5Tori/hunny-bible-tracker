@@ -1,7 +1,10 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:google_sign_in/google_sign_in.dart';
 
+import '../api/hunny_api_client.dart';
 import '../api/hunny_api_config.dart';
 import '../api/hunny_api_models.dart';
 import '../../features/read/data/read_repository.dart';
@@ -19,18 +22,24 @@ class AuthRepository {
     required ReadRepository readRepository,
     fb.FirebaseAuth? firebaseAuth,
     HunnyApiConfig? apiConfig,
+    HunnyApiReachability? apiReachability,
   })  : _firebaseConfig = firebaseConfig,
         _firebaseReady = firebaseReady,
         _firebaseAuth =
             firebaseReady ? (firebaseAuth ?? fb.FirebaseAuth.instance) : null,
         _readRepository = readRepository,
-        _apiConfig = apiConfig ?? HunnyApiConfig.fromEnvironment();
+        _apiConfig = apiConfig ?? HunnyApiConfig.fromEnvironment(),
+        _apiReachability = apiReachability ??
+            HunnyApiReachability(
+              config: apiConfig ?? HunnyApiConfig.fromEnvironment(),
+            );
 
   final FirebaseAuthConfig _firebaseConfig;
   final bool _firebaseReady;
   final fb.FirebaseAuth? _firebaseAuth;
   final ReadRepository _readRepository;
   final HunnyApiConfig _apiConfig;
+  final HunnyApiReachability _apiReachability;
 
   bool get isAvailable => _firebaseReady && _firebaseAuth != null;
 
@@ -46,7 +55,7 @@ class AuthRepository {
       await _readRepository.clearAuthLink();
       return null;
     }
-    await user.reload();
+    await user.reload().timeout(const Duration(seconds: 2));
     final refreshed = auth.currentUser;
     if (refreshed == null) {
       await _readRepository.clearAuthLink();
@@ -117,6 +126,9 @@ class AuthRepository {
   }
 
   Future<HunnyApiMe> fetchApiMe() async {
+    if (!await _apiReachability.canReachApi()) {
+      throw HunnyApiException('Hunny API is offline');
+    }
     final token = await _firebaseIdToken();
     final res = await _authedDio(token).get<dynamic>('/api/v1/me');
     final code = res.statusCode ?? 0;
@@ -128,6 +140,9 @@ class AuthRepository {
   }
 
   Future<void> syncRemoteUser() async {
+    if (!await _apiReachability.canReachApi()) {
+      throw HunnyApiException('Hunny API is offline');
+    }
     final token = await _firebaseIdToken();
     final res = await _authedDio(token).post<dynamic>(
       '/api/v1/auth/sync',
@@ -142,6 +157,9 @@ class AuthRepository {
   }
 
   Future<HunnySyncPushResult> pushReadingSync() async {
+    if (!await _apiReachability.canReachApi()) {
+      throw HunnyApiException('Hunny API is offline');
+    }
     final token = await _firebaseIdToken();
     final payload = await _readRepository.exportReadingBackupSnapshot();
     final res = await _authedDio(token).post<dynamic>(
@@ -166,6 +184,9 @@ class AuthRepository {
   }
 
   Future<HunnySyncBootstrapResult> bootstrapReadingSync() async {
+    if (!await _apiReachability.canReachApi()) {
+      throw HunnyApiException('Hunny API is offline');
+    }
     final token = await _firebaseIdToken();
     final res = await _authedDio(token).get<dynamic>(
       '/api/v1/sync/bootstrap',
@@ -186,6 +207,7 @@ class AuthRepository {
     bool allowApiFailure = true,
   }) async {
     if (!_apiConfig.isConfigured || !isAvailable) return null;
+    if (!await _apiReachability.canReachApi()) return null;
     final lastSyncedAt = await _readRepository.getLastReadingSyncAt();
     if (lastSyncedAt != null &&
         minInterval > Duration.zero &&
@@ -206,6 +228,7 @@ class AuthRepository {
   }) async {
     await _readRepository.syncAuthUserId(user.uid);
     if (!_apiConfig.isConfigured) return;
+    if (!await _apiReachability.canReachApi()) return;
     try {
       await syncRemoteUser();
     } catch (_) {
@@ -217,15 +240,11 @@ class AuthRepository {
     if (!_apiConfig.isConfigured) {
       throw HunnyApiException('HUNNY_API_BASE_URL is not set');
     }
-    return Dio(
-      BaseOptions(
-        baseUrl: _apiConfig.baseUrl,
-        headers: <String, dynamic>{
-          'Accept': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        validateStatus: (code) => code != null && code < 600,
-      ),
+    return HunnyApiClient.create(
+      _apiConfig,
+      headers: <String, dynamic>{
+        'Authorization': 'Bearer $token',
+      },
     );
   }
 
@@ -245,7 +264,7 @@ class AuthRepository {
     if (user == null) {
       throw HunnyApiException('No Firebase user — sign in again');
     }
-    final token = await user.getIdToken();
+    final token = await user.getIdToken().timeout(const Duration(seconds: 2));
     if (token == null || token.isEmpty) {
       throw HunnyApiException('Firebase did not return an ID token');
     }

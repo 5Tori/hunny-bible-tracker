@@ -1,7 +1,7 @@
 name: hunny_bible_tracker
 description: Offline-first Bible reading tracker.
 publish_to: "none"
-version: 0.2.0+6
+version: 0.3.0+7
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -42,13 +42,14 @@ flutter:
   assets:
     - assets/data/bible_books.en.json
     - assets/brand/google_g.svg
+    - assets/image/honeycomb.jpg
 
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/icon/app-icon.png"
+  image_path: "assets/icon/app-icon.jpg"
 
-  adaptive_icon_foreground: "assets/icon/app-icon.png"
+  adaptive_icon_foreground: "assets/icon/app-icon.jpg"
   adaptive_icon_background: "#FFFFFF"
 
   remove_alpha_ios: true

@@ -19,6 +19,9 @@ This is the active cleanup checklist before the next closed-test build.
 - Current plans can be archived without losing progress/history, then restored.
 - Help & feedback posts to the web API.
 - Backup/restore foundation exists through sync push/bootstrap.
+- Offline startup is optimized so Home and Read render from local state first.
+- Discover shows an offline-only message when the public content API is unreachable.
+- Native launch images and launcher icon sources have been refreshed for the next closed-test build.
 
 ## Before Closed Testing Build
 
@@ -30,8 +33,10 @@ This is the active cleanup checklist before the next closed-test build.
 - Confirm iOS Bundle ID before any iOS external testing.
 - Confirm `HUNNY_API_BASE_URL` points to the deployed API for release builds.
 - Run `flutter analyze`.
+- Run `flutter test`.
 - Run `pnpm --dir apps/web typecheck`.
 - Run release-target smoke checks on Android emulator/device.
+- Confirm `apps/mobile/pubspec.yaml` version matches the upload target, currently `0.3.0+7` for the next closed-test artifact.
 
 ## Content Required
 
@@ -53,8 +58,12 @@ This is the active cleanup checklist before the next closed-test build.
 ## Manual QA Checklist
 
 - Fresh install opens Home without account.
+- Airplane mode opens Home quickly and shows current progress or empty progress without long network delay.
+- Airplane mode Read tab works for existing local plans and chapter progress.
 - Home shows Today’s Message and current plan progress.
+- Home shows cached Today’s Message when available, otherwise the Proverbs 16:24 honeycomb offline fallback.
 - Discover loads published content.
+- Discover shows an offline message when the API is unreachable.
 - Discover search filters content by title, summary, body, verse reference, author, tags, and related plan title.
 - Discover type and tag filters work.
 - Discover content detail sheet opens without layout overflow.
@@ -75,6 +84,7 @@ This is the active cleanup checklist before the next closed-test build.
 - Settings Sync now backs up rows.
 - Settings Restore backup restores rows after reinstall/reset.
 - Help & feedback submits successfully.
+- App launch screen shows the centered Hunny logo/name asset on a white background.
 
 ## Known Deferred Work
 

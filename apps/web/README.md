@@ -9,6 +9,7 @@ The mobile app must never connect directly to Neon. It talks to this app for pub
 - Next.js 15 App Router
 - React 19
 - TypeScript
+- Tailwind CSS v4 through `@tailwindcss/postcss`
 - Neon Postgres via `@neondatabase/serverless`
 - Firebase Admin SDK for server-side Firebase ID token verification
 - Firebase Web SDK for the browser admin Google login
@@ -35,8 +36,10 @@ apps/web
 |   |   +-- admin/                 # Admin dashboard (AdminChrome in admin/layout.tsx)
 |   |   +-- api/                   # API route handlers (no shared page layout)
 |   +-- components/admin           # Admin dashboard client/server components
+|   +-- components/public          # Public site header/footer shell
 |   +-- lib                        # Data access, auth, Cloudinary, validation, sync logic
 +-- next.config.mjs                # Monorepo output tracing root
++-- postcss.config.mjs             # Tailwind v4 PostCSS plugin
 +-- package.json
 +-- tsconfig.json
 +-- vercel.json
@@ -81,6 +84,9 @@ GET /admin/plans/[id]
 GET /admin/today-messages
 GET /admin/today-messages/new
 GET /admin/today-messages/[id]
+GET /admin/content
+GET /admin/content/new
+GET /admin/content/[id]
 ```
 
 Admin users sign in with Firebase Google Auth in the browser. Access to admin APIs is allowed only when the Firebase user's email is included in the comma-separated `ADMIN_EMAILS` env var.
@@ -300,4 +306,5 @@ pnpm build
 5. Create or edit a plan, add at least one section and chapter range, upload a cover, publish it.
 6. Confirm `GET /api/v1/plans` returns the published plan.
 7. Create or edit a today message, publish it, and confirm `GET /api/v1/today-message` returns it.
-8. Run `pnpm --dir apps/web typecheck` before handing off code changes.
+8. Create or edit a content item, publish it, and confirm `GET /api/v1/content?sort=featured&language=en` returns it for mobile Discover.
+9. Run `pnpm --dir apps/web typecheck` before handing off code changes.

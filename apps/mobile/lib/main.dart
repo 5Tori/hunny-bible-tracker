@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 
@@ -35,17 +37,16 @@ Future<void> main() async {
     firebaseReady: firebaseReady,
     readRepository: readRepository,
   );
-  try {
-    await authRepository.refreshRemoteSession();
-  } catch (_) {
-    // Offline or invalid cookies — app still runs as guest.
-  }
-
   runApp(
     HunnyBibleApp(
       database: database,
       readRepository: readRepository,
       authRepository: authRepository,
     ),
+  );
+
+  // Do not block cold start on network/auth. The app must stay usable offline.
+  unawaited(
+    authRepository.refreshRemoteSession().catchError((_) => null),
   );
 }

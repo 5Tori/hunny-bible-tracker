@@ -26,11 +26,18 @@ class RootShell extends StatefulWidget {
 
 class _RootShellState extends State<RootShell> {
   late int _selectedIndex = widget.initialIndex;
+  late final List<bool> _visitedTabs = List.generate(
+    4,
+    (index) => index == widget.initialIndex,
+  );
   int _readRefreshToken = 0;
   final _homeKey = GlobalKey<HomeScreenState>();
 
   void _selectTab(int index) {
-    setState(() => _selectedIndex = index);
+    setState(() {
+      _selectedIndex = index;
+      _visitedTabs[index] = true;
+    });
     if (index == 0) {
       _homeKey.currentState?.refresh();
     }
@@ -39,6 +46,7 @@ class _RootShellState extends State<RootShell> {
   void _openReadTab({bool refreshRead = true}) {
     setState(() {
       _selectedIndex = 2;
+      _visitedTabs[2] = true;
       if (refreshRead) _readRefreshToken += 1;
     });
     _homeKey.currentState?.refresh();
@@ -46,33 +54,10 @@ class _RootShellState extends State<RootShell> {
 
   @override
   Widget build(BuildContext context) {
-    final screens = [
-      HomeScreen(
-        key: _homeKey,
-        readRepository: widget.readRepository,
-        onReadTap: () => _selectTab(2),
-      ),
-      DiscoverScreen(),
-      ReadScreen(
-        key: ValueKey(_readRefreshToken),
-        readRepository: widget.readRepository,
-      ),
-      SettingsScreen(
-        authRepository: widget.authRepository,
-        readRepository: widget.readRepository,
-        onReadingDataRestored: () {
-          setState(() => _readRefreshToken += 1);
-          _homeKey.currentState?.refresh();
-        },
-        onNavigateToRead: _openReadTab,
-        onPreferencesChanged: () => setState(() => _readRefreshToken += 1),
-      ),
-    ];
-
     return Scaffold(
       body: IndexedStack(
         index: _selectedIndex,
-        children: screens,
+        children: List.generate(4, _buildTab),
       ),
       bottomNavigationBar: DecoratedBox(
         decoration: const BoxDecoration(
@@ -129,6 +114,34 @@ class _RootShellState extends State<RootShell> {
         ),
       ),
     );
+  }
+
+  Widget _buildTab(int index) {
+    if (!_visitedTabs[index]) return const SizedBox.shrink();
+
+    return switch (index) {
+      0 => HomeScreen(
+          key: _homeKey,
+          readRepository: widget.readRepository,
+          onReadTap: () => _selectTab(2),
+        ),
+      1 => DiscoverScreen(),
+      2 => ReadScreen(
+          key: ValueKey(_readRefreshToken),
+          readRepository: widget.readRepository,
+        ),
+      3 => SettingsScreen(
+          authRepository: widget.authRepository,
+          readRepository: widget.readRepository,
+          onReadingDataRestored: () {
+            setState(() => _readRefreshToken += 1);
+            _homeKey.currentState?.refresh();
+          },
+          onNavigateToRead: _openReadTab,
+          onPreferencesChanged: () => setState(() => _readRefreshToken += 1),
+        ),
+      _ => const SizedBox.shrink(),
+    };
   }
 }
 

@@ -39,7 +39,6 @@ class ReadRepository {
       await _ensureGuestLocalUser();
       await _seedDefaultSettingsIfNeeded();
     });
-    await refreshPlanTemplatesFromRemote(allowFailure: true);
   }
 
   Future<void> refreshPlanTemplatesFromRemote({

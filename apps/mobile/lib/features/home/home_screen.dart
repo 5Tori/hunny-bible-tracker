@@ -1,13 +1,15 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
-import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
 
+import '../../core/api/hunny_api_client.dart';
 import '../../core/theme/app_theme.dart';
 import 'data/today_message_api_client.dart';
 import '../read/data/read_repository.dart';
@@ -38,6 +40,7 @@ class HomeScreenState extends State<HomeScreen> {
   var _todayMessageHearted = false;
   var _todayMessageSaved = false;
   var _todayMessageActionPending = false;
+  var _loadGeneration = 0;
 
   @override
   void initState() {
@@ -48,54 +51,59 @@ class HomeScreenState extends State<HomeScreen> {
   Future<void> refresh() => _load();
 
   Future<void> _load() async {
+    final generation = ++_loadGeneration;
     if (mounted) setState(() => _todayMessageLoading = true);
     const language = 'en';
     final today = DateFormat('yyyy-MM-dd').format(DateTime.now());
-    final cachedTodayMessage = await _getCachedTodayMessage(
-      date: today,
-      language: language,
-    );
-    if (mounted && cachedTodayMessage != null) {
-      final cachedTodayMessageHearted =
-          await _isTodayMessageHearted(cachedTodayMessage.id);
-      final cachedTodayMessageSaved =
-          await _isTodayMessageSaved(cachedTodayMessage.id);
-      if (!mounted) return;
-      setState(() {
-        _todayMessage = cachedTodayMessage;
-        _todayMessageHearted = cachedTodayMessageHearted;
-        _todayMessageSaved = cachedTodayMessageSaved;
-        _todayMessageLoading = false;
-      });
-    }
+    final cachedTodayMessage =
+        await _getCachedTodayMessage(date: today, language: language) ??
+            await _getLastCachedTodayMessage(language: language);
+    final displayMessage =
+        cachedTodayMessage ?? _offlineFallbackTodayMessage(today, language);
 
     final plan = await widget.readRepository.getCurrentPlan();
     final overview = plan == null
         ? null
         : await widget.readRepository.getReadingOverview(plan.id);
-    final todayMessage = await _fetchTodayMessage(
-      date: today,
-      language: language,
-    );
-    if (todayMessage != null) {
-      await _cacheTodayMessage(
-        todayMessage,
-        cacheDate: today,
-        language: language,
-      );
-    }
-    final displayMessage = todayMessage ?? cachedTodayMessage;
-    final todayMessageHearted = displayMessage == null
-        ? false
-        : await _isTodayMessageHearted(displayMessage.id);
-    final todayMessageSaved = displayMessage == null
-        ? false
-        : await _isTodayMessageSaved(displayMessage.id);
-    if (!mounted) return;
+    final todayMessageHearted = await _isTodayMessageHearted(displayMessage.id);
+    final todayMessageSaved = await _isTodayMessageSaved(displayMessage.id);
+    if (!mounted || generation != _loadGeneration) return;
     setState(() {
       _plan = plan;
       _readingOverview = overview;
       _todayMessage = displayMessage;
+      _todayMessageHearted = todayMessageHearted;
+      _todayMessageSaved = todayMessageSaved;
+      _todayMessageLoading = false;
+    });
+
+    unawaited(_refreshTodayMessage(
+      date: today,
+      language: language,
+      generation: generation,
+    ));
+  }
+
+  Future<void> _refreshTodayMessage({
+    required String date,
+    required String language,
+    required int generation,
+  }) async {
+    final todayMessage = await _fetchTodayMessage(
+      date: date,
+      language: language,
+    );
+    if (todayMessage == null) return;
+    await _cacheTodayMessage(
+      todayMessage,
+      cacheDate: date,
+      language: language,
+    );
+    final todayMessageHearted = await _isTodayMessageHearted(todayMessage.id);
+    final todayMessageSaved = await _isTodayMessageSaved(todayMessage.id);
+    if (!mounted || generation != _loadGeneration) return;
+    setState(() {
+      _todayMessage = todayMessage;
       _todayMessageHearted = todayMessageHearted;
       _todayMessageSaved = todayMessageSaved;
       _todayMessageLoading = false;
@@ -134,6 +142,23 @@ class HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<TodayMessage?> _getLastCachedTodayMessage({
+    required String language,
+  }) async {
+    final value = await widget.readRepository.getAppSetting(
+      _lastCachedTodayMessageKey(language: language),
+    );
+    if (value == null) return null;
+
+    try {
+      final decoded = jsonDecode(value);
+      if (decoded is! Map<String, dynamic>) return null;
+      return TodayMessage.fromJson(decoded);
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _cacheTodayMessage(
     TodayMessage message, {
     String? cacheDate,
@@ -153,6 +178,10 @@ class HomeScreenState extends State<HomeScreen> {
         encoded,
       );
     }
+    await widget.readRepository.setAppSetting(
+      _lastCachedTodayMessageKey(language: cacheLanguage),
+      encoded,
+    );
   }
 
   Future<bool> _isTodayMessageHearted(String id) async {
@@ -303,7 +332,13 @@ class HomeScreenState extends State<HomeScreen> {
     if (shareImageUrl == null) return null;
 
     try {
-      final response = await Dio().get<List<int>>(
+      final dio = Dio(
+        BaseOptions(
+          connectTimeout: HunnyApiClient.requestConnectTimeout,
+          receiveTimeout: HunnyApiClient.requestReceiveTimeout,
+        ),
+      );
+      final response = await dio.get<List<int>>(
         shareImageUrl,
         options: Options(responseType: ResponseType.bytes),
       );
@@ -413,7 +448,21 @@ class HomeScreenState extends State<HomeScreen> {
   Future<ui.Image?> _loadShareBackgroundImage(String? imageUrl) async {
     if (imageUrl == null) return null;
     try {
-      final response = await Dio().get<List<int>>(
+      if (_isAssetImageUrl(imageUrl)) {
+        final data = await rootBundle.load(_assetPathFromImageUrl(imageUrl));
+        final bytes = data.buffer.asUint8List();
+        final codec = await ui.instantiateImageCodec(bytes);
+        final frame = await codec.getNextFrame();
+        return frame.image;
+      }
+
+      final dio = Dio(
+        BaseOptions(
+          connectTimeout: HunnyApiClient.requestConnectTimeout,
+          receiveTimeout: HunnyApiClient.requestReceiveTimeout,
+        ),
+      );
+      final response = await dio.get<List<int>>(
         imageUrl,
         options: Options(responseType: ResponseType.bytes),
       );
@@ -462,6 +511,41 @@ class HomeScreenState extends State<HomeScreen> {
     required String language,
   }) =>
       'today_message_cache_${language}_$date';
+
+  String _lastCachedTodayMessageKey({required String language}) =>
+      'today_message_cache_${language}_last';
+
+  TodayMessage _offlineFallbackTodayMessage(String date, String language) {
+    return TodayMessage(
+      id: 'offline-fallback-$language-$date',
+      contentId: null,
+      publishDate: date,
+      language: language,
+      verseReference: 'Proverbs 16:24',
+      bibleVersion: null,
+      verseText:
+          'Gracious words are a honeycomb, sweet to the soul and healing to the bones.',
+      message:
+          'You are offline. Your reading progress is still available, and Hunny will refresh today\'s message when you are back online.',
+      imageUrl: 'asset://assets/image/honeycomb.jpg',
+      shareImageUrl: null,
+      shareImagePublicId: null,
+      shareUrl: null,
+      hintTitle: 'Offline reading is ready',
+      hintSummary:
+          'Keep reading where you left off. Today\'s message will refresh when the connection returns.',
+      articleTitle: 'Offline reading is ready',
+      articleBody:
+          'Your reading plan and progress are stored on this device. You can continue reading and marking chapters offline.',
+      relatedPlanTemplateKey: null,
+      primaryRelatedPlanTemplateId: null,
+      relatedPlanTitle: null,
+      relatedPlanChapters: null,
+      relatedPlanMinutes: null,
+      heartCount: 0,
+      shareCount: 0,
+    );
+  }
 
   Future<void> _openTodayMessageArticle() async {
     final message = _todayMessage;
@@ -618,6 +702,19 @@ class _SharedTodayMessageImage {
   final String fileName;
 }
 
+ImageProvider<Object>? _imageProviderForTodayMessage(String? imageUrl) {
+  if (imageUrl == null) return null;
+  if (_isAssetImageUrl(imageUrl)) {
+    return AssetImage(_assetPathFromImageUrl(imageUrl));
+  }
+  return NetworkImage(imageUrl);
+}
+
+bool _isAssetImageUrl(String imageUrl) => imageUrl.startsWith('asset://');
+
+String _assetPathFromImageUrl(String imageUrl) =>
+    imageUrl.replaceFirst('asset://', '');
+
 class TodayMessageCard extends StatelessWidget {
   const TodayMessageCard({
     super.key,
@@ -683,7 +780,8 @@ class TodayMessageCard extends StatelessWidget {
     }
 
     final imageUrl = current.imageUrl;
-    final hasImage = imageUrl != null;
+    final imageProvider = _imageProviderForTodayMessage(imageUrl);
+    final hasImage = imageProvider != null;
 
     return Container(
       decoration: BoxDecoration(
@@ -702,7 +800,7 @@ class TodayMessageCard extends StatelessWidget {
                 color: AppTheme.ink,
                 image: hasImage
                     ? DecorationImage(
-                        image: NetworkImage(imageUrl),
+                        image: imageProvider,
                         fit: BoxFit.cover,
                       )
                     : null,

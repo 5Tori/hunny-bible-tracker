@@ -2,22 +2,24 @@
 
 Offline-first Bible reading tracker built with Flutter, Drift/SQLite, Firebase Auth, Next.js API routes, and Neon Postgres.
 
-The app does not store full Bible text in v0.1. It stores book/chapter references, reading plans, chapter progress, reading activities, local settings, Today’s Message content metadata, and account-link metadata.
+The app does not store full Bible text. It stores book/chapter references, reading plans, chapter progress, reading activities, local settings, Today’s Message content metadata, Discover content metadata, and account-link metadata.
 
 ## Current Status
 
-The current MVP focus is closed-test readiness for Home, Read, Plans, and Settings.
+The current MVP focus is closed-test readiness for Home, Discover, Read, Plans, Settings, and the public web/API surface.
 
 - Flutter mobile app for iOS and Android.
-- Bottom tabs for `Home`, `Read`, and `Settings`; unfinished Discover/Saved surfaces are hidden for MVP.
-- Offline-first local database through Drift/SQLite.
+- Bottom tabs for `Home`, `Discover`, `Read`, and `Settings`; unfinished Saved/List surfaces are hidden for MVP.
+- Offline-first local database through Drift/SQLite. Home and Read must load quickly offline; Discover is online-only and shows an offline state when the API is unreachable.
 - Firebase Auth for Google sign-in.
 - Neon Postgres is the server-side app database behind `apps/web` API routes.
 - Read supports section-based plan runs, chapter progress, completion, completed history, Start Again, and plan archive/restore.
 - Plans is a full-screen Plan Manager / Plan Library with `My Plans`, `Catalog`, `Archived`, and catalog CTA states.
-- Home supports Today’s Message cards, quick reflection, Read More article modal, related plan CTA, local save, heart/share counters, and current reading progress.
+- Home supports Today’s Message cards, quick reflection, Read More article modal, related plan CTA, local save, heart/share counters, current reading progress, cached messages, and an offline fallback message.
+- Discover supports published content search, type filters, tag filters, media/detail sheets, YouTube video/Shorts playback, and related plan cards.
 - Settings supports account sign-in/out, manual backup, restore/bootstrap, sync status, Manage reading plans, and Help & feedback submission.
-- Admin dashboard supports plan templates and Today’s Message management.
+- Admin dashboard supports plan templates, Today’s Message management, and general content CRUD.
+- `apps/web` serves the public website, support/legal pages, mobile API routes, and admin dashboard. The public website uses Tailwind v4 in the Next.js app.
 
 Remote reading-data backup and restore are implemented through `POST /api/v1/sync/push` and `GET /api/v1/sync/bootstrap`. Full automatic multi-device incremental merge is still deferred.
 
@@ -114,7 +116,7 @@ apps/mobile/pubspec.yaml
 Use `version: <versionName>+<versionCode>`:
 
 ```yaml
-version: 0.1.0+2
+version: 0.3.0+7
 ```
 
 For Google Play, every upload must increase the number after `+` (`versionCode`). If Play Console says the version already exists, confirm you edited `apps/mobile/pubspec.yaml`, not a plugin/example `pubspec.yaml` under `ios/.symlinks` or another generated folder.
@@ -172,8 +174,11 @@ The mobile app must not connect directly to Neon. Server access goes through `ap
 - Local DB schema source: `apps/mobile/lib/core/database/app_database.dart`
 - Generated Drift file: `apps/mobile/lib/core/database/app_database.g.dart`
 - Read repository and sync payload logic: `apps/mobile/lib/features/read/data/read_repository.dart`
+- Shared mobile API timeout/reachability client: `apps/mobile/lib/core/api/hunny_api_client.dart`
 - Plan Manager screen: `apps/mobile/lib/features/plans/plans_screen.dart`
 - Today’s Message client/UI: `apps/mobile/lib/features/home/`
+- Discover content finder UI: `apps/mobile/lib/features/find/discover_screen.dart`
+- Mobile splash and fallback imagery: `apps/mobile/assets/image/`
 - Server schema file: `apps/web/db/schema.sql`
 - API routes: `apps/web/src/app/api`
 - Admin pages: `apps/web/src/app/admin`

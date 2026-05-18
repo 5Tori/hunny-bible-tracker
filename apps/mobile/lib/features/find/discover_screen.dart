@@ -22,6 +22,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   List<RemoteContent> _contents = const [];
   var _loading = true;
+  var _offline = false;
   String? _error;
   String? _selectedType;
   String? _selectedTagKey;
@@ -44,6 +45,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       setState(() {
         _contents = const [];
         _loading = false;
+        _offline = false;
         _error = null;
       });
       return;
@@ -51,10 +53,20 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
     setState(() {
       _loading = true;
+      _offline = false;
       _error = null;
     });
 
     try {
+      if (!await widget.contentApiClient.canReachApi()) {
+        if (!mounted) return;
+        setState(() {
+          _contents = const [];
+          _loading = false;
+          _offline = true;
+        });
+        return;
+      }
       final contents = await widget.contentApiClient.fetchPublishedContent(
         sort: 'featured',
         language: 'en',
@@ -64,6 +76,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       setState(() {
         _contents = contents;
         _loading = false;
+        _offline = false;
       });
     } catch (_) {
       if (!mounted) return;
@@ -311,6 +324,14 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               _StatePanel(
                 title: _error!,
                 message: 'Pull to refresh.',
+                actionLabel: 'Try again',
+                onAction: _loadContent,
+              )
+            else if (_offline)
+              _StatePanel(
+                title: "You're offline.",
+                message:
+                    'Discover search is available when you are back online.',
                 actionLabel: 'Try again',
                 onAction: _loadContent,
               )

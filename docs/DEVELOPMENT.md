@@ -153,6 +153,24 @@ pnpm --dir apps/web typecheck
 
 Run `flutter analyze` and `pnpm --dir apps/web typecheck` after focused mobile/web implementation work. Run the broader test/build set before release candidates.
 
+## Offline Startup Checks
+
+The mobile app should keep Home and Read usable offline:
+
+- `ReadRepository.initializeLocalData()` should only perform local setup before `runApp()`.
+- Firebase session refresh and reading sync should run after the app is on screen.
+- Mobile API calls should use the shared timeout/reachability helper in `lib/core/api/hunny_api_client.dart`.
+- Home should render local progress first and then refresh Today’s Message in the background.
+- Discover is online-only for MVP; when the API is unreachable it should show an offline message quickly.
+
+Before a closed-test build, smoke test with airplane mode enabled:
+
+```text
+Home opens quickly -> current progress appears -> Today’s Message cache or Proverbs 16:24 fallback appears
+Read opens existing local plan -> chapter check/uncheck works
+Discover opens -> offline message appears
+```
+
 ## Native Platform Notes
 
 If native platform folders ever need to be regenerated, run Flutter create carefully and do not overwrite existing `lib/`, `assets/`, or `pubspec.yaml` files:
@@ -160,6 +178,24 @@ If native platform folders ever need to be regenerated, run Flutter create caref
 ```bash
 cd apps/mobile
 flutter create --platforms=ios,android --project-name hunny_bible_tracker .
+```
+
+Native launch assets:
+
+- iOS launch images live in `apps/mobile/ios/Runner/Assets.xcassets/LaunchImage.imageset/`.
+- Android launch background XML files live under `apps/mobile/android/app/src/main/res/drawable*`.
+- The current source art for the centered launch image is `apps/mobile/assets/image/logo-and-name.jpg`.
+- The current launcher icon source is `apps/mobile/assets/icon/app-icon.jpg`.
+
+Note: the repo-level `.gitignore` ignores `apps/mobile/android/`, so local Android native resource edits may not appear in `git status` unless that ignore rule is changed.
+
+## Current Release Target
+
+The current closed-test release record is:
+
+```text
+v0.3.0+7 - Android closed testing
+docs/ref/HUNNY_RELEASE_LOG.md
 ```
 
 ## Firebase Native Checks

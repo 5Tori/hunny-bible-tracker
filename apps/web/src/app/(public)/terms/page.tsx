@@ -1,61 +1,85 @@
 import type { Metadata } from "next";
-import LegalPageLayout from "@/components/legal/LegalPageLayout";
+import Link from "next/link";
+
+import { PageContainer, Prose, SiteFooter, SiteHeader } from "@/components/public/SiteShell";
 import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
   title: "Terms of Service",
-  description: "Terms that apply when using Hunny Bible Tracker.",
+  description: "The terms that apply when you use Hunny Bible Tracker.",
   alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {
   return (
-    <LegalPageLayout
-      title="Terms of Service"
-      description="The terms that apply when you use Hunny Bible Tracker."
-      lastUpdated="May 15, 2026"
-    >
-      <p>
-        By using Hunny Bible Tracker (“Hunny”), you agree to these Terms of Service. If you do not
-        agree, please do not use the app.
-      </p>
+    <div className="min-h-screen bg-background">
+      <SiteHeader />
+      <PageContainer>
+        <p className="text-xs font-medium uppercase tracking-[0.2em] text-honey-ink">
+          Legal
+        </p>
+        <h1 className="mt-3 font-display text-4xl sm:text-5xl">
+          Terms of Service
+        </h1>
+        <p className="mt-3 text-sm text-muted-foreground">
+          Last updated: May 18, 2026
+        </p>
 
-      <h2>Use of the app</h2>
-      <p>
-        Hunny is provided for personal Bible reading tracking. It helps you choose reading plans,
-        track chapter progress, and build a gentle rhythm of Scripture.
-      </p>
+        <div className="mt-10">
+          <Prose>
+            <p>
+              These Terms govern your use of Hunny Bible Tracker
+              (&quot;Hunny&quot;, the &quot;Service&quot;). By using Hunny, you agree
+              to these Terms.
+            </p>
 
-      <h2>Not professional advice</h2>
-      <p>
-        Hunny is not a replacement for pastoral, professional, theological, medical, legal, or other
-        professional advice. For spiritual guidance, please consult trusted leaders or your faith
-        community.
-      </p>
+            <h2>The Service</h2>
+            <p>
+              Hunny is a Bible reading habit tracker. It helps you choose
+              reading plans, track chapter progress, and build a personal
+              reading rhythm at your own pace.
+            </p>
 
-      <h2>Your account</h2>
-      <p>
-        If you choose to sign in, you are responsible for activity that occurs under your account.
-        Please keep your account access secure.
-      </p>
+            <h2>Your account</h2>
+            <p>
+              Accounts are optional and used for backup and restore. You are
+              responsible for keeping your sign-in credentials secure. You may
+              delete your account at any time through the app or by contacting{" "}
+              <Link href="/support">Support</Link>.
+            </p>
 
-      <h2>Service changes</h2>
-      <p>
-        We may add, change, or remove features over time as we improve the app. We may also update
-        these terms when needed.
-      </p>
+            <h2>Acceptable use</h2>
+            <ul>
+              <li>Do not attempt to disrupt, reverse-engineer, or abuse the Service.</li>
+              <li>Do not use the Service to violate any law.</li>
+              <li>Do not attempt to access another user&apos;s data.</li>
+            </ul>
 
-      <h2>Availability and disclaimer</h2>
-      <p>
-        Hunny is provided on an “as is” and “as available” basis without warranties of any kind, to
-        the fullest extent allowed by law.
-      </p>
+            <h2>Content and Scripture</h2>
+            <p>
+              Scripture excerpts and related content are provided for reading
+              support and remain subject to their respective translation,
+              publisher, or rights holder terms.
+            </p>
 
-      <h2>Contact</h2>
-      <p>
-        Questions about these terms? Email{" "}
-        <a href={`mailto:${siteConfig.supportEmail}`}>{siteConfig.supportEmail}</a>.
-      </p>
-    </LegalPageLayout>
+            <h2>Disclaimer of warranties</h2>
+            <p>
+              The Service is provided as is without warranties of any kind. We
+              do not guarantee that the Service will be uninterrupted or
+              error-free.
+            </p>
+
+            <h2>Contact</h2>
+            <p>
+              Questions? Email{" "}
+              <a href={`mailto:${siteConfig.supportEmail}`}>
+                {siteConfig.supportEmail}
+              </a>.
+            </p>
+          </Prose>
+        </div>
+      </PageContainer>
+      <SiteFooter />
+    </div>
   );
 }

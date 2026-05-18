@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
@@ -52,9 +54,6 @@ class _PlansScreenState extends State<PlansScreen> {
 
   Future<void> _load() async {
     setState(() => _loading = true);
-    try {
-      await widget.readRepository.refreshPlanTemplatesFromRemote();
-    } catch (_) {}
 
     final currentPlan = await widget.readRepository.getCurrentPlan();
     final currentPlans = await widget.readRepository.getCurrentPlanSummaries();
@@ -73,6 +72,18 @@ class _PlansScreenState extends State<PlansScreen> {
       _catalog = catalog;
       _loading = false;
     });
+    unawaited(_refreshRemoteCatalog());
+  }
+
+  Future<void> _refreshRemoteCatalog() async {
+    try {
+      await widget.readRepository.refreshPlanTemplatesFromRemote(
+        allowFailure: true,
+      );
+      final catalog = await widget.readRepository.getPlanTemplatesForCatalog();
+      if (!mounted) return;
+      setState(() => _catalog = catalog);
+    } catch (_) {}
   }
 
   Future<void> _continueToRead(String planId) async {

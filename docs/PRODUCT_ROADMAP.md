@@ -16,7 +16,7 @@ Home prompt / Featured Content / Discover / Plan Catalog
   -> archive/restore or start again when desired
 ```
 
-The app is not a full Bible text reader in v0.1. It tracks references, progress, plans, and short admin-managed content that can point users toward approachable reading journeys.
+The app is not a full Bible text reader. It tracks references, progress, plans, and short admin-managed content that can point users toward approachable reading journeys.
 
 ## MVP Tabs
 
@@ -44,6 +44,8 @@ Today’s Message is a daily Home slot:
 - Related plan CTA in the article modal
 
 Public lookup returns the latest published message on or before the requested date. This prevents a blank Home card when today’s content has not been published yet.
+
+Mobile Home renders local reading progress first. Today’s Message uses today’s cache, then the last cached message, then a built-in Proverbs 16:24 honeycomb fallback when offline or when no cache exists.
 
 Heart/share counts are server counters. Save is local for now.
 
@@ -174,6 +176,8 @@ Closed-test MVP should include:
 - Read flow stable for at least one active plan.
 - Plans screen can start, continue, archive, restore, and start again.
 - Discover shows published content and supports search/type/tag filtering.
+- Offline startup keeps Home and Read usable without waiting on remote API retries.
+- Discover is online-only and shows a clear offline state when the public content API is unreachable.
 - Settings sign-in, Sync now, Restore backup, and Help & feedback work.
 - Saved/List remains hidden.
 - Privacy, Terms, and Support pages exist.

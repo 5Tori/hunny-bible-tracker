@@ -16,7 +16,7 @@ Next.js web/API/admin app
   -> Cloudinary image upload for admin-managed media
 ```
 
-The mobile app is offline-first. SQLite is the first write target for reading plans, chapter progress, reading activities, settings, and local Today’s Message flags.
+The mobile app is offline-first. SQLite is the first write target for reading plans, chapter progress, reading activities, settings, and local Today’s Message flags. Home and Read should render from local state first. API calls use short timeouts and cached reachability so offline startup does not wait on repeated network failures.
 
 The web/API app serves admin tools, public content APIs, Firebase-authenticated account APIs, reading backup/restore APIs, and shareable Today’s Message pages.
 
@@ -36,7 +36,7 @@ The web/API app serves admin tools, public content APIs, Firebase-authenticated 
 | `lib/core/database/app_database.dart` | Drift schema source |
 | `lib/core/database/app_database.g.dart` | Generated Drift code |
 | `lib/core/auth/` | Firebase Auth config, auth repository, auth DTOs |
-| `lib/core/api/` | API config and sync response models |
+| `lib/core/api/` | API config, shared Dio timeout/reachability client, and sync response models |
 | `lib/features/root/root_shell.dart` | Bottom tab shell: Home, Discover, Read, Settings |
 | `lib/features/content/` | Content API client and shared content DTOs |
 | `lib/features/home/` | Home tab, Today’s Message, current progress card |
@@ -47,17 +47,22 @@ The web/API app serves admin tools, public content APIs, Firebase-authenticated 
 | `lib/features/list/` | Hidden Saved/List prototype retained for later |
 | `assets/data/bible_books.en.json` | Canonical book metadata seed |
 | `assets/brand/google_g.svg` | Google sign-in mark used in auth sheet |
+| `assets/image/honeycomb.jpg` | Today’s Message offline fallback image |
+| `assets/image/logo-and-name.jpg` | Source image for native launch screen assets |
+| `assets/icon/app-icon.jpg` | Source image for generated launcher icons |
 
 ## Web/API Module Map
 
 | Path | Role |
 | --- | --- |
-| `apps/web/src/app/page.tsx` | Basic web landing page |
-| `apps/web/src/app/privacy/page.tsx` | Privacy page |
-| `apps/web/src/app/terms/page.tsx` | Terms page |
-| `apps/web/src/app/support/page.tsx` | Support page |
+| `apps/web/src/app/(public)/page.tsx` | Public landing page |
+| `apps/web/src/app/(public)/privacy/page.tsx` | Privacy page |
+| `apps/web/src/app/(public)/terms/page.tsx` | Terms page |
+| `apps/web/src/app/(public)/support/page.tsx` | Support page |
 | `apps/web/src/app/admin` | Admin dashboard pages |
 | `apps/web/src/app/(public)/today-message/[slug]/page.tsx` | Public share page for Today’s Message |
+| `apps/web/src/components/public/SiteShell.tsx` | Public web header/footer and shared chrome |
+| `apps/web/postcss.config.mjs` | Tailwind v4 PostCSS setup |
 | `apps/web/src/app/api/health/route.ts` | Health check |
 | `apps/web/src/app/api/v1/auth/sync/route.ts` | Firebase token verify + Neon auth user upsert |
 | `apps/web/src/app/api/v1/me/route.ts` | Firebase token verify + current user response |
@@ -128,6 +133,8 @@ Admin creates/publishes Today’s Message
 
 The public API returns the latest published message where `publish_date <= date`, so the mobile app can still show a message if today’s date does not have a dedicated row.
 
+On mobile, Home first checks today’s local cache, then the last cached Today’s Message, then a built-in offline fallback using Proverbs 16:24 and `assets/image/honeycomb.jpg`. A remote refresh runs after local UI has rendered.
+
 ## Data Flow: General Content / Discover
 
 ```text
@@ -139,6 +146,8 @@ Admin creates/publishes content
 ```
 
 Discover is a finder/list surface. It does not write content locally yet. Home featured content and Saved/List are separate follow-up surfaces.
+
+Discover is online-only for now. If the API is not reachable, the mobile tab shows an offline state instead of waiting through long retries.
 
 ## Data Flow: Authentication and Backup
 

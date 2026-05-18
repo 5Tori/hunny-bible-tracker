@@ -43,5 +43,8 @@ apps/mobile/.env*.json
 **/client_secret*.json
 **/client_*secret*.json
 
-# assets
-assets/
+# Generated/local root assets
+/assets/
+
+# Deprecated mobile icon source kept locally only.
+apps/mobile/assets/icon/app-icon.png

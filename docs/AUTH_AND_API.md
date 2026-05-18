@@ -130,6 +130,8 @@ Firebase-protected routes require:
 Authorization: Bearer <Firebase ID token>
 ```
 
+Mobile clients use `/api/health` as a fast reachability probe before optional public/API sync work. Offline-sensitive surfaces should avoid blocking initial UI on authenticated sync, plan catalog refresh, Today’s Message refresh, or Discover content fetches.
+
 Common auth errors:
 
 - `missing_bearer`
@@ -192,6 +194,7 @@ Current limitations:
 - API deployment has `DATABASE_URL`, Firebase Admin env vars, `ADMIN_EMAILS`, and Cloudinary env vars.
 - Neon has `apps/web/db/schema.sql` applied.
 - Neon has any needed files from `apps/web/db/migrations/` applied to existing environments.
+- `GET /api/health` returns quickly from the deployed API.
 - `POST /api/v1/auth/sync` succeeds after mobile login.
 - `POST /api/v1/sync/push` succeeds for a signed-in account.
 - `GET /api/v1/sync/bootstrap` succeeds for a signed-in account.

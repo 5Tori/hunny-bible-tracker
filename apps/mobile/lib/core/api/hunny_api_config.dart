@@ -17,6 +17,14 @@ class HunnyApiConfig {
     return HunnyApiConfig._(base);
   }
 
+  factory HunnyApiConfig.fromBaseUrl(String baseUrl) {
+    var base = baseUrl.trim();
+    while (base.endsWith('/')) {
+      base = base.substring(0, base.length - 1);
+    }
+    return HunnyApiConfig._(base);
+  }
+
   final String baseUrl;
 
   bool get isConfigured => baseUrl.isNotEmpty;
