@@ -12,6 +12,7 @@ export interface ContentAuthor {
   avatar_image_url: string | null;
   avatar_image_public_id: string | null;
   website_url: string | null;
+  is_verified: boolean;
   is_active: boolean;
   created_at: string;
   updated_at: string;

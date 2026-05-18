@@ -112,6 +112,7 @@ Core author fields:
 - `avatar_image_url`
 - `avatar_image_public_id`
 - `website_url`
+- `is_verified`
 - `is_active`
 
 Core content fields:

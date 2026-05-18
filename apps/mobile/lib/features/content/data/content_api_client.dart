@@ -218,6 +218,7 @@ class RemoteContentAuthor {
     required this.avatarImageUrl,
     required this.avatarImagePublicId,
     required this.websiteUrl,
+    required this.isVerified,
     required this.isActive,
   });
 
@@ -228,6 +229,7 @@ class RemoteContentAuthor {
   final String? avatarImageUrl;
   final String? avatarImagePublicId;
   final String? websiteUrl;
+  final bool isVerified;
   final bool isActive;
 
   factory RemoteContentAuthor.fromJson(Map<String, dynamic> json) {
@@ -239,6 +241,7 @@ class RemoteContentAuthor {
       avatarImageUrl: _nullableString(json['avatar_image_url']),
       avatarImagePublicId: _nullableString(json['avatar_image_public_id']),
       websiteUrl: _nullableString(json['website_url']),
+      isVerified: json['is_verified'] == true,
       isActive: json['is_active'] != false,
     );
   }

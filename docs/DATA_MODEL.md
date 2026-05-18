@@ -324,6 +324,7 @@ Important `content_authors` fields:
 - `avatar_image_url`
 - `avatar_image_public_id`
 - `website_url`
+- `is_verified`
 - `is_active`
 
 `content_assets` stores ordered supporting media for content. Examples:

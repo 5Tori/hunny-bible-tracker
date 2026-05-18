@@ -6,6 +6,7 @@ create table if not exists content_authors (
   avatar_image_url text,
   avatar_image_public_id text,
   website_url text,
+  is_verified boolean not null default false,
   is_active boolean not null default true,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
@@ -15,6 +16,9 @@ create table if not exists content_authors (
 
 create index if not exists idx_content_authors_active_name
   on content_authors (is_active, display_name);
+
+create index if not exists idx_content_authors_verified_active
+  on content_authors (is_verified, is_active, display_name);
 
 create table if not exists contents (
   id uuid primary key default gen_random_uuid(),

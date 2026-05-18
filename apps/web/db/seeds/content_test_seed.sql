@@ -1,11 +1,12 @@
 -- Test content seed for Discover.
--- Run after apps/web/db/migrations/20260517_content_catalog.sql.
+-- Run after content catalog migrations are applied.
 
-insert into content_authors (slug, display_name, bio, is_active, created_at, updated_at)
+insert into content_authors (slug, display_name, bio, is_verified, is_active, created_at, updated_at)
 values (
   'hunny-team',
   'Hunny Team',
   'Short, approachable Bible reading guides from Hunny.',
+  true,
   true,
   now(),
   now()
@@ -13,6 +14,7 @@ values (
 on conflict (slug) do update set
   display_name = excluded.display_name,
   bio = excluded.bio,
+  is_verified = excluded.is_verified,
   is_active = true,
   updated_at = now();
 
@@ -103,7 +105,7 @@ from (
       null,
       null,
       360,
-      'https://example.com/videos/start-mark',
+      'https://www.youtube.com/watch?v=jNQXAC9IVRw',
       20,
       '{"seed":true}'
     ),
@@ -241,7 +243,7 @@ select
   slide.alt_text,
   slide.url,
   'external',
-  'image/svg+xml',
+  'image/png',
   '{"seed":true}'::jsonb,
   now(),
   now()
@@ -253,21 +255,21 @@ join (
       'Jonah runs',
       'The prophet heads away from Nineveh.',
       'Simple placeholder slide for Jonah running away.',
-      'https://placehold.co/900x1200/fff8df/111111.svg?text=Jonah+runs'
+      'https://placehold.co/900x900/fff8df/111111.png?text=Jonah+runs'
     ),
     (
       1,
       'A storm rises',
       'The sea interrupts the escape.',
       'Simple placeholder slide for the storm.',
-      'https://placehold.co/900x1200/e7e2d8/111111.svg?text=A+storm+rises'
+      'https://placehold.co/900x900/e7e2d8/111111.png?text=A+storm+rises'
     ),
     (
       2,
       'Mercy waits',
       'God still moves toward the city.',
       'Simple placeholder slide for mercy waiting.',
-      'https://placehold.co/900x1200/ffd500/111111.svg?text=Mercy+waits'
+      'https://placehold.co/900x900/ffd500/111111.png?text=Mercy+waits'
     )
 ) as slide(order_index, title, caption, alt_text, url)
   on c.slug = 'jonah-running-from-mercy';

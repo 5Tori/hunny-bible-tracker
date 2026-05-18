@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../content/data/content_api_client.dart';
@@ -80,7 +82,13 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   List<String> get _contentTypes {
     final types = _contents.map((content) => content.contentType).toSet()
       ..removeWhere((type) => type.trim().isEmpty);
-    final sorted = types.toList()..sort();
+    final sorted = types.toList()
+      ..sort((a, b) {
+        final aOrder = _typeSortOrder(a);
+        final bOrder = _typeSortOrder(b);
+        if (aOrder != bOrder) return aOrder.compareTo(bOrder);
+        return a.compareTo(b);
+      });
     return sorted;
   }
 
@@ -159,13 +167,25 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
           children: [
-            Text('Discover', style: Theme.of(context).textTheme.headlineMedium),
-            const SizedBox(height: 6),
-            Text(
-              'Find messages, videos, essays, and visual stories.',
-              style: Theme.of(context).textTheme.bodyMedium,
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Discover',
+                    style: Theme.of(context).textTheme.headlineMedium,
+                  ),
+                ),
+                if (!_loading && _contents.isNotEmpty)
+                  Text(
+                    '${filtered.length}',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.mutedInk,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+              ],
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 16),
             TextField(
               controller: _search,
               onChanged: (_) => setState(() {}),
@@ -179,7 +199,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 suffixIcon: _search.text.trim().isEmpty
                     ? null
                     : IconButton(
-                        icon: const Icon(Icons.close),
+                        icon: const Icon(Icons.close, size: 20),
                         onPressed: () {
                           setState(() => _search.clear());
                         },
@@ -204,32 +224,34 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 18),
-            _SectionLabel(title: 'TYPE'),
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _FilterChip(
-                  label: 'All',
-                  selected: _selectedType == null,
-                  onTap: () => setState(() => _selectedType = null),
-                ),
-                for (final type in _contentTypes)
-                  _FilterChip(
+            const SizedBox(height: 12),
+            SizedBox(
+              height: 38,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: _contentTypes.length + 1,
+                separatorBuilder: (_, __) => const SizedBox(width: 8),
+                itemBuilder: (context, index) {
+                  if (index == 0) {
+                    return _FilterChip(
+                      label: 'All',
+                      selected: _selectedType == null,
+                      onTap: () => setState(() => _selectedType = null),
+                    );
+                  }
+                  final type = _contentTypes[index - 1];
+                  return _FilterChip(
                     label: _typeLabel(type),
                     selected: _selectedType == type,
                     onTap: () => setState(() => _selectedType = type),
-                  ),
-              ],
+                  );
+                },
+              ),
             ),
             if (_tags.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              _SectionLabel(title: 'TAGS'),
               const SizedBox(height: 10),
               SizedBox(
-                height: 42,
+                height: 36,
                 child: ListView.separated(
                   scrollDirection: Axis.horizontal,
                   itemCount: _tags.length + 1,
@@ -237,7 +259,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                   itemBuilder: (context, index) {
                     if (index == 0) {
                       return _FilterChip(
-                        label: 'All tags',
+                        label: 'Any tag',
                         selected: _selectedTagKey == null,
                         onTap: () => setState(() => _selectedTagKey = null),
                       );
@@ -245,7 +267,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                     final tag = _tags[index - 1];
                     final key = '${tag.type}:${tag.key}';
                     return _FilterChip(
-                      label: '${tag.name} · ${tag.type}',
+                      label: tag.name,
                       selected: _selectedTagKey == key,
                       onTap: () => setState(() => _selectedTagKey = key),
                     );
@@ -254,7 +276,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
               ),
             ],
             if (_hasActiveFilters) ...[
-              const SizedBox(height: 14),
+              const SizedBox(height: 10),
               Row(
                 children: [
                   Expanded(
@@ -262,7 +284,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                       '${filtered.length} result${filtered.length == 1 ? '' : 's'}',
                       style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.ink,
+                            color: AppTheme.mutedInk,
                           ),
                     ),
                   ),
@@ -279,9 +301,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 ],
               ),
             ],
-            const SizedBox(height: 24),
-            _SectionLabel(title: _hasActiveFilters ? 'RESULTS' : 'ALL CONTENT'),
-            const SizedBox(height: 12),
+            const SizedBox(height: 18),
             if (_loading)
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 36),
@@ -290,22 +310,20 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
             else if (_error != null)
               _StatePanel(
                 title: _error!,
-                message: 'Pull to refresh or check the API connection.',
+                message: 'Pull to refresh.',
                 actionLabel: 'Try again',
                 onAction: _loadContent,
               )
             else if (!widget.contentApiClient.isConfigured)
               const _StatePanel(
-                title: 'Content API is not configured.',
-                message:
-                    'Run the app with HUNNY_API_BASE_URL to load Discover content.',
+                title: 'Discover unavailable.',
+                message: 'API base URL is missing.',
               )
             else if (filtered.isEmpty)
               _StatePanel(
                 title: 'No content found.',
-                message: _hasActiveFilters
-                    ? 'Try a different search or clear filters.'
-                    : 'Publish content in the admin dashboard to fill this list.',
+                message:
+                    _hasActiveFilters ? 'Clear filters and try again.' : '',
               )
             else
               for (final content in filtered)
@@ -357,16 +375,16 @@ class _FilterChip extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: selected ? AppTheme.ink : Colors.white,
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(8),
         child: Container(
-          height: 40,
-          padding: const EdgeInsets.symmetric(horizontal: 14),
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color: selected ? AppTheme.ink : AppTheme.border,
             ),
@@ -399,56 +417,56 @@ class _ContentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final imageUrl = content.coverImageUrl;
-    final reference = content.primaryVerseReference;
+    final subtitle = _contentSubtitle(content);
 
     return Material(
       color: Colors.white,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(8),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         child: Container(
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(color: AppTheme.border),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (imageUrl != null) ...[
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    imageUrl,
-                    width: 76,
-                    height: 76,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const _ImageFallback(),
-                  ),
-                ),
-                const SizedBox(width: 12),
-              ],
+              ClipRRect(
+                borderRadius: BorderRadius.circular(6),
+                child: imageUrl == null
+                    ? _ImageFallback(
+                        size: 72,
+                        icon: _typeIcon(content.contentType),
+                      )
+                    : Image.network(
+                        imageUrl,
+                        width: 72,
+                        height: 72,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _ImageFallback(
+                          size: 72,
+                          icon: _typeIcon(content.contentType),
+                        ),
+                      ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        _TypePill(type: content.contentType),
-                        if (content.durationSeconds != null) ...[
-                          const SizedBox(width: 8),
-                          Text(
-                            _durationLabel(content.durationSeconds!),
-                            style: Theme.of(context)
-                                .textTheme
-                                .bodySmall
-                                ?.copyWith(color: AppTheme.mutedInk),
+                    Text(
+                      _contentMeta(content),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                            color: AppTheme.mutedInk,
+                            fontWeight: FontWeight.w700,
                           ),
-                        ],
-                      ],
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 5),
                     Text(
                       content.title,
                       maxLines: 2,
@@ -457,25 +475,24 @@ class _ContentCard extends StatelessWidget {
                             fontWeight: FontWeight.w800,
                           ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      content.summary ??
-                          reference ??
-                          content.author?.displayName ??
-                          'Open to read more.',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.mutedInk,
-                          ),
-                    ),
+                    if (subtitle != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              color: AppTheme.mutedInk,
+                            ),
+                      ),
+                    ],
                     if (content.tags.isNotEmpty) ...[
-                      const SizedBox(height: 10),
+                      const SizedBox(height: 9),
                       Wrap(
                         spacing: 6,
                         runSpacing: 6,
                         children: [
-                          for (final tag in content.tags.take(4))
+                          for (final tag in content.tags.take(3))
                             _SmallTag(
                               tag: tag,
                               selected:
@@ -495,13 +512,56 @@ class _ContentCard extends StatelessWidget {
   }
 }
 
-class _ContentDetailSheet extends StatelessWidget {
+class _ContentDetailSheet extends StatefulWidget {
   const _ContentDetailSheet({required this.content});
 
   final RemoteContent content;
 
   @override
+  State<_ContentDetailSheet> createState() => _ContentDetailSheetState();
+}
+
+class _ContentDetailSheetState extends State<_ContentDetailSheet> {
+  late final PageController _slideController;
+  var _slideIndex = 0;
+
+  RemoteContent get content => widget.content;
+
+  @override
+  void initState() {
+    super.initState();
+    _slideController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _slideController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final imageAssets = content.assets.where(_isImageAsset).toList();
+    final videoAsset = _firstVideoAsset(content.assets);
+    final media = _ContentMediaBlock(
+      content: content,
+      imageAssets: imageAssets,
+      videoAsset: videoAsset,
+      slideController: _slideController,
+      slideIndex: _slideIndex,
+      onSlideChanged: (index) => setState(() => _slideIndex = index),
+      onOpenUrl: _openUrl,
+    );
+    final otherAssets = content.assets
+        .where((asset) => !_isImageAsset(asset) && !_isVideoAsset(asset))
+        .toList();
+
     return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.82,
@@ -514,41 +574,27 @@ class _ContentDetailSheet extends StatelessWidget {
           children: [
             Row(
               children: [
-                _TypePill(type: content.contentType),
-                const Spacer(),
+                Expanded(
+                  child: Text(
+                    _contentDetailMeta(content),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: AppTheme.mutedInk,
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                ),
                 IconButton(
                   onPressed: () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.close),
                 ),
               ],
             ),
-            const SizedBox(height: 10),
-            if (content.coverImageUrl != null) ...[
-              ClipRRect(
-                borderRadius: BorderRadius.circular(14),
-                child: Image.network(
-                  content.coverImageUrl!,
-                  height: 210,
-                  fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                ),
-              ),
-              const SizedBox(height: 18),
-            ],
             Text(
               content.title,
               style: Theme.of(context).textTheme.headlineMedium,
             ),
-            if (content.author != null) ...[
-              const SizedBox(height: 6),
-              Text(
-                'By ${content.author!.displayName}',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w700,
-                      color: AppTheme.ink,
-                    ),
-              ),
-            ],
             if (content.primaryVerseReference != null) ...[
               const SizedBox(height: 10),
               Text(
@@ -560,15 +606,44 @@ class _ContentDetailSheet extends StatelessWidget {
                     ),
               ),
             ],
+            if (content.author != null) ...[
+              const SizedBox(height: 14),
+              _AuthorByline(author: content.author!),
+            ],
+            if (media.hasMedia) ...[
+              const SizedBox(height: 18),
+              media,
+            ],
             if (content.summary != null) ...[
               const SizedBox(height: 18),
               Text(
                 content.summary!,
-                style: Theme.of(context).textTheme.bodyLarge,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      height: 1.5,
+                    ),
+              ),
+            ],
+            if (content.verseText != null) ...[
+              const SizedBox(height: 18),
+              Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: AppTheme.softSurface,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: AppTheme.border),
+                ),
+                child: Text(
+                  content.verseText!,
+                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                        color: AppTheme.ink,
+                        height: 1.55,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
               ),
             ],
             if (content.body != null) ...[
-              const SizedBox(height: 16),
+              const SizedBox(height: 18),
               Text(
                 content.body!,
                 style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -577,11 +652,9 @@ class _ContentDetailSheet extends StatelessWidget {
                     ),
               ),
             ],
-            if (content.assets.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              const _SectionLabel(title: 'ASSETS'),
-              const SizedBox(height: 10),
-              for (final asset in content.assets)
+            if (otherAssets.isNotEmpty) ...[
+              const SizedBox(height: 18),
+              for (final asset in otherAssets)
                 Padding(
                   padding: const EdgeInsets.only(bottom: 10),
                   child: _AssetRow(asset: asset),
@@ -589,7 +662,7 @@ class _ContentDetailSheet extends StatelessWidget {
             ],
             if (content.relatedPlans.isNotEmpty) ...[
               const SizedBox(height: 24),
-              const _SectionLabel(title: 'RELATED PLANS'),
+              const _SectionLabel(title: 'PLANS'),
               const SizedBox(height: 10),
               for (final plan in content.relatedPlans)
                 Container(
@@ -597,7 +670,7 @@ class _ContentDetailSheet extends StatelessWidget {
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
                     color: AppTheme.softSurface,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(8),
                     border: Border.all(color: AppTheme.border),
                   ),
                   child: Row(
@@ -637,6 +710,419 @@ class _ContentDetailSheet extends StatelessWidget {
   }
 }
 
+class _AuthorByline extends StatelessWidget {
+  const _AuthorByline({required this.author});
+
+  final RemoteContentAuthor author;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _AuthorAvatar(author: author),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Flexible(
+                child: Text(
+                  author.displayName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        color: AppTheme.ink,
+                      ),
+                ),
+              ),
+              if (author.isVerified) ...[
+                const SizedBox(width: 5),
+                const Icon(
+                  Icons.verified_rounded,
+                  size: 18,
+                  color: Color(0xFF2563EB),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _AuthorAvatar extends StatelessWidget {
+  const _AuthorAvatar({required this.author});
+
+  final RemoteContentAuthor author;
+
+  @override
+  Widget build(BuildContext context) {
+    final avatarUrl = author.avatarImageUrl;
+    if (avatarUrl != null) {
+      return ClipOval(
+        child: Image.network(
+          avatarUrl,
+          width: 38,
+          height: 38,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => _AuthorInitial(author: author),
+        ),
+      );
+    }
+    return _AuthorInitial(author: author);
+  }
+}
+
+class _AuthorInitial extends StatelessWidget {
+  const _AuthorInitial({required this.author});
+
+  final RemoteContentAuthor author;
+
+  @override
+  Widget build(BuildContext context) {
+    final initial = author.displayName.trim().isEmpty
+        ? '?'
+        : String.fromCharCode(author.displayName.trim().runes.first)
+            .toUpperCase();
+    return Container(
+      width: 38,
+      height: 38,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: AppTheme.accentYellow,
+        shape: BoxShape.circle,
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Text(
+        initial,
+        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+              color: AppTheme.ink,
+              fontWeight: FontWeight.w900,
+            ),
+      ),
+    );
+  }
+}
+
+class _ContentMediaBlock extends StatelessWidget {
+  const _ContentMediaBlock({
+    required this.content,
+    required this.imageAssets,
+    required this.videoAsset,
+    required this.slideController,
+    required this.slideIndex,
+    required this.onSlideChanged,
+    required this.onOpenUrl,
+  });
+
+  final RemoteContent content;
+  final List<RemoteContentAsset> imageAssets;
+  final RemoteContentAsset? videoAsset;
+  final PageController slideController;
+  final int slideIndex;
+  final ValueChanged<int> onSlideChanged;
+  final ValueChanged<String> onOpenUrl;
+
+  bool get hasMedia {
+    if (content.contentType == 'webtoon') {
+      return imageAssets.isNotEmpty || content.coverImageUrl != null;
+    }
+    if (content.contentType == 'video') {
+      return videoAsset != null ||
+          content.externalUrl != null ||
+          content.coverImageUrl != null;
+    }
+    return content.coverImageUrl != null || imageAssets.isNotEmpty;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (content.contentType == 'webtoon') {
+      final slides = imageAssets;
+      if (slides.isNotEmpty) {
+        return _WebtoonSlider(
+          slides: slides,
+          controller: slideController,
+          index: slideIndex,
+          onChanged: onSlideChanged,
+        );
+      }
+      if (content.coverImageUrl != null) {
+        return _SquareNetworkImage(url: content.coverImageUrl!);
+      }
+    }
+
+    if (content.contentType == 'video') {
+      if (videoAsset == null &&
+          content.externalUrl == null &&
+          content.coverImageUrl != null) {
+        return _CoverMedia(url: content.coverImageUrl!);
+      }
+      return _VideoMediaBlock(
+        content: content,
+        asset: videoAsset,
+        onOpenUrl: onOpenUrl,
+      );
+    }
+
+    if (content.coverImageUrl != null) {
+      return _CoverMedia(url: content.coverImageUrl!);
+    }
+
+    if (imageAssets.isNotEmpty) {
+      return _ImageAsset(asset: imageAssets.first);
+    }
+
+    return const SizedBox.shrink();
+  }
+}
+
+class _WebtoonSlider extends StatelessWidget {
+  const _WebtoonSlider({
+    required this.slides,
+    required this.controller,
+    required this.index,
+    required this.onChanged,
+  });
+
+  final List<RemoteContentAsset> slides;
+  final PageController controller;
+  final int index;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        AspectRatio(
+          aspectRatio: 1,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: PageView.builder(
+              controller: controller,
+              itemCount: slides.length,
+              onPageChanged: onChanged,
+              itemBuilder: (context, slideIndex) {
+                final slide = slides[slideIndex];
+                return Image.network(
+                  slide.url,
+                  fit: BoxFit.cover,
+                  errorBuilder: (_, __, ___) => const _ImageFallback(
+                    size: double.infinity,
+                    height: double.infinity,
+                    icon: Icons.collections_outlined,
+                  ),
+                );
+              },
+            ),
+          ),
+        ),
+        if (slides.length > 1) ...[
+          const SizedBox(height: 10),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (var i = 0; i < slides.length; i++)
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 160),
+                  width: i == index ? 18 : 6,
+                  height: 6,
+                  margin: const EdgeInsets.symmetric(horizontal: 3),
+                  decoration: BoxDecoration(
+                    color: i == index ? AppTheme.ink : AppTheme.border,
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _VideoMediaBlock extends StatelessWidget {
+  const _VideoMediaBlock({
+    required this.content,
+    required this.asset,
+    required this.onOpenUrl,
+  });
+
+  final RemoteContent content;
+  final RemoteContentAsset? asset;
+  final ValueChanged<String> onOpenUrl;
+
+  @override
+  Widget build(BuildContext context) {
+    final url = asset?.url ?? content.externalUrl;
+    final thumbnail = content.coverImageUrl;
+    final youtubeVideoId =
+        url == null ? null : YoutubePlayerController.convertUrlToId(url);
+    final isShorts = url == null ? false : _isYoutubeShortsUrl(url);
+
+    if (youtubeVideoId != null) {
+      return _YoutubeVideoPlayer(
+        videoId: youtubeVideoId,
+        isShorts: isShorts,
+      );
+    }
+
+    return Material(
+      color: AppTheme.softSurface,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: url == null ? null : () => onOpenUrl(url),
+        borderRadius: BorderRadius.circular(8),
+        child: AspectRatio(
+          aspectRatio: isShorts ? 9 / 16 : 16 / 9,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                if (thumbnail != null)
+                  Image.network(
+                    thumbnail,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  )
+                else
+                  Container(color: AppTheme.softSurface),
+                Container(color: Colors.black.withAlpha(38)),
+                Center(
+                  child: Container(
+                    width: 58,
+                    height: 58,
+                    decoration: const BoxDecoration(
+                      color: AppTheme.ink,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.play_arrow_rounded,
+                      color: Colors.white,
+                      size: 34,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _YoutubeVideoPlayer extends StatefulWidget {
+  const _YoutubeVideoPlayer({
+    required this.videoId,
+    required this.isShorts,
+  });
+
+  final String videoId;
+  final bool isShorts;
+
+  @override
+  State<_YoutubeVideoPlayer> createState() => _YoutubeVideoPlayerState();
+}
+
+class _YoutubeVideoPlayerState extends State<_YoutubeVideoPlayer> {
+  late YoutubePlayerController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = _createController(widget.videoId);
+  }
+
+  @override
+  void didUpdateWidget(covariant _YoutubeVideoPlayer oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.videoId == widget.videoId) return;
+    _controller.close();
+    _controller = _createController(widget.videoId);
+  }
+
+  @override
+  void dispose() {
+    _controller.close();
+    super.dispose();
+  }
+
+  YoutubePlayerController _createController(String videoId) {
+    return YoutubePlayerController.fromVideoId(
+      videoId: videoId,
+      autoPlay: false,
+      params: const YoutubePlayerParams(
+        showControls: true,
+        showFullscreenButton: true,
+        strictRelatedVideos: true,
+        enableCaption: true,
+        playsInline: true,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: YoutubePlayer(
+        controller: _controller,
+        aspectRatio: widget.isShorts ? 9 / 16 : 16 / 9,
+        autoFullScreen: true,
+      ),
+    );
+  }
+}
+
+class _CoverMedia extends StatelessWidget {
+  const _CoverMedia({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Image.network(
+        url,
+        height: 210,
+        width: double.infinity,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+      ),
+    );
+  }
+}
+
+class _SquareNetworkImage extends StatelessWidget {
+  const _SquareNetworkImage({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return AspectRatio(
+      aspectRatio: 1,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(8),
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) => const _ImageFallback(
+            size: double.infinity,
+            height: double.infinity,
+            icon: Icons.collections_outlined,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _AssetRow extends StatelessWidget {
   const _AssetRow({required this.asset});
 
@@ -644,29 +1130,15 @@ class _AssetRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isImage = asset.assetType == 'image' ||
-        asset.mimeType?.startsWith('image/') == true;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppTheme.border),
       ),
       child: Row(
         children: [
-          if (isImage)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                asset.url,
-                width: 52,
-                height: 52,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => const _ImageFallback(size: 52),
-              ),
-            )
-          else
-            const _ImageFallback(size: 52),
+          _ImageFallback(size: 52, icon: _assetIcon(asset.assetType)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -696,25 +1168,37 @@ class _AssetRow extends StatelessWidget {
   }
 }
 
-class _TypePill extends StatelessWidget {
-  const _TypePill({required this.type});
+class _ImageAsset extends StatelessWidget {
+  const _ImageAsset({required this.asset});
 
-  final String type;
+  final RemoteContentAsset asset;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: AppTheme.accentYellow,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Text(
-        _typeLabel(type),
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: AppTheme.ink,
-              fontWeight: FontWeight.w800,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Image.network(
+            asset.url,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => const _ImageFallback(
+              size: double.infinity,
+              height: 180,
             ),
+          ),
+          if (asset.caption != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              asset.caption!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.mutedInk,
+                  ),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -735,7 +1219,7 @@ class _SmallTag extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
         color: selected ? AppTheme.accentYellow : Colors.white,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: selected ? AppTheme.ink : AppTheme.border),
       ),
       child: Text(
@@ -750,21 +1234,27 @@ class _SmallTag extends StatelessWidget {
 }
 
 class _ImageFallback extends StatelessWidget {
-  const _ImageFallback({this.size = 76});
+  const _ImageFallback({
+    this.size = 76,
+    this.height,
+    this.icon = Icons.auto_stories_outlined,
+  });
 
   final double size;
+  final double? height;
+  final IconData icon;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: size,
-      height: size,
+      height: height ?? size,
       decoration: BoxDecoration(
         color: AppTheme.softSurface,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(6),
         border: Border.all(color: AppTheme.border),
       ),
-      child: const Icon(Icons.auto_stories_outlined, color: AppTheme.mutedInk),
+      child: Icon(icon, color: AppTheme.mutedInk),
     );
   }
 }
@@ -788,7 +1278,7 @@ class _StatePanel extends StatelessWidget {
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
         color: AppTheme.softSurface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(8),
         border: Border.all(color: AppTheme.border),
       ),
       child: Column(
@@ -798,12 +1288,14 @@ class _StatePanel extends StatelessWidget {
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.titleMedium,
           ),
-          const SizedBox(height: 6),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
-          ),
+          if (message.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium,
+            ),
+          ],
           if (actionLabel != null && onAction != null) ...[
             const SizedBox(height: 12),
             OutlinedButton(
@@ -815,6 +1307,88 @@ class _StatePanel extends StatelessWidget {
       ),
     );
   }
+}
+
+String? _contentSubtitle(RemoteContent content) {
+  return content.summary ??
+      content.primaryVerseReference ??
+      content.author?.displayName;
+}
+
+String _contentMeta(RemoteContent content) {
+  final parts = [
+    _typeLabel(content.contentType),
+    if (content.durationSeconds != null)
+      _durationLabel(content.durationSeconds!),
+    if (content.author != null) content.author!.displayName,
+    if (content.primaryVerseReference != null) content.primaryVerseReference!,
+  ];
+  return parts.join(' · ');
+}
+
+String _contentDetailMeta(RemoteContent content) {
+  final parts = [
+    _typeLabel(content.contentType),
+    if (content.durationSeconds != null)
+      _durationLabel(content.durationSeconds!),
+  ];
+  return parts.join(' · ');
+}
+
+bool _isImageAsset(RemoteContentAsset asset) {
+  return asset.assetType == 'image' ||
+      asset.mimeType?.startsWith('image/') == true;
+}
+
+bool _isVideoAsset(RemoteContentAsset asset) {
+  return asset.assetType == 'video' ||
+      asset.mimeType?.startsWith('video/') == true;
+}
+
+bool _isYoutubeShortsUrl(String url) {
+  final uri = Uri.tryParse(url.trim());
+  if (uri == null) return false;
+  final host = uri.host.toLowerCase();
+  if (!host.contains('youtube.com') && !host.contains('youtube-nocookie.com')) {
+    return false;
+  }
+  return uri.pathSegments.any((segment) => segment.toLowerCase() == 'shorts');
+}
+
+RemoteContentAsset? _firstVideoAsset(List<RemoteContentAsset> assets) {
+  for (final asset in assets) {
+    if (_isVideoAsset(asset)) return asset;
+  }
+  return null;
+}
+
+IconData _typeIcon(String type) {
+  return switch (type) {
+    'video' => Icons.play_arrow_rounded,
+    'essay' => Icons.article_outlined,
+    'webtoon' => Icons.collections_outlined,
+    'message' => Icons.chat_bubble_outline,
+    _ => Icons.auto_stories_outlined,
+  };
+}
+
+IconData _assetIcon(String type) {
+  return switch (type) {
+    'video' => Icons.play_arrow_rounded,
+    'audio' => Icons.graphic_eq,
+    'link' => Icons.link,
+    _ => Icons.insert_drive_file_outlined,
+  };
+}
+
+int _typeSortOrder(String type) {
+  return switch (type) {
+    'message' => 0,
+    'video' => 1,
+    'essay' => 2,
+    'webtoon' => 3,
+    _ => 99,
+  };
 }
 
 String _typeLabel(String type) {

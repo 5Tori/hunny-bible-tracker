@@ -1,7 +1,7 @@
 name: hunny_bible_tracker
 description: Offline-first Bible reading tracker.
 publish_to: "none"
-version: 0.1.0+5
+version: 0.2.0+6
 
 environment:
   sdk: ">=3.4.0 <4.0.0"
@@ -27,6 +27,7 @@ dependencies:
   url_launcher: ^6.3.1
   flutter_animate: ^4.5.2
   confetti: ^0.8.0
+  youtube_player_iframe: ^6.0.0
 
 dev_dependencies:
   flutter_test:
