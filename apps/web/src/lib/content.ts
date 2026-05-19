@@ -66,6 +66,21 @@ export interface ContentAsset {
   updated_at: string;
 }
 
+export interface ContentSection {
+  id: string;
+  content_id: string;
+  order_index: number;
+  title: string | null;
+  body: string | null;
+  image_url: string | null;
+  image_public_id: string | null;
+  image_alt_text: string | null;
+  image_caption: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ContentTag {
   id: string;
   type: string;
@@ -94,6 +109,7 @@ export interface ContentRelatedPlan {
 export interface ContentWithRelations extends ContentBase {
   author: ContentAuthor | null;
   assets: ContentAsset[];
+  sections: ContentSection[];
   tags: ContentTag[];
   related_plans: ContentRelatedPlan[];
 }
@@ -137,6 +153,16 @@ export interface AdminContentInput {
     width?: number | string | null;
     height?: number | string | null;
     duration_seconds?: number | string | null;
+    metadata?: Record<string, unknown> | string | null;
+  }>;
+  sections?: Array<{
+    order_index?: number | string | null;
+    title?: string | null;
+    body?: string | null;
+    image_url?: string | null;
+    image_public_id?: string | null;
+    image_alt_text?: string | null;
+    image_caption?: string | null;
     metadata?: Record<string, unknown> | string | null;
   }>;
   tags?: Array<{
@@ -192,7 +218,7 @@ function normalizeLanguage(value?: string | null) {
 
 function normalizeContentType(value?: string | null) {
   const type = emptyToNull(value)?.toLowerCase();
-  if (type === 'message' || type === 'video' || type === 'essay' || type === 'webtoon') return type;
+  if (type === 'message' || type === 'video' || type === 'essay' || type === 'cartoon') return type;
   return null;
 }
 
@@ -286,6 +312,27 @@ function normalizeInput(input: AdminContentInput) {
     })
     .filter((asset): asset is NonNullable<typeof asset> => Boolean(asset));
 
+  const sections = (input.sections ?? [])
+    .map((section, index) => {
+      const body = emptyToNull(section.body);
+      const title = emptyToNull(section.title);
+      const imageUrl = emptyToNull(section.image_url);
+      const imagePublicId = emptyToNull(section.image_public_id);
+      const imageAltText = emptyToNull(section.image_alt_text);
+      const imageCaption = emptyToNull(section.image_caption);
+      const metadata = normalizeJsonObject(section.metadata);
+      return {
+        order_index: normalizeNullableNumber(section.order_index) ?? index,
+        title,
+        body,
+        image_url: imageUrl,
+        image_public_id: imagePublicId,
+        image_alt_text: imageAltText,
+        image_caption: imageCaption,
+        metadata,
+      };
+    });
+
   const relatedPlansFromIds = (input.related_plan_ids ?? [])
     .map((planTemplateId, index) => ({
       plan_template_id: planTemplateId,
@@ -314,7 +361,7 @@ function normalizeInput(input: AdminContentInput) {
     title,
     subtitle: emptyToNull(input.subtitle),
     summary: emptyToNull(input.summary),
-    body: emptyToNull(input.body),
+    body: contentType === 'essay' ? null : emptyToNull(input.body),
     cover_image_url: emptyToNull(input.cover_image_url),
     cover_image_public_id: emptyToNull(input.cover_image_public_id),
     author_id: emptyToNull(input.author_id),
@@ -331,6 +378,7 @@ function normalizeInput(input: AdminContentInput) {
     browse_visible: input.browse_visible !== false,
     metadata: normalizeJsonObject(input.metadata),
     assets,
+    sections: contentType === 'essay' ? sections : [],
     tags,
     related_plans: relatedPlans,
   };
@@ -354,6 +402,12 @@ async function getContentRelations(content: ContentBase) {
     where content_id = ${content.id}
     order by asset_role asc, order_index asc, created_at asc
   `) as ContentAsset[];
+
+  const sections = (await sql`
+    select * from content_sections
+    where content_id = ${content.id}
+    order by order_index asc, created_at asc
+  `) as ContentSection[];
 
   const tags = (await sql`
     select t.* from content_tags t
@@ -382,7 +436,7 @@ async function getContentRelations(content: ContentBase) {
     order by cpl.display_order asc, pt.featured_rank asc nulls last, pt.updated_at desc
   `) as ContentRelatedPlan[];
 
-  return { author, assets, tags, relatedPlans };
+  return { author, assets, sections, tags, relatedPlans };
 }
 
 async function resolveAuthorId(
@@ -455,6 +509,36 @@ function buildAssetQueries(contentId: string, assets: ReturnType<typeof normaliz
       ${asset.height},
       ${asset.duration_seconds},
       ${asset.metadata},
+      now(),
+      now()
+    )
+  `);
+}
+
+function buildSectionQueries(contentId: string, sections: ReturnType<typeof normalizeInput>['sections'], txn: SqlLike) {
+  return sections.map((section) => txn`
+    insert into content_sections (
+      content_id,
+      order_index,
+      title,
+      body,
+      image_url,
+      image_public_id,
+      image_alt_text,
+      image_caption,
+      metadata,
+      created_at,
+      updated_at
+    ) values (
+      ${contentId},
+      ${section.order_index},
+      ${section.title},
+      ${section.body},
+      ${section.image_url},
+      ${section.image_public_id},
+      ${section.image_alt_text},
+      ${section.image_caption},
+      ${section.metadata},
       now(),
       now()
     )
@@ -537,6 +621,7 @@ function hydrateContent(
     ...content,
     author: relations.author,
     assets: relations.assets,
+    sections: relations.sections,
     tags: relations.tags,
     related_plans: relations.relatedPlans,
   };
@@ -718,6 +803,7 @@ export async function createAdminContent(rawInput: AdminContentInput) {
       )
     `,
     ...buildAssetQueries(contentId, input.assets, txn),
+    ...buildSectionQueries(contentId, input.sections, txn),
     ...buildTagQueries(contentId, input.tags, txn),
     ...buildRelatedPlanQueries(contentId, input.related_plans, txn),
   ] as any);
@@ -766,9 +852,11 @@ export async function updateAdminContent(id: string, rawInput: AdminContentInput
       where id::text = ${id}
     `,
     txn`delete from content_assets where content_id::text = ${id}`,
+    txn`delete from content_sections where content_id::text = ${id}`,
     txn`delete from content_tag_links where content_id::text = ${id}`,
     txn`delete from content_plan_links where content_id::text = ${id}`,
     ...buildAssetQueries(id, input.assets, txn),
+    ...buildSectionQueries(id, input.sections, txn),
     ...buildTagQueries(id, input.tags, txn),
     ...buildRelatedPlanQueries(id, input.related_plans, txn),
   ] as any);

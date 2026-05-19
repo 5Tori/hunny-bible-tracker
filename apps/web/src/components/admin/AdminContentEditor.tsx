@@ -23,6 +23,7 @@ interface PlanOption {
 }
 
 type ContentAssetInput = NonNullable<AdminContentInput['assets']>[number];
+type ContentSectionInput = NonNullable<AdminContentInput['sections']>[number];
 type ContentTagInput = NonNullable<AdminContentInput['tags']>[number];
 
 const emptyContent: AdminContentInput = {
@@ -49,6 +50,7 @@ const emptyContent: AdminContentInput = {
   browse_visible: true,
   metadata: {},
   assets: [],
+  sections: [],
   tags: [],
   related_plan_ids: [],
 };
@@ -117,6 +119,16 @@ function mapContentToForm(content: ContentWithRelations): AdminContentInput {
       duration_seconds: asset.duration_seconds,
       metadata: asset.metadata,
     })),
+    sections: content.sections.map((section) => ({
+      order_index: section.order_index,
+      title: section.title ?? '',
+      body: section.body,
+      image_url: section.image_url ?? '',
+      image_public_id: section.image_public_id ?? '',
+      image_alt_text: section.image_alt_text ?? '',
+      image_caption: section.image_caption ?? '',
+      metadata: section.metadata,
+    })),
     tags: content.tags.map((tag) => ({
       type: tag.type,
       key: tag.key,
@@ -131,12 +143,14 @@ function mapContentToForm(content: ContentWithRelations): AdminContentInput {
 function preparePayload(content: AdminContentInput, metadataText: string): AdminContentInput {
   return {
     ...content,
+    body: content.content_type === 'essay' ? null : content.body,
     published_at:
       typeof content.published_at === 'string'
         ? fromDateTimeLocal(content.published_at)
         : content.published_at,
     metadata: metadataText.trim() ? metadataText : {},
     assets: (content.assets ?? []).filter((asset) => asset.url.trim()),
+    sections: content.content_type === 'essay' ? (content.sections ?? []) : [],
     tags: (content.tags ?? []).filter((tag) => tag.name.trim()),
   };
 }
@@ -229,7 +243,7 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
         ...(current.assets ?? []),
         {
           asset_type: asset?.asset_type ?? 'image',
-          asset_role: asset?.asset_role ?? 'body',
+          asset_role: asset?.asset_role ?? (current.content_type === 'cartoon' ? 'slide' : 'body'),
           order_index: current.assets?.length ?? 0,
           title: asset?.title ?? '',
           caption: asset?.caption ?? '',
@@ -251,6 +265,41 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
     setContent((current) => ({
       ...current,
       assets: (current.assets ?? []).filter((_, assetIndex) => assetIndex !== index),
+    }));
+  };
+
+  const setSection = (index: number, update: Partial<ContentSectionInput>) => {
+    setContent((current) => ({
+      ...current,
+      sections: (current.sections ?? []).map((section, sectionIndex) =>
+        sectionIndex === index ? { ...section, ...update } : section,
+      ),
+    }));
+  };
+
+  const addSection = (section?: Partial<ContentSectionInput>) => {
+    setContent((current) => ({
+      ...current,
+      sections: [
+        ...(current.sections ?? []),
+        {
+          order_index: section?.order_index ?? current.sections?.length ?? 0,
+          title: section?.title ?? '',
+          body: section?.body ?? '',
+          image_url: section?.image_url ?? '',
+          image_public_id: section?.image_public_id ?? '',
+          image_alt_text: section?.image_alt_text ?? '',
+          image_caption: section?.image_caption ?? '',
+          metadata: section?.metadata ?? {},
+        },
+      ],
+    }));
+  };
+
+  const removeSection = (index: number) => {
+    setContent((current) => ({
+      ...current,
+      sections: (current.sections ?? []).filter((_, sectionIndex) => sectionIndex !== index),
     }));
   };
 
@@ -286,7 +335,10 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
     }));
   };
 
-  const handleUpload = async (file: File, role: 'cover' | 'asset') => {
+  const handleUpload = async (
+    file: File,
+    role: { type: 'cover' } | { type: 'asset' } | { type: 'section'; index: number },
+  ) => {
     setUploading(true);
     setError(null);
 
@@ -318,16 +370,21 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
         format: string | null;
       };
 
-      if (role === 'cover') {
+      if (role.type === 'cover') {
         setContent((current) => ({
           ...current,
           cover_image_url: asset.secure_url,
           cover_image_public_id: asset.public_id,
         }));
+      } else if (role.type === 'section') {
+        setSection(role.index, {
+          image_url: asset.secure_url,
+          image_public_id: asset.public_id,
+        });
       } else {
         addAsset({
           asset_type: asset.resource_type || 'image',
-          asset_role: 'body',
+          asset_role: content.content_type === 'cartoon' ? 'slide' : 'body',
           url: asset.secure_url,
           public_id: asset.public_id,
           provider: 'cloudinary',
@@ -341,6 +398,13 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
       setError((uploadError as Error).message);
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleAssetFiles = async (files: FileList | null) => {
+    if (!files?.length) return;
+    for (const file of Array.from(files)) {
+      await handleUpload(file, { type: 'asset' });
     }
   };
 
@@ -424,12 +488,33 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
             <select
               id="content_type"
               value={content.content_type}
-              onChange={(event) => setContent({ ...content, content_type: event.target.value })}
+              onChange={(event) => {
+                const nextType = event.target.value;
+                setContent({
+                  ...content,
+                  content_type: nextType,
+                  sections:
+                    nextType === 'essay' && (content.sections ?? []).length === 0
+                      ? [
+                          {
+                            order_index: 0,
+                            title: '',
+                            body: '',
+                            image_url: '',
+                            image_public_id: '',
+                            image_alt_text: '',
+                            image_caption: '',
+                            metadata: {},
+                          },
+                        ]
+                      : content.sections,
+                });
+              }}
             >
               <option value="message">Message</option>
               <option value="video">Video</option>
               <option value="essay">Essay</option>
-              <option value="webtoon">Webtoon</option>
+              <option value="cartoon">Cartoon</option>
             </select>
           </div>
           <div>
@@ -481,16 +566,100 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
           />
         </div>
 
-        <div className="field-row">
-          <label htmlFor="body">Body / explanatory text</label>
-          <textarea
-            id="body"
-            value={content.body ?? ''}
-            onChange={(event) => setContent({ ...content, body: event.target.value })}
-            rows={7}
-          />
-        </div>
+        {content.content_type === 'essay' ? (
+          <p className="muted">Essay body is built from the sections below.</p>
+        ) : (
+          <div className="field-row">
+            <label htmlFor="body">{content.content_type === 'video' ? 'Video description' : 'Body / explanatory text'}</label>
+            <textarea
+              id="body"
+              value={content.body ?? ''}
+              onChange={(event) => setContent({ ...content, body: event.target.value })}
+              rows={7}
+            />
+          </div>
+        )}
       </section>
+
+      {content.content_type === 'essay' ? (
+        <section className="form-card">
+          <h2>Essay sections</h2>
+          <p className="muted">Each section can include one optional image and one text block.</p>
+          {(content.sections ?? []).map((section, index) => (
+            <div key={`essay-section-${index}`} className="item-card content-asset-card">
+              <div className="section-header">
+                <h3>Section {index + 1}</h3>
+                <button type="button" className="btn btn-link" onClick={() => removeSection(index)}>
+                  Remove section
+                </button>
+              </div>
+              <div className="field-row group-grid">
+                <div>
+                  <label>Order</label>
+                  <input
+                    type="number"
+                    value={section.order_index ?? index}
+                    onChange={(event) => setSection(index, { order_index: parseNumber(event.target.value) ?? index })}
+                  />
+                </div>
+                <div>
+                  <label>Title</label>
+                  <input value={section.title ?? ''} onChange={(event) => setSection(index, { title: event.target.value })} />
+                </div>
+                <div>
+                  <label htmlFor={`section-image-upload-${index}`}>Image upload</label>
+                  <input
+                    id={`section-image-upload-${index}`}
+                    type="file"
+                    accept="image/*"
+                    onChange={(event) => {
+                      const file = event.target.files?.[0];
+                      if (file) void handleUpload(file, { type: 'section', index });
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="field-row">
+                <label>Image URL</label>
+                <input
+                  value={section.image_url ?? ''}
+                  onChange={(event) => setSection(index, { image_url: event.target.value })}
+                  placeholder="Optional"
+                />
+                {section.image_url ? <img src={section.image_url} alt="Essay section preview" className="cover-preview" /> : null}
+              </div>
+              <div className="field-row group-grid">
+                <div>
+                  <label>Image alt text</label>
+                  <input
+                    value={section.image_alt_text ?? ''}
+                    onChange={(event) => setSection(index, { image_alt_text: event.target.value })}
+                  />
+                </div>
+                <div>
+                  <label>Image caption</label>
+                  <input
+                    value={section.image_caption ?? ''}
+                    onChange={(event) => setSection(index, { image_caption: event.target.value })}
+                  />
+                </div>
+              </div>
+              <div className="field-row">
+                <label>Paragraph</label>
+                <textarea
+                  value={section.body ?? ''}
+                  onChange={(event) => setSection(index, { body: event.target.value })}
+                  rows={6}
+                  placeholder="Write this section paragraph..."
+                />
+              </div>
+            </div>
+          ))}
+          <button type="button" className="btn btn-secondary" onClick={() => addSection()}>
+            Add section
+          </button>
+        </section>
+      ) : null}
 
       <section className="form-card">
         <h2>Author and references</h2>
@@ -572,7 +741,7 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
       </section>
 
       <section className="form-card">
-        <h2>Cover and assets</h2>
+        <h2>{content.content_type === 'cartoon' ? 'Cover and cartoon slides' : 'Cover and assets'}</h2>
         <div className="field-row">
           <label htmlFor="cover_image_url">Cover image URL</label>
           <input
@@ -593,7 +762,7 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
             accept="image/*"
             onChange={(event) => {
               const file = event.target.files?.[0];
-              if (file) void handleUpload(file, 'cover');
+              if (file) void handleUpload(file, { type: 'cover' });
             }}
           />
           <p className="muted">Uploaded to Cloudinary folder hunny-bible-tracker/content.</p>
@@ -649,19 +818,19 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
 
         <div className="actions-row">
           <button type="button" className="btn btn-secondary" onClick={() => addAsset()}>
-            Add asset
+            {content.content_type === 'cartoon' ? 'Add slide' : 'Add asset'}
           </button>
           <label className="btn btn-secondary" htmlFor="asset_upload">
-            Upload asset
+            {content.content_type === 'cartoon' ? 'Upload slide images' : 'Upload asset'}
           </label>
           <input
             id="asset_upload"
             className="visually-hidden"
             type="file"
             accept="image/*"
+            multiple={content.content_type === 'cartoon'}
             onChange={(event) => {
-              const file = event.target.files?.[0];
-              if (file) void handleUpload(file, 'asset');
+              void handleAssetFiles(event.target.files);
             }}
           />
         </div>

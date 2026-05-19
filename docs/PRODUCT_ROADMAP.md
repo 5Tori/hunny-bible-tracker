@@ -58,7 +58,7 @@ General content is the next product layer around plans. It should support:
 - Message
 - Video with explanatory text
 - Article/essay
-- Webtoon with ordered image slides
+- Cartoon with ordered image slides
 
 Content should be able to appear in:
 

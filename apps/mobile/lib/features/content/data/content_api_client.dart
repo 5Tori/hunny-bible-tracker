@@ -18,7 +18,8 @@ class ContentApiClient {
 
   bool get isConfigured => _config.isConfigured;
 
-  Future<bool> canReachApi() => _reachability.canReachApi();
+  Future<bool> canReachApi({bool force = false}) =>
+      _reachability.canReachApi(force: force);
 
   Future<List<RemoteContent>> fetchPublishedContent({
     String sort = 'featured',
@@ -26,9 +27,12 @@ class ContentApiClient {
     String? contentType,
     String? tag,
     int? limit,
+    bool skipReachabilityCheck = false,
   }) async {
     if (!_config.isConfigured) return const [];
-    if (!await _reachability.canReachApi()) return const [];
+    if (!skipReachabilityCheck && !await _reachability.canReachApi()) {
+      return const [];
+    }
 
     final query = <String, dynamic>{
       'sort': sort,
@@ -133,6 +137,7 @@ class RemoteContent {
     required this.updatedAt,
     required this.author,
     required this.assets,
+    required this.sections,
     required this.tags,
     required this.relatedPlans,
   });
@@ -163,6 +168,7 @@ class RemoteContent {
   final DateTime updatedAt;
   final RemoteContentAuthor? author;
   final List<RemoteContentAsset> assets;
+  final List<RemoteContentSection> sections;
   final List<RemoteContentTag> tags;
   final List<RemoteContentRelatedPlan> relatedPlans;
 
@@ -171,6 +177,7 @@ class RemoteContent {
   factory RemoteContent.fromJson(Map<String, dynamic> json) {
     final author = json['author'];
     final assets = json['assets'];
+    final sections = json['sections'];
     final tags = json['tags'];
     final relatedPlans = json['related_plans'];
     return RemoteContent(
@@ -207,6 +214,12 @@ class RemoteContent {
               .map(RemoteContentAsset.fromJson)
               .toList()
           : const [],
+      sections: sections is List
+          ? sections
+              .whereType<Map<String, dynamic>>()
+              .map(RemoteContentSection.fromJson)
+              .toList()
+          : const [],
       tags: tags is List
           ? tags
               .whereType<Map<String, dynamic>>()
@@ -219,6 +232,47 @@ class RemoteContent {
               .map(RemoteContentRelatedPlan.fromJson)
               .toList()
           : const [],
+    );
+  }
+}
+
+class RemoteContentSection {
+  const RemoteContentSection({
+    required this.id,
+    required this.contentId,
+    required this.orderIndex,
+    required this.title,
+    required this.body,
+    required this.imageUrl,
+    required this.imagePublicId,
+    required this.imageAltText,
+    required this.imageCaption,
+    required this.metadata,
+  });
+
+  final String id;
+  final String contentId;
+  final int orderIndex;
+  final String? title;
+  final String? body;
+  final String? imageUrl;
+  final String? imagePublicId;
+  final String? imageAltText;
+  final String? imageCaption;
+  final Map<String, dynamic> metadata;
+
+  factory RemoteContentSection.fromJson(Map<String, dynamic> json) {
+    return RemoteContentSection(
+      id: _requiredString(json, 'id'),
+      contentId: _requiredString(json, 'content_id'),
+      orderIndex: _nullableInt(json['order_index']) ?? 0,
+      title: _nullableString(json['title']),
+      body: _nullableString(json['body']),
+      imageUrl: _nullableString(json['image_url']),
+      imagePublicId: _nullableString(json['image_public_id']),
+      imageAltText: _nullableString(json['image_alt_text']),
+      imageCaption: _nullableString(json['image_caption']),
+      metadata: _mapValue(json['metadata']),
     );
   }
 }

@@ -97,7 +97,7 @@ export default function AdminContentPage() {
         <div>
           <p className="eyebrow">Reusable content</p>
           <h1>Content catalog</h1>
-          <p>Manage messages, videos, essays, and webtoons for Home, Discover, and related plans.</p>
+          <p>Manage messages, videos, essays, and cartoons for Home, Discover, and related plans.</p>
         </div>
         <div className="admin-actions">
           <Link href="/admin/plans" className="btn btn-secondary">

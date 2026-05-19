@@ -276,6 +276,7 @@ Admin-owned plan content is stored in Neon and published to mobile through `/api
 content_authors
 contents
 content_assets
+content_sections
 content_tags
 content_tag_links
 content_plan_links
@@ -288,7 +289,7 @@ General content is server-managed and currently powers Discover/Find. It is also
 - `message`
 - `video`
 - `essay`
-- `webtoon`
+- `cartoon`
 
 Important `contents` fields:
 
@@ -331,9 +332,10 @@ Important `content_authors` fields:
 
 - video thumbnail
 - embedded video URL
-- webtoon slide images
-- article inline images
+- cartoon slide images
 - share image
+
+`content_sections` stores ordered essay body sections. Each section has one required text body and one optional image, so essay content can render as repeated image-plus-paragraph blocks.
 
 `content_tags` supports multiple tag categories through the `type` field instead of hard-coding a fixed taxonomy. Early likely categories:
 

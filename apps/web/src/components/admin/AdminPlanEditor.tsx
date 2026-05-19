@@ -64,6 +64,19 @@ function parseNumber(value: string) {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+function calculatePlanTotalChapters(sections: AdminPlanInput['sections']) {
+  return sections.reduce((sum, section) => {
+    return (
+      sum +
+      section.items.reduce((sectionSum, item) => {
+        const start = Math.max(1, Math.floor(Number(item.start_chapter) || 1));
+        const end = Math.max(start, Math.floor(Number(item.end_chapter) || start));
+        return sectionSum + (end - start + 1);
+      }, 0)
+    );
+  }, 0);
+}
+
 function normalizeSections(sections: AdminPlanInput['sections']) {
   if (!sections || sections.length === 0) {
     return emptyPlan.sections;
@@ -138,6 +151,7 @@ export default function AdminPlanEditor({ planId }: AdminPlanEditorProps) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const calculatedTotalChapters = calculatePlanTotalChapters(plan.sections);
 
   useEffect(() => {
     if (!planId) return;
@@ -301,6 +315,7 @@ export default function AdminPlanEditor({ planId }: AdminPlanEditorProps) {
     try {
       const payload = {
         ...plan,
+        total_chapters: calculatedTotalChapters,
         tags: tagsString
           .split(',')
           .map((tag) => tag.trim())
@@ -505,14 +520,20 @@ export default function AdminPlanEditor({ planId }: AdminPlanEditorProps) {
             />
           </div>
           <div>
-            <label htmlFor="primary_book_key">Primary book key</label>
-            <BookKeyCombobox
-              id="primary_book_key"
-              value={plan.primary_book_key ?? ''}
-              onChange={(bookKey) => setPlan({ ...plan, primary_book_key: bookKey })}
-              allowEmpty
-            />
+            <label htmlFor="total_chapters">Total chapters</label>
+            <input id="total_chapters" type="number" value={calculatedTotalChapters} readOnly />
+            <p className="muted">Automatically calculated from section items.</p>
           </div>
+        </div>
+
+        <div className="field-row">
+          <label htmlFor="primary_book_key">Primary book key</label>
+          <BookKeyCombobox
+            id="primary_book_key"
+            value={plan.primary_book_key ?? ''}
+            onChange={(bookKey) => setPlan({ ...plan, primary_book_key: bookKey })}
+            allowEmpty
+          />
         </div>
 
         <div className="field-row">

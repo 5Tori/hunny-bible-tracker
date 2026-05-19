@@ -4,14 +4,19 @@ import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../content/data/content_api_client.dart';
+import '../read/data/read_repository.dart';
 
 class DiscoverScreen extends StatefulWidget {
   DiscoverScreen({
     super.key,
+    required this.readRepository,
     ContentApiClient? contentApiClient,
+    this.onPlanStarted,
   }) : contentApiClient = contentApiClient ?? ContentApiClient();
 
+  final ReadRepository readRepository;
   final ContentApiClient contentApiClient;
+  final VoidCallback? onPlanStarted;
 
   @override
   State<DiscoverScreen> createState() => _DiscoverScreenState();
@@ -58,7 +63,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     });
 
     try {
-      if (!await widget.contentApiClient.canReachApi()) {
+      if (!await widget.contentApiClient.canReachApi(force: true)) {
         if (!mounted) return;
         setState(() {
           _contents = const [];
@@ -71,6 +76,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         sort: 'featured',
         language: 'en',
         limit: 50,
+        skipReachabilityCheck: true,
       );
       if (!mounted) return;
       setState(() {
@@ -141,6 +147,8 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         content.body,
         content.primaryVerseReference,
         content.author?.displayName,
+        ...content.sections.map((section) => section.title),
+        ...content.sections.map((section) => section.body),
         ...content.tags.map((tag) => tag.name),
         ...content.relatedPlans.map((plan) => plan.title),
       ].whereType<String>().map((value) => value.toLowerCase());
@@ -166,7 +174,11 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (context) => _ContentDetailSheet(content: content),
+      builder: (context) => _ContentDetailSheet(
+        content: content,
+        readRepository: widget.readRepository,
+        onPlanStarted: widget.onPlanStarted,
+      ),
     );
   }
 
@@ -439,6 +451,8 @@ class _ContentCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final imageUrl = content.coverImageUrl;
     final subtitle = _contentSubtitle(content);
+    const imageWidth = 82.0;
+    const imageHeight = 116.0;
 
     return Material(
       color: Colors.white,
@@ -459,16 +473,18 @@ class _ContentCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(6),
                 child: imageUrl == null
                     ? _ImageFallback(
-                        size: 72,
+                        size: imageWidth,
+                        height: imageHeight,
                         icon: _typeIcon(content.contentType),
                       )
                     : Image.network(
                         imageUrl,
-                        width: 72,
-                        height: 72,
+                        width: imageWidth,
+                        height: imageHeight,
                         fit: BoxFit.cover,
                         errorBuilder: (_, __, ___) => _ImageFallback(
-                          size: 72,
+                          size: imageWidth,
+                          height: imageHeight,
                           icon: _typeIcon(content.contentType),
                         ),
                       ),
@@ -534,9 +550,15 @@ class _ContentCard extends StatelessWidget {
 }
 
 class _ContentDetailSheet extends StatefulWidget {
-  const _ContentDetailSheet({required this.content});
+  const _ContentDetailSheet({
+    required this.content,
+    required this.readRepository,
+    this.onPlanStarted,
+  });
 
   final RemoteContent content;
+  final ReadRepository readRepository;
+  final VoidCallback? onPlanStarted;
 
   @override
   State<_ContentDetailSheet> createState() => _ContentDetailSheetState();
@@ -545,6 +567,8 @@ class _ContentDetailSheet extends StatefulWidget {
 class _ContentDetailSheetState extends State<_ContentDetailSheet> {
   late final PageController _slideController;
   var _slideIndex = 0;
+  final Set<String> _subscribedPlanIds = {};
+  final Set<String> _startingPlanIds = {};
 
   RemoteContent get content => widget.content;
 
@@ -564,6 +588,37 @@ class _ContentDetailSheetState extends State<_ContentDetailSheet> {
     final uri = Uri.tryParse(url);
     if (uri == null) return;
     await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  Future<void> _startRelatedPlan(RemoteContentRelatedPlan plan) async {
+    if (_startingPlanIds.contains(plan.id)) return;
+    final alreadySubscribed = _subscribedPlanIds.contains(plan.id);
+    setState(() => _startingPlanIds.add(plan.id));
+    try {
+      try {
+        await widget.readRepository.addPlanFromTemplate(plan.templateKey);
+      } on ArgumentError {
+        await widget.readRepository.refreshPlanTemplatesFromRemote();
+        await widget.readRepository.addPlanFromTemplate(plan.templateKey);
+      }
+      if (!mounted) return;
+      setState(() => _subscribedPlanIds.add(plan.id));
+      widget.onPlanStarted?.call();
+      if (!alreadySubscribed) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Plan subscribed')),
+        );
+      }
+    } catch (_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not start this plan.')),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _startingPlanIds.remove(plan.id));
+      }
+    }
   }
 
   @override
@@ -663,7 +718,15 @@ class _ContentDetailSheetState extends State<_ContentDetailSheet> {
                 ),
               ),
             ],
-            if (content.body != null) ...[
+            if (content.contentType == 'essay' &&
+                content.sections.isNotEmpty) ...[
+              const SizedBox(height: 18),
+              for (final section in content.sections)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 18),
+                  child: _EssaySectionBlock(section: section),
+                ),
+            ] else if (content.body != null) ...[
               const SizedBox(height: 18),
               Text(
                 content.body!,
@@ -683,45 +746,19 @@ class _ContentDetailSheetState extends State<_ContentDetailSheet> {
             ],
             if (content.relatedPlans.isNotEmpty) ...[
               const SizedBox(height: 24),
-              const _SectionLabel(title: 'PLANS'),
+              Text(
+                'Want to explore the full story?',
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w800,
+                    ),
+              ),
               const SizedBox(height: 10),
               for (final plan in content.relatedPlans)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: AppTheme.softSurface,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: AppTheme.border),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              plan.title,
-                              style: Theme.of(context)
-                                  .textTheme
-                                  .bodyLarge
-                                  ?.copyWith(fontWeight: FontWeight.w800),
-                            ),
-                            Text(
-                              [
-                                if (plan.totalChapters != null)
-                                  '${plan.totalChapters} chapters',
-                                if (plan.estimatedMinutes != null)
-                                  '${plan.estimatedMinutes} min',
-                              ].join(' · '),
-                              style: Theme.of(context).textTheme.bodySmall,
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Icon(Icons.arrow_forward_ios, size: 14),
-                    ],
-                  ),
+                _RelatedPlanCard(
+                  plan: plan,
+                  starting: _startingPlanIds.contains(plan.id),
+                  subscribed: _subscribedPlanIds.contains(plan.id),
+                  onStart: () => _startRelatedPlan(plan),
                 ),
             ],
           ],
@@ -827,6 +864,166 @@ class _AuthorInitial extends StatelessWidget {
   }
 }
 
+class _RelatedPlanCard extends StatelessWidget {
+  const _RelatedPlanCard({
+    required this.plan,
+    required this.starting,
+    required this.subscribed,
+    required this.onStart,
+  });
+
+  final RemoteContentRelatedPlan plan;
+  final bool starting;
+  final bool subscribed;
+  final VoidCallback onStart;
+
+  @override
+  Widget build(BuildContext context) {
+    final meta = [
+      if (plan.totalChapters != null) '${plan.totalChapters} chapters',
+      if (plan.estimatedMinutes != null) '${plan.estimatedMinutes} min',
+    ].join(' · ');
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: AppTheme.softSurface,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            plan.title,
+            style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+          if (meta.isNotEmpty) ...[
+            const SizedBox(height: 2),
+            Text(
+              meta,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.mutedInk,
+                  ),
+            ),
+          ],
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: starting ? null : onStart,
+              style: FilledButton.styleFrom(
+                backgroundColor: AppTheme.ink,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+              ),
+              child: Text(
+                starting
+                    ? 'Starting...'
+                    : subscribed
+                        ? 'Continue'
+                        : 'Start this plan',
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _EssaySectionBlock extends StatelessWidget {
+  const _EssaySectionBlock({required this.section});
+
+  final RemoteContentSection section;
+
+  @override
+  Widget build(BuildContext context) {
+    final imageUrl = section.imageUrl;
+    final imageCaption = section.imageCaption;
+    final title = section.title;
+    final body = section.body;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (imageUrl != null) ...[
+          _EssaySectionImage(section: section),
+          const SizedBox(height: 12),
+        ],
+        if (imageCaption != null && imageUrl == null) ...[
+          Text(
+            imageCaption,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.mutedInk,
+                ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        if (title != null) ...[
+          Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+          ),
+          const SizedBox(height: 8),
+        ],
+        if (body != null)
+          Text(
+            body,
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: AppTheme.ink,
+                  height: 1.6,
+                ),
+          ),
+      ],
+    );
+  }
+}
+
+class _EssaySectionImage extends StatelessWidget {
+  const _EssaySectionImage({required this.section});
+
+  final RemoteContentSection section;
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Image.network(
+            section.imageUrl!,
+            width: double.infinity,
+            fit: BoxFit.cover,
+            errorBuilder: (_, __, ___) => const _ImageFallback(
+              size: double.infinity,
+              height: 180,
+              icon: Icons.image_outlined,
+            ),
+          ),
+          if (section.imageCaption != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              section.imageCaption!,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.mutedInk,
+                  ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
 class _ContentMediaBlock extends StatelessWidget {
   const _ContentMediaBlock({
     required this.content,
@@ -847,7 +1044,10 @@ class _ContentMediaBlock extends StatelessWidget {
   final ValueChanged<String> onOpenUrl;
 
   bool get hasMedia {
-    if (content.contentType == 'webtoon') {
+    if (content.contentType == 'essay') {
+      return false;
+    }
+    if (content.contentType == 'cartoon') {
       return imageAssets.isNotEmpty || content.coverImageUrl != null;
     }
     if (content.contentType == 'video') {
@@ -860,10 +1060,14 @@ class _ContentMediaBlock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (content.contentType == 'webtoon') {
+    if (content.contentType == 'essay') {
+      return const SizedBox.shrink();
+    }
+
+    if (content.contentType == 'cartoon') {
       final slides = imageAssets;
       if (slides.isNotEmpty) {
-        return _WebtoonSlider(
+        return _CartoonSlider(
           slides: slides,
           controller: slideController,
           index: slideIndex,
@@ -900,8 +1104,8 @@ class _ContentMediaBlock extends StatelessWidget {
   }
 }
 
-class _WebtoonSlider extends StatelessWidget {
-  const _WebtoonSlider({
+class _CartoonSlider extends StatelessWidget {
+  const _CartoonSlider({
     required this.slides,
     required this.controller,
     required this.index,
@@ -1387,7 +1591,7 @@ IconData _typeIcon(String type) {
   return switch (type) {
     'video' => Icons.play_arrow_rounded,
     'essay' => Icons.article_outlined,
-    'webtoon' => Icons.collections_outlined,
+    'cartoon' => Icons.collections_outlined,
     'message' => Icons.chat_bubble_outline,
     _ => Icons.auto_stories_outlined,
   };
@@ -1407,7 +1611,7 @@ int _typeSortOrder(String type) {
     'message' => 0,
     'video' => 1,
     'essay' => 2,
-    'webtoon' => 3,
+    'cartoon' => 3,
     _ => 99,
   };
 }
@@ -1417,7 +1621,7 @@ String _typeLabel(String type) {
     'message' => 'Message',
     'video' => 'Video',
     'essay' => 'Essay',
-    'webtoon' => 'Webtoon',
+    'cartoon' => 'Cartoon',
     _ => type,
   };
 }

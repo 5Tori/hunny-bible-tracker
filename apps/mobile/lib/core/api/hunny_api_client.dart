@@ -7,8 +7,8 @@ class HunnyApiClient {
 
   static const requestConnectTimeout = Duration(milliseconds: 1200);
   static const requestReceiveTimeout = Duration(milliseconds: 2500);
-  static const probeConnectTimeout = Duration(milliseconds: 700);
-  static const probeReceiveTimeout = Duration(milliseconds: 900);
+  static const probeConnectTimeout = Duration(milliseconds: 1500);
+  static const probeReceiveTimeout = Duration(milliseconds: 2000);
 
   static Dio create(
     HunnyApiConfig config, {

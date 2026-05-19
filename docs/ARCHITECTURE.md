@@ -139,7 +139,7 @@ On mobile, Home first checks todayâ€™s local cache, then the last cached Todayâ€
 
 ```text
 Admin creates/publishes content
-  -> Neon contents / content_assets / content_tags / content_plan_links
+  -> Neon contents / content_sections / content_assets / content_tags / content_plan_links
   -> GET /api/v1/content?sort=featured&language=en
   -> mobile Discover loads content through ContentApiClient
   -> user searches, filters by type/tag, and opens a content detail sheet

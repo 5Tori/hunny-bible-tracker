@@ -114,14 +114,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       .titleMedium
                       ?.copyWith(fontWeight: FontWeight.w700),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Used for Read online links on Bible.com.',
-                  textAlign: TextAlign.center,
-                  style: Theme.of(sheetContext).textTheme.bodySmall?.copyWith(
-                        color: AppTheme.mutedInk,
-                      ),
-                ),
                 const SizedBox(height: 16),
                 for (final version in BibleComVersion.selectable) ...[
                   ListTile(
@@ -141,7 +133,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       },
     );
     if (selected == null || !mounted) return;
-    if (selected.id == _bibleVersion.id && selected.abbr == _bibleVersion.abbr) {
+    if (selected.id == _bibleVersion.id &&
+        selected.abbr == _bibleVersion.abbr) {
       return;
     }
     await widget.readRepository.setBibleComVersion(selected);
@@ -343,14 +336,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       else
                         SelectableText(
                           accountTitle,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(
-                                fontSize: 15,
-                                fontFamily: 'monospace',
-                                fontWeight: FontWeight.w700,
-                              ),
+                          style:
+                              Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontSize: 15,
+                                    fontFamily: 'monospace',
+                                    fontWeight: FontWeight.w700,
+                                  ),
                         ),
                       if (!signedIn) ...[
                         const SizedBox(height: 4),

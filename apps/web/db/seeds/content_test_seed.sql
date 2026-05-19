@@ -126,10 +126,10 @@ from (
     ),
     (
       'jonah-running-from-mercy',
-      'webtoon',
+      'cartoon',
       'Jonah: running from mercy',
       'A three-panel visual story starter.',
-      'A webtoon-style introduction to Jonah and the surprising wideness of mercy.',
+      'A cartoon-style introduction to Jonah and the surprising wideness of mercy.',
       'Jonah is not only a story about running away. It is a story about God pursuing both the prophet and the city.',
       'Jonah 1:3',
       null,
@@ -191,6 +191,56 @@ join (
 ) as map(content_slug, tag_type, tag_key) on map.content_slug = c.slug
 join content_tags t on t.type = map.tag_type and t.key = map.tag_key
 on conflict (content_id, tag_id) do nothing;
+
+delete from content_sections
+where content_id in (
+  select id from contents where slug = 'when-prayer-feels-small'
+);
+
+insert into content_sections (
+  content_id,
+  order_index,
+  title,
+  body,
+  image_url,
+  image_alt_text,
+  image_caption,
+  metadata,
+  created_at,
+  updated_at
+)
+select
+  c.id,
+  section.order_index,
+  section.title,
+  section.body,
+  section.image_url,
+  section.image_alt_text,
+  section.image_caption,
+  '{"seed":true}'::jsonb,
+  now(),
+  now()
+from contents c
+join (
+  values
+    (
+      0,
+      'Start with honesty',
+      'Prayer does not become faithful because it is long. Sometimes the honest sentence is the doorway back to God.',
+      null,
+      null,
+      null
+    ),
+    (
+      1,
+      'Let weakness be named',
+      'When your words feel thin, you can still come as you are. God is not measuring your eloquence.',
+      'https://placehold.co/1200x800/fff8df/111111.png?text=Small+prayers',
+      'Simple placeholder image for a quiet prayer moment.',
+      'Small prayers are still real prayers.'
+    )
+) as section(order_index, title, body, image_url, image_alt_text, image_caption)
+  on c.slug = 'when-prayer-feels-small';
 
 insert into content_plan_links (
   content_id,

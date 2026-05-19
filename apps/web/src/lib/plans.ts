@@ -212,7 +212,7 @@ function normalizeInput(input: AdminPlanInput): AdminPlanInput {
     difficulty: emptyToNull(normalizeDifficulty(String(input.difficulty ?? ''))),
     estimated_minutes: normalizeNullableNumber(input.estimated_minutes),
     estimated_days: normalizeNullableNumber(input.estimated_days),
-    total_chapters: normalizeNullableNumber(input.total_chapters),
+    total_chapters: calculateTotalChapters(sections),
     primary_book_key: emptyToNull(input.primary_book_key),
     primary_character: emptyToNull(input.primary_character),
     is_archived: Boolean(input.is_archived),
@@ -433,7 +433,7 @@ function buildTagQueries(planId: string, tags: string[] | undefined, txn: SqlLik
 export async function createAdminPlan(rawInput: AdminPlanInput) {
   const input = normalizeInput(rawInput);
   const planId = crypto.randomUUID();
-  const totalChapters = input.total_chapters ?? calculateTotalChapters(input.sections);
+  const totalChapters = calculateTotalChapters(input.sections);
   const templateKey = await generateTemplateKey(input.title);
 
   await sql.transaction((txn: SqlLike) => [
@@ -495,7 +495,7 @@ export async function createAdminPlan(rawInput: AdminPlanInput) {
 
 export async function updateAdminPlan(id: string, rawInput: AdminPlanInput) {
   const input = normalizeInput(rawInput);
-  const totalChapters = input.total_chapters ?? calculateTotalChapters(input.sections);
+  const totalChapters = calculateTotalChapters(input.sections);
 
   await sql.transaction((txn: SqlLike) => [
     txn`

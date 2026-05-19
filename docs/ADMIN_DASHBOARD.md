@@ -89,12 +89,14 @@ Planned content types:
 - `message`
 - `video`
 - `essay`
-- `webtoon`
+- `cartoon`
 
 Admin scope:
 
 - Content create/edit/publish/archive
-- Ordered content assets for media, inline images, and webtoon slides
+- Essay sections with optional section images
+- Video URL plus description body
+- Ordered content assets for media and cartoon slides
 - Category-based content tags
 - Many-to-many related plan selection
 - Lightweight author creation/reuse from the content editor
