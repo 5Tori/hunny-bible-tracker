@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AndroidTesterCta } from "@/components/public/AndroidTesterCta";
 import { navLinks, siteConfig } from "@/lib/site-config";
 
 export default function MarketingHeader() {
@@ -20,9 +21,7 @@ export default function MarketingHeader() {
               {link.label}
             </Link>
           ))}
-          <a href={siteConfig.googlePlayUrl} className="hb-button hb-button--small hb-button--dark">
-            Get the app
-          </a>
+          <AndroidTesterCta className="hb-button hb-button--small hb-button--dark" />
         </nav>
       </div>
     </header>

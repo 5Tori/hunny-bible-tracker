@@ -1,3 +1,4 @@
+import { AndroidTesterCta } from "@/components/public/AndroidTesterCta";
 import { siteConfig } from "@/lib/site-config";
 
 export default function FinalCTA() {
@@ -11,9 +12,7 @@ export default function FinalCTA() {
             Begin with a short plan and build your Bible reading habit one chapter at a time.
           </p>
           <div className="hb-cta-row hb-cta-row--center">
-            <a href={siteConfig.googlePlayUrl} className="hb-button hb-button--dark">
-              Get it on Google Play
-            </a>
+            <AndroidTesterCta variant="hb" />
             <span className="hb-button hb-button--light" aria-disabled="true" role="note">
               {siteConfig.iosStatusLabel}
             </span>

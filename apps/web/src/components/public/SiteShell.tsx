@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { AndroidTesterCta } from "@/components/public/AndroidTesterCta";
 import { siteConfig } from "@/lib/site-config";
 
 export function SiteHeader() {
@@ -21,12 +22,7 @@ export function SiteHeader() {
           >
             Support
           </Link>
-          <a
-            href="/#download"
-            className="ml-1 hidden rounded-full bg-[#211105] px-4 py-2 text-white transition hover:bg-[#332010] sm:inline-flex"
-          >
-            Get the app
-          </a>
+          <AndroidTesterCta variant="header" />
         </nav>
       </div>
     </header>

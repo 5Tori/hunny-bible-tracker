@@ -7,6 +7,8 @@ export const siteConfig = {
   url: "https://hunny-bible-tracker.vercel.app",
   supportEmail: "hunnybibletracker@gmail.com",
   googlePlayUrl: "https://play.google.com/store/apps/details?id=com.hunnybibletracker.app",
+  androidTesterGroupUrl: "https://groups.google.com/g/hunny-bible-tracker-closed-testers",
+  androidTesterOptInUrl: "https://play.google.com/apps/testing/com.hunnybibletracker.app",
   iosStatusLabel: "iOS coming soon",
 } as const;
 

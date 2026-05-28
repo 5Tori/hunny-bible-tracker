@@ -1,8 +1,8 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { AndroidTesterCta } from "@/components/public/AndroidTesterCta";
 import { HoneyMark, SiteFooter, SiteHeader } from "@/components/public/SiteShell";
-import { siteConfig } from "@/lib/site-config";
 
 const plans = [
   {
@@ -114,12 +114,7 @@ export default function HomePage() {
                 </p>
 
                 <div id="download" className="mt-8 flex flex-wrap items-center gap-3">
-                  <StoreButton
-                    store="Google Play"
-                    caption="Get it on"
-                    href={siteConfig.googlePlayUrl}
-                    icon={<PlayIcon />}
-                  />
+                  <AndroidTesterCta />
                   <StoreButton
                     store="App Store"
                     caption="Coming soon to"
@@ -311,12 +306,7 @@ export default function HomePage() {
             Build a gentle rhythm of Scripture at your own pace.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <StoreButton
-              store="Google Play"
-              caption="Get it on"
-              href={siteConfig.googlePlayUrl}
-              icon={<PlayIcon />}
-            />
+            <AndroidTesterCta />
             <Link
               href="/support"
               className="inline-flex items-center justify-center rounded-2xl border border-border bg-card px-5 py-3 text-sm font-medium text-foreground transition hover:bg-muted"
@@ -434,14 +424,6 @@ function PhoneMockup() {
         </div>
       </div>
     </div>
-  );
-}
-
-function PlayIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M5 3.5v17l15-8.5L5 3.5z" />
-    </svg>
   );
 }
 

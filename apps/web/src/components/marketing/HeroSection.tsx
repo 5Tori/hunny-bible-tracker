@@ -1,3 +1,4 @@
+import { AndroidTesterCta } from "@/components/public/AndroidTesterCta";
 import { siteConfig } from "@/lib/site-config";
 
 const trustItems = ["Short story-led plans", "Offline-first progress", "No guilt", "Beginner friendly"];
@@ -16,9 +17,7 @@ export default function HeroSection() {
           </p>
 
           <div className="hb-cta-row">
-            <a href={siteConfig.googlePlayUrl} className="hb-button hb-button--dark">
-              Get it on Google Play
-            </a>
+            <AndroidTesterCta variant="hb" />
             <span className="hb-button hb-button--soft" aria-disabled="true" role="note">
               {siteConfig.iosStatusLabel}
             </span>
