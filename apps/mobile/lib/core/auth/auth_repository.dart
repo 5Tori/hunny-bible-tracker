@@ -1,32 +1,33 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:firebase_auth/firebase_auth.dart' as fb;
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' hide AuthUser;
 
 import '../api/hunny_api_client.dart';
 import '../api/hunny_api_config.dart';
 import '../api/hunny_api_models.dart';
 import '../../features/read/data/read_repository.dart';
 import 'auth_models.dart';
-import 'firebase_auth_config.dart';
+import 'supabase_auth_config.dart';
 
-/// Firebase Auth session + local profile link.
+/// Supabase Auth session + local profile link.
 ///
-/// Neon remains the application database. Firebase owns authentication, and
-/// `local_users.auth_user_id` stores Firebase `uid` for future sync.
+/// The server database lives behind Next.js API routes. Supabase owns
+/// authentication; `local_users.auth_user_id` stores the Supabase user UUID.
 class AuthRepository {
   AuthRepository({
-    required FirebaseAuthConfig firebaseConfig,
-    required bool firebaseReady,
+    required SupabaseAuthConfig supabaseConfig,
+    required bool supabaseReady,
     required ReadRepository readRepository,
-    fb.FirebaseAuth? firebaseAuth,
+    SupabaseClient? supabaseClient,
     HunnyApiConfig? apiConfig,
     HunnyApiReachability? apiReachability,
-  })  : _firebaseConfig = firebaseConfig,
-        _firebaseReady = firebaseReady,
-        _firebaseAuth =
-            firebaseReady ? (firebaseAuth ?? fb.FirebaseAuth.instance) : null,
+  })  : _supabaseConfig = supabaseConfig,
+        _supabaseReady = supabaseReady,
+        _supabase = supabaseReady
+            ? (supabaseClient ?? Supabase.instance.client)
+            : null,
         _readRepository = readRepository,
         _apiConfig = apiConfig ?? HunnyApiConfig.fromEnvironment(),
         _apiReachability = apiReachability ??
@@ -34,41 +35,50 @@ class AuthRepository {
               config: apiConfig ?? HunnyApiConfig.fromEnvironment(),
             );
 
-  final FirebaseAuthConfig _firebaseConfig;
-  final bool _firebaseReady;
-  final fb.FirebaseAuth? _firebaseAuth;
+  final SupabaseAuthConfig _supabaseConfig;
+  final bool _supabaseReady;
+  final SupabaseClient? _supabase;
   final ReadRepository _readRepository;
   final HunnyApiConfig _apiConfig;
   final HunnyApiReachability _apiReachability;
 
-  bool get isAvailable => _firebaseReady && _firebaseAuth != null;
+  bool get isAvailable => _supabaseReady && _supabase != null;
 
   bool get isApiConfigured => _apiConfig.isConfigured;
 
-  bool get isGoogleSignInConfigured => _firebaseConfig.isGoogleSignInConfigured;
+  bool get isGoogleSignInConfigured => _supabaseConfig.isGoogleSignInConfigured;
 
   Future<AuthSession?> refreshRemoteSession() async {
-    final auth = _firebaseAuth;
-    if (!_firebaseReady || auth == null) return null;
-    final user = auth.currentUser;
+    final client = _supabase;
+    if (!_supabaseReady || client == null) return null;
+
+    var session = client.auth.currentSession;
+    if (session == null) {
+      await _readRepository.clearAuthLink();
+      return null;
+    }
+
+    try {
+      final refreshed = await client.auth.refreshSession();
+      session = refreshed.session ?? session;
+    } catch (_) {
+      // Keep existing session when refresh fails offline.
+    }
+
+    final user = session?.user;
     if (user == null) {
       await _readRepository.clearAuthLink();
       return null;
     }
-    await user.reload().timeout(const Duration(seconds: 2));
-    final refreshed = auth.currentUser;
-    if (refreshed == null) {
-      await _readRepository.clearAuthLink();
-      return null;
-    }
-    await _syncSignedInUser(refreshed, allowApiFailure: true);
+
+    await _syncSignedInUser(user, allowApiFailure: true);
     await pushReadingSyncIfDue(allowApiFailure: true);
-    return _sessionFromFirebaseUser(refreshed);
+    return _sessionFromUser(user);
   }
 
   Future<AuthSession> signInWithGoogle() async {
     _requireReady();
-    if (!_firebaseConfig.isGoogleSignInConfigured) {
+    if (!_supabaseConfig.isGoogleSignInConfigured) {
       throw AppAuthException(
         'Add GOOGLE_WEB_CLIENT_ID at build time for Google Sign-In.',
       );
@@ -76,8 +86,8 @@ class AuthRepository {
     try {
       final google = GoogleSignIn(
         scopes: const ['email', 'profile'],
-        serverClientId: _firebaseConfig.webClientId,
-        clientId: _firebaseConfig.nativeGoogleClientId,
+        serverClientId: _supabaseConfig.webClientId,
+        clientId: _supabaseConfig.nativeGoogleClientId,
       );
       final account = await google.signIn();
       if (account == null) {
@@ -85,42 +95,48 @@ class AuthRepository {
             code: 'cancelled');
       }
       final tokens = await account.authentication;
-      final credential = fb.GoogleAuthProvider.credential(
-        accessToken: tokens.accessToken,
-        idToken: tokens.idToken,
-      );
-      final firebaseCredential =
-          await _firebaseAuth!.signInWithCredential(credential);
-      final user = firebaseCredential.user;
-      if (user == null) {
-        throw AppAuthException('Firebase did not return a user.');
+      final idToken = tokens.idToken;
+      if (idToken == null || idToken.isEmpty) {
+        throw AppAuthException('Google did not return an ID token.');
       }
+
+      final response = await _supabase!.auth.signInWithIdToken(
+        provider: OAuthProvider.google,
+        idToken: idToken,
+        accessToken: tokens.accessToken,
+      );
+
+      final user = response.user;
+      if (user == null) {
+        throw AppAuthException('Supabase did not return a user.');
+      }
+
+      final createdAt = DateTime.tryParse(user.createdAt);
+      final createdNewAccount = createdAt != null &&
+          DateTime.now().difference(createdAt.toUtc()).inMinutes < 2;
+
       await _syncSignedInUser(user, allowApiFailure: true);
       await pushReadingSyncIfDue(
         minInterval: Duration.zero,
         allowApiFailure: true,
       );
-      return _sessionFromFirebaseUser(
-        user,
-        createdNewAccount:
-            firebaseCredential.additionalUserInfo?.isNewUser ?? false,
-      );
+      return _sessionFromUser(user, createdNewAccount: createdNewAccount);
     } on AppAuthException {
       rethrow;
-    } on fb.FirebaseAuthException catch (e) {
-      throw AppAuthException(_firebaseMessage(e), code: e.code);
+    } on AuthException catch (e) {
+      throw AppAuthException(_supabaseMessage(e), code: e.code);
     }
   }
 
   Future<void> signOut() async {
     try {
       await GoogleSignIn(
-        serverClientId: _firebaseConfig.webClientId,
-        clientId: _firebaseConfig.nativeGoogleClientId,
+        serverClientId: _supabaseConfig.webClientId,
+        clientId: _supabaseConfig.nativeGoogleClientId,
       ).signOut();
     } catch (_) {}
-    if (_firebaseAuth != null) {
-      await _firebaseAuth.signOut();
+    if (_supabase != null) {
+      await _supabase.auth.signOut();
     }
     await _readRepository.clearAuthLink();
   }
@@ -129,7 +145,7 @@ class AuthRepository {
     if (!await _apiReachability.canReachApi()) {
       throw HunnyApiException('Hunny API is offline');
     }
-    final token = await _firebaseIdToken();
+    final token = await _accessToken();
     final res = await _authedDio(token).get<dynamic>('/api/v1/me');
     final code = res.statusCode ?? 0;
     final data = res.data;
@@ -143,11 +159,11 @@ class AuthRepository {
     if (!await _apiReachability.canReachApi()) {
       throw HunnyApiException('Hunny API is offline');
     }
-    final token = await _firebaseIdToken();
+    final token = await _accessToken();
     final res = await _authedDio(token).post<dynamic>(
       '/api/v1/auth/sync',
       data: <String, dynamic>{},
-      options: Options(contentType: Headers.jsonContentType),
+      options: Options(contentType: 'application/json'),
     );
     final code = res.statusCode ?? 0;
     if (code < 200 || code >= 300) {
@@ -160,12 +176,12 @@ class AuthRepository {
     if (!await _apiReachability.canReachApi()) {
       throw HunnyApiException('Hunny API is offline');
     }
-    final token = await _firebaseIdToken();
+    final token = await _accessToken();
     final payload = await _readRepository.exportReadingBackupSnapshot();
     final res = await _authedDio(token).post<dynamic>(
       '/api/v1/sync/push',
       data: payload,
-      options: Options(contentType: Headers.jsonContentType),
+      options: Options(contentType: 'application/json'),
     );
     final code = res.statusCode ?? 0;
     final data = res.data;
@@ -187,7 +203,7 @@ class AuthRepository {
     if (!await _apiReachability.canReachApi()) {
       throw HunnyApiException('Hunny API is offline');
     }
-    final token = await _firebaseIdToken();
+    final token = await _accessToken();
     final res = await _authedDio(token).get<dynamic>(
       '/api/v1/sync/bootstrap',
     );
@@ -223,10 +239,10 @@ class AuthRepository {
   }
 
   Future<void> _syncSignedInUser(
-    fb.User user, {
+    User user, {
     bool allowApiFailure = false,
   }) async {
-    await _readRepository.syncAuthUserId(user.uid);
+    await _readRepository.syncAuthUserId(user.id);
     if (!_apiConfig.isConfigured) return;
     if (!await _apiReachability.canReachApi()) return;
     try {
@@ -258,15 +274,15 @@ class AuthRepository {
     return fallback;
   }
 
-  Future<String> _firebaseIdToken() async {
+  Future<String> _accessToken() async {
     _requireReady();
-    final user = _firebaseAuth!.currentUser;
-    if (user == null) {
-      throw HunnyApiException('No Firebase user — sign in again');
+    final session = _supabase!.auth.currentSession;
+    if (session == null) {
+      throw HunnyApiException('No Supabase session — sign in again');
     }
-    final token = await user.getIdToken().timeout(const Duration(seconds: 2));
-    if (token == null || token.isEmpty) {
-      throw HunnyApiException('Firebase did not return an ID token');
+    final token = session.accessToken;
+    if (token.isEmpty) {
+      throw HunnyApiException('Supabase did not return an access token');
     }
     return token;
   }
@@ -274,27 +290,30 @@ class AuthRepository {
   void _requireReady() {
     if (!isAvailable) {
       throw AppAuthException(
-        'Firebase Auth is not configured. Add Firebase dart-defines and initialize Firebase.',
+        'Supabase Auth is not configured. Add SUPABASE_URL and SUPABASE_ANON_KEY dart-defines.',
       );
     }
   }
 
-  AuthSession _sessionFromFirebaseUser(
-    fb.User user, {
+  AuthSession _sessionFromUser(
+    User user, {
     bool createdNewAccount = false,
   }) {
+    final meta = user.userMetadata ?? {};
+    final name = meta['full_name'] ?? meta['name'];
+    final photo = meta['avatar_url'] ?? meta['picture'];
     return AuthSession(
       createdNewAccount: createdNewAccount,
       user: AuthUser(
-        id: user.uid,
+        id: user.id,
         email: user.email,
-        name: user.displayName,
-        photoUrl: user.photoURL,
+        name: name is String ? name : null,
+        photoUrl: photo is String ? photo : null,
       ),
     );
   }
 
-  String _firebaseMessage(fb.FirebaseAuthException e) {
-    return e.message ?? 'Firebase Auth failed (${e.code})';
+  String _supabaseMessage(AuthException e) {
+    return e.message;
   }
 }

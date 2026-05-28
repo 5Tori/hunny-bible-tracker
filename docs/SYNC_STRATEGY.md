@@ -1,6 +1,6 @@
 # Sync Strategy
 
-The app is offline-first. Reading data is written locally first, then optionally backed up to Neon for signed-in users.
+The app is offline-first. Reading data is written locally first, then optionally backed up to Supabase for signed-in users.
 
 ```text
 User action
@@ -9,7 +9,7 @@ User action
   -> row marked local_only/pending
   -> authenticated sync push
   -> Next.js API
-  -> Neon Postgres
+  -> Supabase Postgres
 ```
 
 ## Current Implemented Sync
@@ -17,9 +17,9 @@ User action
 ### Auth identity
 
 ```text
-Firebase ID token
+Supabase access token
   -> POST /api/v1/auth/sync
-  -> Neon auth_users upsert
+  -> profiles upsert
 ```
 
 ### Reading backup push
@@ -97,10 +97,10 @@ Before sign-in, local data belongs to one guest `local_users` row.
 After sign-in:
 
 ```text
-Firebase uid
+Supabase user UUID
   -> local_users.auth_user_id
   -> POST /api/v1/auth/sync
-  -> auth_users.id
+  -> profiles.id
 ```
 
 Current behavior preserves local data and pushes it after sign-in. Restore/bootstrap replaces local reading state from the compact account backup.
@@ -111,7 +111,7 @@ Current behavior preserves local data and pushes it after sign-in. Restore/boots
 
 Plan templates are source/catalog data.
 
-Published plan templates are server-managed in Neon and downloaded through `GET /api/v1/plans`. Mobile caches them locally in Drift so Catalog and user plan creation can work from the local snapshot.
+Published plan templates are server-managed in Supabase and downloaded through `GET /api/v1/plans`. Mobile caches them locally in Drift so Catalog and user plan creation can work from the local snapshot.
 
 ### User plan runs
 
@@ -142,7 +142,7 @@ Do not delete completion activity when a user unchecks a chapter.
 | `POST /api/v1/sync/push` | Upload current local reading snapshot for signed-in user |
 | `GET /api/v1/sync/bootstrap` | Download server snapshot for signed-in user |
 
-All routes verify Firebase bearer tokens server-side.
+All routes verify Supabase bearer tokens server-side.
 
 ## Remaining Sync Work
 
@@ -150,7 +150,7 @@ Do not treat the current sync as full multi-device collaboration. It is a practi
 
 Remaining work:
 
-- Apply `apps/web/db/schema.sql` to the fresh Neon database.
+- Apply `supabase/migrations/20260528000000_baseline.sql` to the fresh Supabase database.
 - Run push/restore E2E smoke tests.
 - Throttled app-start sync UX and telemetry polish.
 - Network reconnect trigger.

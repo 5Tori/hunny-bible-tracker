@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-import { sql } from '@/lib/db/neon';
+import { sql } from '@/lib/db/postgres';
 
 type JsonRecord = Record<string, unknown>;
 

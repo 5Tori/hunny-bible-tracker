@@ -1,8 +1,6 @@
 import crypto from 'crypto';
 
-import { sql } from '@/lib/db/neon';
-
-type SqlLike = typeof sql;
+import { sql, type SqlLike } from '@/lib/db/postgres';
 
 export interface ContentAuthor {
   id: string;

@@ -2,7 +2,7 @@
 
 `apps/web` is the Next.js app that serves the Hunny Bible Tracker public web pages, admin dashboard, and mobile-facing API.
 
-The mobile app must never connect directly to Neon. It talks to this app for published catalog data, auth user sync, reading-progress sync, today's message, and feedback submission.
+The mobile app must never connect directly to Supabase Postgres. It talks to this app for published catalog data, auth user sync, reading-progress sync, today's message, and feedback submission.
 
 ## Stack
 
@@ -10,19 +10,29 @@ The mobile app must never connect directly to Neon. It talks to this app for pub
 - React 19
 - TypeScript
 - Tailwind CSS v4 through `@tailwindcss/postcss`
-- Neon Postgres via `@neondatabase/serverless`
-- Firebase Admin SDK for server-side Firebase ID token verification
-- Firebase Web SDK for the browser admin Google login
+- Supabase Postgres via `postgres` (transaction pooler `DATABASE_URL`)
+- `@supabase/supabase-js` for JWT verification and admin browser auth
 - Cloudinary for admin-uploaded plan covers and today-message images
 - Vercel Analytics on the public layout
+
+See [`docs/SUPABASE_SETUP.md`](../../docs/SUPABASE_SETUP.md) for project creation, migrations, and OAuth redirect URLs.
+
+Deploy target: **Cloudflare Workers** (default URL `https://hunny-bible-tracker-web.<subdomain>.workers.dev`). See [`docs/CLOUDFLARE_DEPLOY.md`](../../docs/CLOUDFLARE_DEPLOY.md).
+
+```bash
+cd apps/web
+pnpm preview   # local Workers runtime
+pnpm deploy    # build + deploy (requires wrangler login + Hyperdrive id in wrangler.jsonc)
+```
 
 ## App Structure
 
 ```text
 apps/web
 +-- db
-|   +-- schema.sql                 # Full current Neon schema
-|   +-- migrations/                # Empty during MVP schema-history reset
+|   +-- schema.sql                 # Reference schema (profiles + app tables)
+|   +-- migrations/                # Legacy incremental SQL (superseded by supabase/migrations)
++-- supabase/migrations/           # Baseline migration for Supabase (source of truth)
 +-- docs
 |   +-- ADMIN_DASHBOARD.md         # Admin-specific operator notes
 +-- src
@@ -49,9 +59,10 @@ Use `src/app/**/page.tsx` for UI routes and `src/app/api/**/route.ts` for API en
 
 ## Key Modules
 
-- `src/lib/db/neon.ts`: creates the Neon SQL client from `DATABASE_URL`.
-- `src/lib/auth/verify-firebase-token.ts`: verifies Firebase bearer tokens using service-account env vars or application default credentials.
-- `src/lib/auth/auth-user-sync.ts`: upserts Firebase identities into `auth_users`.
+- `src/lib/db/postgres.ts`: SQL client for Supabase Postgres (`DATABASE_URL` pooler).
+- `src/lib/auth/verify-supabase-token.ts`: verifies Supabase access tokens via service role.
+- `src/lib/auth/auth-user-sync.ts`: upserts `public.profiles` for signed-in users.
+- `src/lib/supabase/client.ts` / `admin.ts`: browser and server Supabase clients.
 - `src/lib/admin/auth.ts`: parses bearer tokens and allows only emails listed in `ADMIN_EMAILS`.
 - `src/lib/admin/client.ts`: stores/reads the browser admin ID token for admin fetch calls.
 - `src/lib/plans.ts`: plan catalog validation, CRUD, publishing, archiving, public plan reads, and sort parsing.
@@ -89,9 +100,9 @@ GET /admin/content/new
 GET /admin/content/[id]
 ```
 
-Admin users sign in with Firebase Google Auth in the browser. Access to admin APIs is allowed only when the Firebase user's email is included in the comma-separated `ADMIN_EMAILS` env var.
+Admin users sign in with Supabase Google Auth in the browser. Access to admin APIs is allowed only when the Supabase user's email is included in the comma-separated `ADMIN_EMAILS` env var.
 
-`src/components/admin/AdminChrome.tsx` provides the admin shell and keeps the Firebase ID token available to admin client code. `/admin/login` is intentionally rendered outside that shell.
+`src/components/admin/AdminChrome.tsx` provides the admin shell and keeps the Supabase ID token available to admin client code. `/admin/login` is intentionally rendered outside that shell.
 
 ## API Routes
 
@@ -105,11 +116,11 @@ Returns a lightweight health response.
 
 ### Auth/User
 
-All routes below require `Authorization: Bearer <Firebase ID token>`.
+All routes below require `Authorization: Bearer <Supabase access token>`.
 
 ```text
-POST /api/v1/auth/sync  # Verify token and upsert auth_users
-GET  /api/v1/me         # Verify token, upsert auth_users, return basic token identity
+POST /api/v1/auth/sync  # Verify token and upsert profiles
+GET  /api/v1/me         # Verify token, upsert profiles, return basic token identity
 ```
 
 ### Published Plans
@@ -125,14 +136,14 @@ Only published, non-archived plans are returned. `identifier` can resolve a publ
 
 ### Reading Sync
 
-Both routes require `Authorization: Bearer <Firebase ID token>`.
+Both routes require `Authorization: Bearer <Supabase access token>`.
 
 ```text
 GET  /api/v1/sync/bootstrap
 POST /api/v1/sync/push
 ```
 
-`bootstrap` returns the latest compact reading backup payload for the authenticated Firebase user, or `payload: null` when no backup exists.
+`bootstrap` returns the latest compact reading backup payload for the authenticated Supabase user, or `payload: null` when no backup exists.
 
 `push` accepts one compact backup snapshot. The server validates it, computes a stable payload hash, and upserts one `user_reading_backups` row for the authenticated user. See `src/lib/sync/reading-sync.ts` for the exact JSON shape.
 
@@ -158,7 +169,7 @@ Stores a mobile feedback message in `feedback_messages`. Valid categories are `b
 
 ### Admin APIs
 
-All admin routes require `Authorization: Bearer <Firebase ID token>` and an email in `ADMIN_EMAILS`.
+All admin routes require `Authorization: Bearer <Supabase access token>` and an email in `ADMIN_EMAILS`.
 
 ```text
 GET    /api/v1/admin/verify
@@ -183,12 +194,12 @@ Plan and today-message uploads go to Cloudinary and record metadata in `media_as
 
 ## Data Model
 
-The full schema is `db/schema.sql`. Apply it to Neon before running the app against a fresh database.
+The full schema is `db/schema.sql`. Apply it to Supabase before running the app against a fresh database.
 
 Important table groups:
 
 ```text
-auth_users
+profiles
 
 plan_templates
   -> plan_template_sections
@@ -223,7 +234,7 @@ Today-message notes:
 
 Reading-sync notes:
 
-- Firebase Auth owns identity; `auth_users` is the server's local user record.
+- Supabase Auth owns identity; `profiles` is the server's local user record.
 - Mobile rows are deduped by `(auth_user_id, client_id)`.
 - Several tables also enforce natural uniqueness, for example chapter progress by user/plan/book/chapter.
 
@@ -288,9 +299,9 @@ pnpm build
 
 ## Development Boundaries
 
-- Keep mobile-facing behavior behind API routes; do not expose Neon credentials or direct DB access to mobile.
+- Keep mobile-facing behavior behind API routes; do not expose Supabase credentials or direct DB access to mobile.
 - Keep route handlers small. Put validation, SQL, and normalization in `src/lib`.
-- Use Firebase bearer tokens for authenticated mobile APIs and admin APIs.
+- Use Supabase bearer tokens for authenticated mobile APIs and admin APIs.
 - Use `requireAdminUser` only for admin-only endpoints.
 - Use `db/schema.sql` as the source of truth for database setup during MVP development.
 - When changing API response shapes, check the mobile client expectations before merging.
@@ -300,7 +311,7 @@ pnpm build
 ## Manual Smoke Test
 
 1. Fill `apps/web/.env.local`.
-2. Apply `apps/web/db/schema.sql` to Neon if the database is new.
+2. Apply `apps/web/db/schema.sql` to Supabase if the database is new.
 3. Run `pnpm web:dev` from the repo root.
 4. Open `/admin/login` and sign in with an email in `ADMIN_EMAILS`.
 5. Create or edit a plan, add at least one section and chapter range, upload a cover, publish it.

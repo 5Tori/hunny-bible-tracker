@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 
-import { upsertFirebaseAuthUser } from '@/lib/auth/auth-user-sync';
-import { verifyFirebaseBearerToken } from '@/lib/auth/verify-firebase-token';
+import { upsertSupabaseAuthUser } from '@/lib/auth/auth-user-sync';
+import { verifySupabaseBearerToken } from '@/lib/auth/verify-supabase-token';
+
+function displayNameFromMetadata(user: { user_metadata?: Record<string, unknown> }) {
+  const meta = user.user_metadata ?? {};
+  const name = meta.full_name ?? meta.name;
+  return typeof name === 'string' ? name : null;
+}
 
 export async function GET(req: Request) {
   const auth = req.headers.get('authorization');
@@ -12,20 +18,21 @@ export async function GET(req: Request) {
   if (!token) {
     return NextResponse.json({ error: 'missing_token' }, { status: 401 });
   }
-  let payload;
+
+  let user;
   try {
-    payload = await verifyFirebaseBearerToken(token);
+    user = await verifySupabaseBearerToken(token);
   } catch {
     return NextResponse.json({ error: 'invalid_token' }, { status: 401 });
   }
 
   try {
-    await upsertFirebaseAuthUser(payload);
+    await upsertSupabaseAuthUser(user);
     return NextResponse.json({
       user: {
-        sub: payload.uid,
-        email: typeof payload.email === 'string' ? payload.email : null,
-        name: typeof payload.name === 'string' ? payload.name : null,
+        sub: user.id,
+        email: typeof user.email === 'string' ? user.email : null,
+        name: displayNameFromMetadata(user),
       },
     });
   } catch {

@@ -2,53 +2,50 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
-import { adminFetch, clearAdminSession, getAdminTokenOrRefresh } from '@/lib/admin/client';
+import { useCatalogList } from '@/components/admin/catalog/useCatalogList';
+import { Alert } from '@/components/admin/ui/Alert';
+import { Badge } from '@/components/admin/ui/Badge';
+import { ButtonLink } from '@/components/admin/ui/Button';
+import { DataTable } from '@/components/admin/ui/DataTable';
+import { EmptyState } from '@/components/admin/ui/EmptyState';
+import { FilterTabs } from '@/components/admin/ui/FilterTabs';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
+import { RowActionsMenu } from '@/components/admin/ui/RowActionsMenu';
 import type { ContentWithRelations } from '@/lib/content';
 
 type ContentFilter = 'active' | 'archived' | 'all';
 
-function statusLabel(content: ContentWithRelations) {
-  if (content.is_archived) return 'Archived';
-  return content.is_published ? 'Published' : 'Draft';
+const FILTER_TABS = [
+  { id: 'active' as const, label: 'Active' },
+  { id: 'archived' as const, label: 'Archived' },
+  { id: 'all' as const, label: 'All' },
+] as const;
+
+const COLUMNS = [
+  { key: 'content', header: 'Content' },
+  { key: 'type', header: 'Type' },
+  { key: 'author', header: 'Author' },
+  { key: 'status', header: 'Status' },
+  { key: 'plans', header: 'Plans' },
+  { key: 'actions', header: 'Actions' },
+];
+
+function statusBadge(content: ContentWithRelations) {
+  if (content.is_archived) return <Badge tone="neutral">Archived</Badge>;
+  if (content.is_published) return <Badge tone="success">Published</Badge>;
+  return <Badge tone="neutral">Draft</Badge>;
 }
 
 export default function AdminContentPage() {
-  const router = useRouter();
   const [contents, setContents] = useState<ContentWithRelations[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [busyId, setBusyId] = useState<string | null>(null);
   const [filter, setFilter] = useState<ContentFilter>('active');
+  const { busyId, setBusyId, error, load, runDelete, loading } = useCatalogList();
 
   const loadContent = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    const token = await getAdminTokenOrRefresh();
-    if (!token) {
-      router.push('/admin/login');
-      return;
-    }
-
-    const response = await adminFetch('/api/v1/admin/content');
-    if (response.status === 401 || response.status === 403) {
-      await clearAdminSession();
-      router.push('/admin/login');
-      return;
-    }
-
-    if (!response.ok) {
-      setError('Unable to load content.');
-      setLoading(false);
-      return;
-    }
-
-    const json = await response.json();
-    setContents((json.contents ?? []) as ContentWithRelations[]);
-    setLoading(false);
-  }, [router]);
+    const json = (await load('/api/v1/admin/content')) as { contents?: ContentWithRelations[] } | null;
+    if (json) setContents(json.contents ?? []);
+  }, [load]);
 
   useEffect(() => {
     void loadContent();
@@ -62,136 +59,90 @@ export default function AdminContentPage() {
     });
   }, [contents, filter]);
 
-  const runDelete = async (content: ContentWithRelations) => {
-    const ok = window.confirm(`Delete "${content.title}"? This cannot be undone.`);
-    if (!ok) return;
-
+  const handleDelete = async (content: ContentWithRelations) => {
+    if (!window.confirm(`Delete "${content.title}"? This cannot be undone.`)) return;
     setBusyId(content.id);
-    setError(null);
-    try {
-      const response = await adminFetch(`/api/v1/admin/content/${content.id}`, {
-        method: 'DELETE',
-      });
-
-      if (response.status === 401 || response.status === 403) {
-        await clearAdminSession();
-        router.push('/admin/login');
-        return;
-      }
-
-      const body = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setError(typeof body.message === 'string' ? body.message : 'Delete failed.');
-        return;
-      }
-
-      await loadContent();
-    } finally {
-      setBusyId(null);
-    }
+    const ok = await runDelete(`/api/v1/admin/content/${content.id}`, { errorMessage: 'Delete failed.' });
+    setBusyId(null);
+    if (ok) await loadContent();
   };
 
   return (
-    <main className="admin-plans-page">
-      <div className="admin-page-header">
-        <div>
-          <p className="eyebrow">Reusable content</p>
-          <h1>Content catalog</h1>
-          <p>Manage messages, videos, essays, and cartoons for Home, Discover, and related plans.</p>
-        </div>
-        <div className="admin-actions">
-          <Link href="/admin/plans" className="btn btn-secondary">
-            Plans
-          </Link>
-          <Link href="/admin/content/new" className="btn btn-primary">
-            New content
-          </Link>
-          <button
-            type="button"
-            onClick={() => { void clearAdminSession().then(() => router.push('/admin/login')); }}
-            className="btn btn-secondary"
-          >
-            Logout
-          </button>
-        </div>
-      </div>
+    <>
+      <PageHeader
+        label="Reusable content"
+        title="Content"
+        description="Manage messages, videos, essays, and cartoons for Home, Discover, and related plans."
+        actions={<ButtonLink href="/admin/content/new" variant="primary">New content</ButtonLink>}
+      />
 
-      <div className="admin-catalog-filters" role="tablist" aria-label="Content filter">
-        {(
-          [
-            { id: 'active' as const, label: 'Active' },
-            { id: 'archived' as const, label: 'Archived' },
-            { id: 'all' as const, label: 'All' },
-          ] as const
-        ).map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={filter === tab.id}
-            className={filter === tab.id ? 'admin-catalog-filter is-active' : 'admin-catalog-filter'}
-            onClick={() => setFilter(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <FilterTabs tabs={FILTER_TABS} value={filter} onChange={setFilter} ariaLabel="Content filter" />
 
-      {error ? <div className="alert alert-error">{error}</div> : null}
-      {loading ? <p>Loading content...</p> : null}
+      {error ? <Alert tone="error">{error}</Alert> : null}
+      {loading ? <p className="admin-muted">Loading content…</p> : null}
 
       {!loading && filtered.length === 0 ? (
-        <div className="empty-state-card">
-          <h2>No content in this view</h2>
-          <p>Create the first reusable content item, then connect it to Home or Discover later.</p>
-          <Link href="/admin/content/new" className="btn btn-secondary">
-            Create content
-          </Link>
-        </div>
+        <EmptyState
+          title="No content in this view"
+          description="Create the first reusable content item."
+          action={<ButtonLink href="/admin/content/new" variant="secondary">Create content</ButtonLink>}
+        />
       ) : null}
 
       {!loading && filtered.length > 0 ? (
-        <div className="plans-table content-table">
-          <div className="plans-table-row plans-table-header content-table-row">
-            <span>Content</span>
-            <span>Type</span>
-            <span>Author</span>
-            <span>Status</span>
-            <span>Plans</span>
-            <span>Actions</span>
-          </div>
-          {filtered.map((content) => (
-            <div key={content.id} className="plans-table-row content-table-row">
-              <span className="table-title-cell">
-                {content.cover_image_url ? (
-                  <img src={content.cover_image_url} alt="" className="table-thumb" />
-                ) : null}
-                <span>
-                  <strong>{content.title}</strong>
-                  <small>{content.summary || content.slug}</small>
-                </span>
-              </span>
-              <span>{content.content_type}</span>
-              <span>{content.author?.display_name ?? 'None'}</span>
-              <span>{statusLabel(content)}</span>
-              <span>{content.related_plans.length}</span>
-              <span className="plans-table-actions">
-                <Link href={`/admin/content/${content.id}`} className="btn btn-link">
-                  Edit
-                </Link>
-                <button
-                  type="button"
-                  className="btn btn-danger"
-                  disabled={busyId === content.id}
-                  onClick={() => void runDelete(content)}
-                >
-                  Delete
-                </button>
-              </span>
-            </div>
-          ))}
-        </div>
+        <DataTable
+          tableClassName="admin-table-content"
+          columns={COLUMNS}
+          rows={filtered}
+          rowKey={(c) => c.id}
+          renderCell={(content, key) => {
+            const busy = busyId === content.id;
+            switch (key) {
+              case 'content':
+                return (
+                  <span className="admin-table-title-cell">
+                    {content.cover_image_url ? (
+                      <img src={content.cover_image_url} alt="" className="admin-table-thumb" />
+                    ) : null}
+                    <span>
+                      <strong>{content.title}</strong>
+                      <small className="admin-muted">{content.summary || content.slug}</small>
+                    </span>
+                  </span>
+                );
+              case 'type':
+                return content.content_type;
+              case 'author':
+                return content.author?.display_name ?? 'None';
+              case 'status':
+                return statusBadge(content);
+              case 'plans':
+                return String(content.related_plans.length);
+              case 'actions':
+                return (
+                  <span className="admin-table-actions">
+                    <Link href={`/admin/content/${content.id}`} className="admin-btn admin-btn-link">
+                      Edit
+                    </Link>
+                    <RowActionsMenu
+                      actions={[
+                        {
+                          id: 'delete',
+                          label: 'Delete',
+                          tone: 'danger',
+                          disabled: busy,
+                          onClick: () => void handleDelete(content),
+                        },
+                      ]}
+                    />
+                  </span>
+                );
+              default:
+                return null;
+            }
+          }}
+        />
       ) : null}
-    </main>
+    </>
   );
 }

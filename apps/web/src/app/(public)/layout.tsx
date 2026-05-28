@@ -1,4 +1,3 @@
-import { Analytics } from "@vercel/analytics/next";
 import type { Metadata, Viewport } from "next";
 
 import { siteConfig } from "@/lib/site-config";
@@ -50,10 +49,5 @@ export const viewport: Viewport = {
 };
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <div className="public-site min-h-screen">{children}</div>
-      <Analytics />
-    </>
-  );
+  return <div className="public-site min-h-screen">{children}</div>;
 }

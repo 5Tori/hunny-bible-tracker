@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-import { sql } from '@/lib/db/neon';
+import { sql } from '@/lib/db/postgres';
 
 export interface CloudinaryUploadResponse {
   public_id: string;
@@ -160,42 +160,4 @@ export async function uploadContentImage(file: File) {
   return uploadImageToCloudinary(file, 'hunny-bible-tracker/content');
 }
 
-export function buildTodayMessageShareImageUrl(options: {
-  imagePublicId: string | null;
-  verseText: string | null;
-  verseReference: string;
-  bibleVersion: string | null;
-}) {
-  const imagePublicId = options.imagePublicId?.trim();
-  if (!imagePublicId) return null;
-
-  const { cloudName } = cloudinaryConfig();
-  const referenceLabel = options.bibleVersion
-    ? `${options.verseReference} · ${options.bibleVersion}`
-    : options.verseReference;
-  const verseText = truncateCloudinaryText(
-    options.verseText?.trim() || options.verseReference,
-    420,
-  );
-  const transformations = [
-    'c_fill,g_auto,w_1080,h_1350',
-    'e_brightness:-12',
-    'e_colorize,co_rgb:000000,o_28',
-    [
-      `l_text:Arial_66_bold:${encodeCloudinaryText(`"${verseText}"`)}`,
-      'co_rgb:ffffff',
-      'c_fit,w_912',
-      'fl_layer_apply,g_south_west,x_84,y_210',
-    ].join('/'),
-    [
-      `l_text:Arial_32_bold:${encodeCloudinaryText(referenceLabel.toUpperCase())}`,
-      'co_rgb:ffffff',
-      'o_78',
-      'c_fit,w_912',
-      'fl_layer_apply,g_south_west,x_84,y_112',
-    ].join('/'),
-    'f_png,q_auto',
-  ];
-
-  return `https://res.cloudinary.com/${cloudName}/image/upload/${transformations.join('/')}/${imagePublicId}`;
-}
+export { buildTodayMessageShareImageUrl } from '@/lib/cloudinary-share-url';

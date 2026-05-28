@@ -1,9 +1,7 @@
 import crypto from 'crypto';
 
-import { sql } from '@/lib/db/neon';
+import { sql, type SqlLike } from '@/lib/db/postgres';
 import { normalizeDifficulty, normalizePlanType, normalizeTestamentScope } from '@/lib/plan-taxonomy';
-
-type SqlLike = typeof sql;
 
 export interface PlanTemplateBase {
   id: string;

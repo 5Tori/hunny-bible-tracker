@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 
 if [[ ! -f ".env.ios.json" ]]; then
   echo "Missing apps/mobile/.env.ios.json"
-  echo "Create it from apps/mobile/.env.example.json and fill Firebase values."
+  echo "Create it from apps/mobile/.env.example.json and fill Supabase values."
   exit 1
 fi
 

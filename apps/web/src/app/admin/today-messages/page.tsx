@@ -1,123 +1,126 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
-import { getAdminTokenOrRefresh, adminFetch, clearAdminSession } from '@/lib/admin/client';
+import { useCatalogList } from '@/components/admin/catalog/useCatalogList';
+import { Alert } from '@/components/admin/ui/Alert';
+import { Badge } from '@/components/admin/ui/Badge';
+import { ButtonLink } from '@/components/admin/ui/Button';
+import { DataTable } from '@/components/admin/ui/DataTable';
+import { EmptyState } from '@/components/admin/ui/EmptyState';
+import { FilterTabs } from '@/components/admin/ui/FilterTabs';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
 import type { TodayMessageBase } from '@/lib/today-messages';
 
+type TodayFilter = 'active' | 'archived' | 'all';
+
+const FILTER_TABS = [
+  { id: 'active' as const, label: 'Active' },
+  { id: 'archived' as const, label: 'Archived' },
+  { id: 'all' as const, label: 'All' },
+] as const;
+
+const COLUMNS = [
+  { key: 'message', header: 'Message' },
+  { key: 'date', header: 'Date' },
+  { key: 'language', header: 'Language' },
+  { key: 'status', header: 'Status' },
+  { key: 'actions', header: 'Actions' },
+];
+
 export default function AdminTodayMessagesPage() {
-  const router = useRouter();
   const [messages, setMessages] = useState<TodayMessageBase[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [filter, setFilter] = useState<TodayFilter>('active');
+  const { error, setError, load, loading } = useCatalogList();
+
+  const loadMessages = useCallback(async () => {
+    setError(null);
+    const json = (await load('/api/v1/admin/today-messages')) as { messages?: TodayMessageBase[] } | null;
+    if (json) {
+      setMessages(json.messages ?? []);
+    }
+  }, [load, setError]);
 
   useEffect(() => {
-    const loadMessages = async () => {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const token = await getAdminTokenOrRefresh();
-        if (!token) {
-          router.push('/admin/login');
-          return;
-        }
-
-        const response = await adminFetch('/api/v1/admin/today-messages');
-
-        if (response.status === 401 || response.status === 403) {
-          await clearAdminSession();
-          router.push('/admin/login');
-          return;
-        }
-
-        if (!response.ok) {
-          const hint =
-            response.status === 404
-              ? ' (404 — API route missing on this deployment, or wrong app URL.)'
-              : ` (HTTP ${response.status})`;
-          setError(`Unable to load today messages.${hint}`);
-          return;
-        }
-
-        const json = (await response.json()) as { messages?: TodayMessageBase[] };
-        setMessages(json.messages ?? []);
-      } catch {
-        setError('Unable to load today messages. Check the network tab for the failing request.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     void loadMessages();
-  }, [router]);
+  }, [loadMessages]);
+
+  const filtered = useMemo(() => {
+    return messages.filter((message) => {
+      const archived = Boolean((message as TodayMessageBase & { is_archived?: boolean }).is_archived);
+      if (filter === 'archived') return archived;
+      if (filter === 'active') return !archived;
+      return true;
+    });
+  }, [messages, filter]);
 
   return (
-    <main className="admin-plans-page">
-      <div className="admin-page-header">
-        <div>
-          <p className="eyebrow">Home content</p>
-          <h1>Today&apos;s messages</h1>
-          <p>Manage scheduled daily verse/message cards for the mobile Home tab.</p>
-        </div>
-        <div className="admin-actions">
-          <Link href="/admin/plans" className="btn btn-secondary">
-            Plans
-          </Link>
-          <Link href="/admin/today-messages/new" className="btn btn-primary">
-            New message
-          </Link>
-          <button type="button" onClick={() => { void clearAdminSession().then(() => router.push('/admin/login')); }} className="btn btn-secondary">
-            Logout
-          </button>
-        </div>
-      </div>
+    <>
+      <PageHeader
+        label="Home content"
+        title="Today's messages"
+        description="Manage scheduled daily verse/message cards for the mobile Home tab."
+        actions={<ButtonLink href="/admin/today-messages/new" variant="primary">New message</ButtonLink>}
+      />
 
-      {error ? <div className="alert alert-error">{error}</div> : null}
-      {loading ? <p>Loading messages…</p> : null}
+      <FilterTabs tabs={FILTER_TABS} value={filter} onChange={setFilter} ariaLabel="Today messages filter" />
 
-      {!loading && messages.length === 0 ? (
-        <div className="empty-state-card">
-          <h2>No messages yet</h2>
-          <p>Create the first daily message. You can keep it as a draft until the mobile Home API is connected.</p>
-          <Link href="/admin/today-messages/new" className="btn btn-secondary">
-            Create message
-          </Link>
-        </div>
+      {error ? <Alert tone="error">{error}</Alert> : null}
+      {loading ? <p className="admin-muted">Loading messages…</p> : null}
+
+      {!loading && filtered.length === 0 ? (
+        <EmptyState
+          title="No messages in this view"
+          description="Create a daily message for the Home tab."
+          action={<ButtonLink href="/admin/today-messages/new" variant="secondary">Create message</ButtonLink>}
+        />
       ) : null}
 
-      {!loading && messages.length > 0 ? (
-        <div className="plans-table today-table">
-          <div className="plans-table-row plans-table-header today-table-row">
-            <span>Message</span>
-            <span>Date</span>
-            <span>Language</span>
-            <span>Status</span>
-            <span>Edit</span>
-          </div>
-          {messages.map((message) => (
-            <div key={message.id} className="plans-table-row today-table-row">
-              <span className="table-title-cell">
-                {message.image_url ? <img src={message.image_url} alt="" className="table-thumb" /> : null}
-                <span>
-                  <strong>{message.verse_reference}</strong>
-                  <small>{message.message || message.verse_text || 'No message text yet'}</small>
-                </span>
-              </span>
-              <span>{message.publish_date}</span>
-              <span>{message.language}</span>
-              <span>{message.is_published ? 'Published' : 'Draft'}</span>
-              <span>
-                <Link href={`/admin/today-messages/${message.id}`} className="btn btn-link">
-                  Edit
-                </Link>
-              </span>
-            </div>
-          ))}
-        </div>
+      {!loading && filtered.length > 0 ? (
+        <DataTable
+          tableClassName="admin-table-today"
+          columns={COLUMNS}
+          rows={filtered}
+          rowKey={(m) => m.id}
+          renderCell={(message, key) => {
+            switch (key) {
+              case 'message':
+                return (
+                  <span className="admin-table-title-cell">
+                    {message.image_url ? (
+                      <img src={message.image_url} alt="" className="admin-table-thumb" />
+                    ) : null}
+                    <span>
+                      <strong>{message.verse_reference}</strong>
+                      <small className="admin-muted">
+                        {message.message || message.verse_text || 'No message text yet'}
+                      </small>
+                    </span>
+                  </span>
+                );
+              case 'date':
+                return message.publish_date;
+              case 'language':
+                return message.language;
+              case 'status':
+                return message.is_published ? (
+                  <Badge tone="success">Published</Badge>
+                ) : (
+                  <Badge tone="neutral">Draft</Badge>
+                );
+              case 'actions':
+                return (
+                  <Link href={`/admin/today-messages/${message.id}`} className="admin-btn admin-btn-link">
+                    Edit
+                  </Link>
+                );
+              default:
+                return null;
+            }
+          }}
+        />
       ) : null}
-    </main>
+    </>
   );
 }

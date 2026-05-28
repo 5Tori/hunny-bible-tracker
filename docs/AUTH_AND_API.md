@@ -5,38 +5,33 @@ This document describes the active authentication and API setup.
 ## Current Direction
 
 ```text
-Firebase Auth
+Supabase Auth
   -> mobile identity and Google login
 
 Next.js API routes
-  -> verify Firebase ID tokens where required
-  -> read/write Neon app data
+  -> verify Supabase access tokens where required
+  -> read/write Supabase Postgres app data
 
-Neon Postgres
-  -> app data database
+Supabase Postgres
+  -> app data database (public.profiles + catalog tables)
 ```
 
-Firebase Auth is the mobile authentication provider. Neon is used as the application database through API routes, not as the mobile auth provider.
+Supabase Auth is the mobile authentication provider. Postgres is used as the application database through API routes, not as a direct mobile database.
 
-## Mobile Firebase Config
+## Mobile Supabase Config
 
-The app initializes Firebase from `--dart-define` values, usually provided by `.env.ios.json` and `.env.android.json`.
+The app initializes Supabase from `--dart-define` values, usually provided by `.env.ios.json` and `.env.android.json`.
 
 Required:
 
 ```text
-FIREBASE_API_KEY
-FIREBASE_APP_ID
-FIREBASE_MESSAGING_SENDER_ID
-FIREBASE_PROJECT_ID
+SUPABASE_URL
+SUPABASE_ANON_KEY
 ```
 
-Recommended/current:
+For Google Sign-In (native + `signInWithIdToken`):
 
 ```text
-FIREBASE_AUTH_DOMAIN
-FIREBASE_STORAGE_BUCKET
-FIREBASE_IOS_BUNDLE_ID
 GOOGLE_WEB_CLIENT_ID
 GOOGLE_IOS_CLIENT_ID
 GOOGLE_ANDROID_CLIENT_ID
@@ -65,20 +60,16 @@ Current development identifiers:
 | Android applicationId | `com.hunnybibletracker.app` |
 | iOS Bundle ID | `com.example.hunnyBibleTracker` |
 
-Before release, confirm these are the intended production IDs and that Firebase apps match them exactly.
+Before release, confirm these are the intended production IDs and that Supabase + Google OAuth clients match them.
 
 ### iOS
 
-Native Google Sign-In requires `apps/mobile/ios/Runner/Info.plist` to match `apps/mobile/ios/Runner/GoogleService-Info.plist`:
-
-- `GIDClientID` = iOS `CLIENT_ID`
-- `CFBundleURLTypes` scheme = `REVERSED_CLIENT_ID`
-
-Firebase iOS SDK 12.x requires iOS deployment target 15.0+ in this project.
+- `Info.plist` includes Google `GIDClientID` / reversed client URL scheme for native Google Sign-In.
+- `Info.plist` includes `com.hunnybibletracker.app` URL scheme for Supabase OAuth redirects.
 
 ### Android
 
-Firebase Console must include the Android app package and SHA fingerprints.
+Google Cloud OAuth must include the Android app package and SHA fingerprints.
 
 Register:
 
@@ -100,34 +91,34 @@ All current API routes live under `apps/web/src/app/api`.
 | Route | Method | Auth | Purpose |
 | --- | --- | --- | --- |
 | `/api/health` | `GET` | None | Health check |
-| `/api/v1/auth/sync` | `POST` | Firebase bearer | Verify token, upsert `auth_users`, return user |
-| `/api/v1/me` | `GET` | Firebase bearer | Verify token, upsert `auth_users`, return current user summary |
+| `/api/v1/auth/sync` | `POST` | Supabase bearer | Verify token, upsert `profiles`, return user |
+| `/api/v1/me` | `GET` | Supabase bearer | Verify token, upsert `profiles`, return current user summary |
 | `/api/v1/plans` | `GET` | None | Public published plan catalog |
 | `/api/v1/plans/[identifier]` | `GET` | None | Public single published plan by id/key |
 | `/api/v1/content` | `GET` | None | Public published content catalog with author, assets, tags, and related plans |
 | `/api/v1/content/[identifier]` | `GET` | None | Public single published content item by id/slug |
-| `/api/v1/sync/push` | `POST` | Firebase bearer | Upload compact reading backup snapshot |
-| `/api/v1/sync/bootstrap` | `GET` | Firebase bearer | Download compact reading backup snapshot |
+| `/api/v1/sync/push` | `POST` | Supabase bearer | Upload compact reading backup snapshot |
+| `/api/v1/sync/bootstrap` | `GET` | Supabase bearer | Download compact reading backup snapshot |
 | `/api/v1/today-message` | `GET` | None | Latest published Today’s Message by date/language |
 | `/api/v1/today-message/[id]/heart` | `POST` | None | Increment Today’s Message heart counter |
 | `/api/v1/today-message/[id]/share` | `POST` | None | Increment Today’s Message share counter |
 | `/api/v1/feedback` | `POST` | None | Insert Help & feedback message |
-| `/api/v1/admin/verify` | `GET` | Admin Firebase bearer | Verify admin access |
-| `/api/v1/admin/plans` | `GET/POST` | Admin Firebase bearer | Plan template list/create |
-| `/api/v1/admin/plans/[id]` | `GET/PUT/DELETE` | Admin Firebase bearer | Plan template read/update/delete |
-| `/api/v1/admin/plans/upload` | `POST` | Admin Firebase bearer | Upload plan cover image |
-| `/api/v1/admin/content` | `GET/POST` | Admin Firebase bearer | Content list/create |
-| `/api/v1/admin/content/[id]` | `GET/PUT/DELETE` | Admin Firebase bearer | Content read/update/delete |
-| `/api/v1/admin/content/authors` | `GET` | Admin Firebase bearer | Content author options |
-| `/api/v1/admin/content/upload` | `POST` | Admin Firebase bearer | Upload content image |
-| `/api/v1/admin/today-messages` | `GET/POST` | Admin Firebase bearer | Today’s Message list/create |
-| `/api/v1/admin/today-messages/[id]` | `GET/PUT/DELETE` | Admin Firebase bearer | Today’s Message read/update/delete |
-| `/api/v1/admin/today-messages/upload` | `POST` | Admin Firebase bearer | Upload Today’s Message image |
+| `/api/v1/admin/verify` | `GET` | Admin Supabase bearer | Verify admin access |
+| `/api/v1/admin/plans` | `GET/POST` | Admin Supabase bearer | Plan template list/create |
+| `/api/v1/admin/plans/[id]` | `GET/PUT/DELETE` | Admin Supabase bearer | Plan template read/update/delete |
+| `/api/v1/admin/plans/upload` | `POST` | Admin Supabase bearer | Upload plan cover image |
+| `/api/v1/admin/content` | `GET/POST` | Admin Supabase bearer | Content list/create |
+| `/api/v1/admin/content/[id]` | `GET/PUT/DELETE` | Admin Supabase bearer | Content read/update/delete |
+| `/api/v1/admin/content/authors` | `GET` | Admin Supabase bearer | Content author options |
+| `/api/v1/admin/content/upload` | `POST` | Admin Supabase bearer | Upload content image |
+| `/api/v1/admin/today-messages` | `GET/POST` | Admin Supabase bearer | Today’s Message list/create |
+| `/api/v1/admin/today-messages/[id]` | `GET/PUT/DELETE` | Admin Supabase bearer | Today’s Message read/update/delete |
+| `/api/v1/admin/today-messages/upload` | `POST` | Admin Supabase bearer | Upload Today’s Message image |
 
-Firebase-protected routes require:
+Supabase-protected routes require:
 
 ```text
-Authorization: Bearer <Firebase ID token>
+Authorization: Bearer <Supabase access token>
 ```
 
 Mobile clients use `/api/health` as a fast reachability probe before optional public/API sync work. Offline-sensitive surfaces should avoid blocking initial UI on authenticated sync, plan catalog refresh, Today’s Message refresh, or Discover content fetches.
@@ -144,24 +135,25 @@ Common auth errors:
 Set in `apps/web/.env.local` or deployment env:
 
 ```bash
-DATABASE_URL="postgresql://USER:PASSWORD@HOST/dbname?sslmode=require"
-FIREBASE_PROJECT_ID="..."
-FIREBASE_CLIENT_EMAIL="firebase-adminsdk-...@YOUR_PROJECT.iam.gserviceaccount.com"
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+DATABASE_URL="postgresql://postgres.[ref]:[password]@...pooler.supabase.com:6543/postgres?pgbouncer=true"
+SUPABASE_URL="https://YOUR_PROJECT_REF.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="..."
+NEXT_PUBLIC_SUPABASE_URL="https://YOUR_PROJECT_REF.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="..."
 ADMIN_EMAILS="admin@example.com"
 CLOUDINARY_CLOUD_NAME="..."
 CLOUDINARY_API_KEY="..."
 CLOUDINARY_API_SECRET="..."
 ```
 
-Firebase Admin can also use application default credentials if service-account env vars are not set and the environment supports ADC.
+See [`docs/SUPABASE_SETUP.md`](SUPABASE_SETUP.md) for pooler URLs and OAuth redirect configuration.
 
 ## Mobile API Behavior
 
 `HUNNY_API_BASE_URL` is optional.
 
-- If unset or empty, the Flutter app can still run locally with Firebase Auth and SQLite.
-- If set, sign-in syncs the Firebase user to Neon and reading backup/restore can call `apps/web`.
+- If unset or empty, the Flutter app can still run locally with Supabase Auth and SQLite.
+- If set, sign-in syncs the Supabase user to `profiles` and reading backup/restore can call `apps/web`.
 
 Local API URLs:
 
@@ -185,15 +177,13 @@ Current limitations:
 
 ## Deployment Checklist
 
-- Firebase Google provider is enabled.
-- Firebase Android package matches release `applicationId`.
-- Firebase iOS Bundle ID matches release Bundle ID.
-- Android debug/release/Play SHA-1 values are registered.
-- iOS `Info.plist` has correct `GIDClientID` and reversed URL scheme.
-- Flutter builds include dart-define values.
-- API deployment has `DATABASE_URL`, Firebase Admin env vars, `ADMIN_EMAILS`, and Cloudinary env vars.
-- Neon has `apps/web/db/schema.sql` applied.
-- Neon has any needed files from `apps/web/db/migrations/` applied to existing environments.
+- Supabase Google provider is enabled with correct redirect URLs.
+- Google OAuth Android package matches release `applicationId`.
+- Android debug/release/Play SHA-1 values are registered in Google Cloud.
+- iOS `Info.plist` has Google and `com.hunnybibletracker.app` URL schemes.
+- Flutter builds include Supabase + Google dart-define values.
+- API deployment has `DATABASE_URL`, Supabase env vars, `ADMIN_EMAILS`, and Cloudinary env vars.
+- Supabase has `supabase/migrations/20260528000000_baseline.sql` applied (`supabase db push`).
 - `GET /api/health` returns quickly from the deployed API.
 - `POST /api/v1/auth/sync` succeeds after mobile login.
 - `POST /api/v1/sync/push` succeeds for a signed-in account.

@@ -5,7 +5,7 @@ import '../../../core/auth/auth_repository.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../read/data/read_repository.dart';
 
-/// One-time prompt after Firebase creates a new account from Google sign-in.
+/// One-time prompt after Supabase creates a new account from Google sign-in.
 Future<void> showPostAuthBackupPromptIfNeeded({
   required BuildContext context,
   required AuthRepository authRepository,

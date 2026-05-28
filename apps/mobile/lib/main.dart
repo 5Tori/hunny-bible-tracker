@@ -1,10 +1,10 @@
 import 'dart:async';
 
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../core/auth/auth_repository.dart';
-import '../core/auth/firebase_auth_config.dart';
+import '../core/auth/supabase_auth_config.dart';
 import 'app/app.dart';
 import 'core/database/app_database.dart';
 import 'features/read/data/read_repository.dart';
@@ -16,25 +16,27 @@ Future<void> main() async {
   final readRepository = ReadRepository(database);
   await readRepository.initializeLocalData();
 
-  final firebaseConfig = FirebaseAuthConfig.fromEnvironment();
-  var firebaseReady = false;
-  if (firebaseConfig.isConfigured) {
+  final supabaseConfig = SupabaseAuthConfig.fromEnvironment();
+  var supabaseReady = false;
+  if (supabaseConfig.isConfigured) {
     try {
-      await Firebase.initializeApp(
-        options: firebaseConfig.toFirebaseOptions(),
+      await Supabase.initialize(
+        url: supabaseConfig.url,
+        anonKey: supabaseConfig.anonKey,
+        authOptions: const FlutterAuthClientOptions(
+          authFlowType: AuthFlowType.pkce,
+        ),
       );
-      firebaseReady = true;
+      supabaseReady = true;
     } catch (e, stack) {
-      debugPrint('Firebase.initializeApp failed: $e');
+      debugPrint('Supabase.initialize failed: $e');
       debugPrint('$stack');
-      // Mis-matched dart-define (e.g. iOS app id on Android), stale CI secrets, or
-      // native layer issues — keep guest mode instead of crashing at cold start.
-      firebaseReady = false;
+      supabaseReady = false;
     }
   }
   final authRepository = AuthRepository(
-    firebaseConfig: firebaseConfig,
-    firebaseReady: firebaseReady,
+    supabaseConfig: supabaseConfig,
+    supabaseReady: supabaseReady,
     readRepository: readRepository,
   );
   runApp(

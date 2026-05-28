@@ -2,18 +2,18 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { getRedirectResult, signInWithRedirect } from 'firebase/auth';
-import type { User } from 'firebase/auth';
-import { firebaseAuth, googleProvider } from '@/lib/firebase/client';
+import type { Session } from '@supabase/supabase-js';
 
 import { adminFetch, clearAdminSession, setAdminToken } from '@/lib/admin/client';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
-/** Set before signInWithRedirect so we can recover the session after OAuth if getRedirectResult is null (e.g. React Strict Mode remount). */
 const OAUTH_RETURN_KEY = 'hunny-admin-oauth-return';
 
-async function verifyAdminAndEnterDashboard(user: User, router: ReturnType<typeof useRouter>) {
-  const token = await user.getIdToken();
-  setAdminToken(token);
+async function verifyAdminAndEnterDashboard(
+  session: Session,
+  router: ReturnType<typeof useRouter>,
+) {
+  setAdminToken(session.access_token);
 
   const response = await adminFetch('/api/v1/admin/verify');
 
@@ -38,34 +38,27 @@ export function AdminGoogleLoginButton() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Full-page redirect flow (no popup / COOP issues).
-  // Strict Mode runs this effect twice; the first getRedirectResult may be "consumed" on the aborted
-  // mount, so we also read firebaseAuth.currentUser when we know we just returned from Google.
   useEffect(() => {
     let cancelled = false;
+    const supabase = getSupabaseBrowserClient();
 
     (async () => {
       try {
         const expectingReturn =
           typeof window !== 'undefined' && sessionStorage.getItem(OAUTH_RETURN_KEY) === '1';
 
-        const cred = await getRedirectResult(firebaseAuth);
-        let user: User | null = cred?.user ?? null;
-
-        if (!user && expectingReturn) {
-          await firebaseAuth.authStateReady();
-          user = firebaseAuth.currentUser;
-        }
+        const { data } = await supabase.auth.getSession();
+        const session = data.session;
 
         if (cancelled) return;
 
-        if (user) {
+        if (session?.user) {
           if (expectingReturn) {
             sessionStorage.removeItem(OAUTH_RETURN_KEY);
           }
           setBusy(true);
           setError(null);
-          await verifyAdminAndEnterDashboard(user, router);
+          await verifyAdminAndEnterDashboard(session, router);
         } else if (expectingReturn) {
           sessionStorage.removeItem(OAUTH_RETURN_KEY);
         }
@@ -93,7 +86,15 @@ export function AdminGoogleLoginButton() {
       if (typeof window !== 'undefined') {
         sessionStorage.setItem(OAUTH_RETURN_KEY, '1');
       }
-      await signInWithRedirect(firebaseAuth, googleProvider);
+      const supabase = getSupabaseBrowserClient();
+      const redirectTo = `${window.location.origin}/admin/login`;
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo },
+      });
+      if (oauthError) {
+        throw oauthError;
+      }
     } catch (loginError) {
       if (typeof window !== 'undefined') {
         sessionStorage.removeItem(OAUTH_RETURN_KEY);
@@ -105,9 +106,9 @@ export function AdminGoogleLoginButton() {
 
   return (
     <div>
-      {error ? <div className="alert alert-error">{error}</div> : null}
+      {error ? <div className="admin-alert admin-alert-error">{error}</div> : null}
       {!bootDone ? (
-        <p className="muted" style={{ marginTop: 12 }}>
+        <p className="admin-muted" style={{ marginTop: 12 }}>
           Preparing sign-in…
         </p>
       ) : null}

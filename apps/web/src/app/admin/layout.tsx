@@ -1,5 +1,11 @@
-import { AdminChrome } from '@/components/admin/AdminChrome';
+import '@/styles/admin.css';
+
+import { AdminShell } from '@/components/admin/layout/AdminShell';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
-  return <AdminChrome>{children}</AdminChrome>;
+  return (
+    <div className="admin-app">
+      <AdminShell>{children}</AdminShell>
+    </div>
+  );
 }

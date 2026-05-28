@@ -1,11 +1,11 @@
--- Hunny Bible Tracker server schema.
--- Firebase Auth owns identity. Neon stores app metadata behind Next.js API routes.
+-- Hunny Bible Tracker server schema (Supabase).
+-- Supabase Auth owns identity (auth.users). public.profiles stores app metadata behind Next.js API routes.
+-- Prefer applying supabase/migrations/20260528000000_baseline.sql via Supabase CLI or dashboard.
 
-create extension if not exists pgcrypto;
+create extension if not exists pgcrypto with schema extensions;
 
-create table if not exists auth_users (
-  id uuid primary key default gen_random_uuid(),
-  firebase_uid text not null unique,
+create table if not exists profiles (
+  id uuid primary key references auth.users (id) on delete cascade,
   email text,
   display_name text,
   photo_url text,
@@ -97,7 +97,7 @@ create table if not exists plan_template_tags (
 
 create table if not exists user_reading_backups (
   id uuid primary key default gen_random_uuid(),
-  auth_user_id uuid not null references auth_users(id) on delete cascade,
+  auth_user_id uuid not null references profiles(id) on delete cascade,
   backup_version integer not null,
   payload_jsonb jsonb not null,
   payload_hash text not null,

@@ -1,0 +1,19 @@
+# Copy to .dev.vars for `pnpm preview` / `wrangler dev` (gitignored).
+# Same values as .env.local; Hyperdrive local dev can use DATABASE_URL via binding localConnectionString in wrangler.jsonc.
+
+NEXTJS_ENV=development
+
+DATABASE_URL="postgresql://postgres.tbexpdwipdjgcjtlujis:REPLACE_DB_PASSWORD@aws-0-REPLACE_REGION.pooler.supabase.com:6543/postgres?pgbouncer=true"
+
+SUPABASE_URL="https://tbexpdwipdjgcjtlujis.supabase.co"
+SUPABASE_SERVICE_ROLE_KEY="REPLACE_SERVICE_ROLE_KEY"
+
+NEXT_PUBLIC_SUPABASE_URL="https://tbexpdwipdjgcjtlujis.supabase.co"
+NEXT_PUBLIC_SUPABASE_ANON_KEY="REPLACE_ANON_KEY"
+NEXT_PUBLIC_SITE_URL="http://127.0.0.1:8787"
+
+ADMIN_EMAILS="your-google-email@example.com"
+
+CLOUDINARY_CLOUD_NAME=""
+CLOUDINARY_API_KEY=""
+CLOUDINARY_API_SECRET=""

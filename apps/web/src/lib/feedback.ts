@@ -1,4 +1,4 @@
-import { sql } from '@/lib/db/neon';
+import { sql } from '@/lib/db/postgres';
 
 const feedbackCategories = new Set(['bug', 'idea', 'other']);
 

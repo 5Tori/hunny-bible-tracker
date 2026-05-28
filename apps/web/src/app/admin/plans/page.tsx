@@ -1,51 +1,45 @@
 'use client';
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
-import { adminFetch, getAdminTokenOrRefresh, clearAdminSession } from '@/lib/admin/client';
+import { PlanCatalogRowActions } from '@/components/admin/catalog/PlanCatalogRowActions';
+import { useCatalogList } from '@/components/admin/catalog/useCatalogList';
+import { Alert } from '@/components/admin/ui/Alert';
+import { Badge } from '@/components/admin/ui/Badge';
+import { ButtonLink } from '@/components/admin/ui/Button';
+import { DataTable } from '@/components/admin/ui/DataTable';
+import { EmptyState } from '@/components/admin/ui/EmptyState';
+import { FilterTabs } from '@/components/admin/ui/FilterTabs';
+import { PageHeader } from '@/components/admin/ui/PageHeader';
 import type { PlanTemplateBase } from '@/lib/plans';
 import { planTypeLabel } from '@/lib/plan-taxonomy';
 
 type CatalogFilter = 'all' | 'active' | 'archived';
 
+const FILTER_TABS = [
+  { id: 'active' as const, label: 'Active' },
+  { id: 'archived' as const, label: 'Archived' },
+  { id: 'all' as const, label: 'All' },
+] as const;
+
+const COLUMNS = [
+  { key: 'title', header: 'Title' },
+  { key: 'type', header: 'Type' },
+  { key: 'catalog', header: 'Catalog' },
+  { key: 'browse', header: 'Browse' },
+  { key: 'updated', header: 'Updated' },
+  { key: 'actions', header: 'Actions' },
+];
+
 export default function AdminPlansPage() {
-  const router = useRouter();
   const [plans, setPlans] = useState<PlanTemplateBase[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState<CatalogFilter>('active');
-  const [busyId, setBusyId] = useState<string | null>(null);
+  const { busyId, setBusyId, error, load, runPatch, runDelete, loading } = useCatalogList();
 
   const loadPlans = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-
-    const token = await getAdminTokenOrRefresh();
-    if (!token) {
-      router.push('/admin/login');
-      return;
-    }
-
-    const response = await adminFetch('/api/v1/admin/plans');
-
-    if (response.status === 401 || response.status === 403) {
-      await clearAdminSession();
-      router.push('/admin/login');
-      return;
-    }
-
-    if (!response.ok) {
-      setError('Unable to load admin plans.');
-      setLoading(false);
-      return;
-    }
-
-    const json = await response.json();
-    setPlans(json.plans ?? []);
-    setLoading(false);
-  }, [router]);
+    const json = (await load('/api/v1/admin/plans')) as { plans?: PlanTemplateBase[] } | null;
+    if (json) setPlans(json.plans ?? []);
+  }, [load]);
 
   useEffect(() => {
     void loadPlans();
@@ -60,236 +54,108 @@ export default function AdminPlansPage() {
     });
   }, [plans, filter]);
 
-  const runCatalogPatch = async (planId: string, patch: { is_published?: boolean; is_archived?: boolean }) => {
+  const handlePatch = async (planId: string, patch: { is_published?: boolean; is_archived?: boolean }) => {
     setBusyId(planId);
-    setError(null);
-    try {
-      const response = await adminFetch(`/api/v1/admin/plans/${planId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(patch),
-      });
-
-      if (response.status === 401 || response.status === 403) {
-        await clearAdminSession();
-        router.push('/admin/login');
-        return;
-      }
-
-      const body = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setError(typeof body.message === 'string' ? body.message : 'Catalog update failed.');
-        return;
-      }
-
-      await loadPlans();
-    } finally {
-      setBusyId(null);
-    }
+    const ok = await runPatch(`/api/v1/admin/plans/${planId}`, patch, { errorMessage: 'Catalog update failed.' });
+    setBusyId(null);
+    if (ok) await loadPlans();
   };
 
-  const runDelete = async (plan: PlanTemplateBase) => {
-    const ok = window.confirm(`Delete “${plan.title}”? This cannot be undone.`);
-    if (!ok) return;
-
+  const handleDelete = async (plan: PlanTemplateBase) => {
+    if (!window.confirm(`Delete "${plan.title}"? This cannot be undone.`)) return;
     setBusyId(plan.id);
-    setError(null);
-    try {
-      const response = await adminFetch(`/api/v1/admin/plans/${plan.id}`, { method: 'DELETE' });
-
-      if (response.status === 401 || response.status === 403) {
-        await clearAdminSession();
-        router.push('/admin/login');
-        return;
-      }
-
-      const body = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setError(typeof body.message === 'string' ? body.message : 'Delete failed.');
-        return;
-      }
-
-      await loadPlans();
-    } finally {
-      setBusyId(null);
-    }
-  };
-
-  const browseSummary = (plan: PlanTemplateBase) => {
-    const visible = plan.browse_visible !== false;
-    const rank = plan.featured_rank;
-    return (
-      <span className="plans-browse-cell">
-        {visible ? (
-          <span className="plans-badge plans-badge-browse-on">Visible</span>
-        ) : (
-          <span className="plans-badge plans-badge-hidden">Hidden</span>
-        )}
-        {visible && rank != null ? (
-          <span className="muted">Featured #{rank}</span>
-        ) : null}
-      </span>
-    );
-  };
-
-  const catalogLabel = (plan: PlanTemplateBase) => {
-    const archived = Boolean(plan.is_archived);
-    const published = Boolean(plan.is_published);
-    if (archived) {
-      return (
-        <span className="plans-catalog-status">
-          <span className="plans-badge plans-badge-archived">Archived</span>
-          <span className="muted">Hidden from catalog</span>
-        </span>
-      );
-    }
-    return (
-      <span className="plans-catalog-status">
-        <span className={published ? 'plans-badge plans-badge-published' : 'plans-badge plans-badge-draft'}>
-          {published ? 'Published' : 'Draft'}
-        </span>
-      </span>
-    );
+    const ok = await runDelete(`/api/v1/admin/plans/${plan.id}`, { errorMessage: 'Delete failed.' });
+    setBusyId(null);
+    if (ok) await loadPlans();
   };
 
   return (
-    <main className="admin-plans-page">
-      <div className="admin-page-header">
-        <div>
-          <h1>Plan catalog</h1>
-          <p>Create and edit templates, control draft vs published, archive, or delete plans.</p>
-        </div>
-        <div className="admin-actions">
-          <Link href="/admin/today-messages" className="btn btn-secondary">
-            Today messages
-          </Link>
-          <Link href="/admin/plans/new" className="btn btn-primary">
-            New plan
-          </Link>
-          <button type="button" onClick={() => { void clearAdminSession().then(() => router.push('/admin/login')); }} className="btn btn-secondary">
-            Logout
-          </button>
-        </div>
-      </div>
+    <>
+      <PageHeader
+        title="Plans"
+        description="Create and edit templates, control draft vs published, archive, or delete plans."
+        actions={<ButtonLink href="/admin/plans/new" variant="primary">New plan</ButtonLink>}
+      />
 
-      <div className="admin-catalog-filters" role="tablist" aria-label="Catalog filter">
-        {(
-          [
-            { id: 'active' as const, label: 'Active' },
-            { id: 'archived' as const, label: 'Archived' },
-            { id: 'all' as const, label: 'All' },
-          ] as const
-        ).map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            role="tab"
-            aria-selected={filter === tab.id}
-            className={filter === tab.id ? 'admin-catalog-filter is-active' : 'admin-catalog-filter'}
-            onClick={() => setFilter(tab.id)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <FilterTabs tabs={FILTER_TABS} value={filter} onChange={setFilter} ariaLabel="Catalog filter" />
 
-      {error ? <div className="alert alert-error">{error}</div> : null}
-      {loading ? <p>Loading plans…</p> : null}
+      {error ? <Alert tone="error">{error}</Alert> : null}
+      {loading ? <p className="admin-muted">Loading plans…</p> : null}
 
       {!loading && filteredPlans.length === 0 ? (
-        <div>
-          <p>No plans in this view.</p>
-          {filter === 'active' ? (
-            <Link href="/admin/plans/new" className="btn btn-secondary">
-              Create a plan
-            </Link>
-          ) : null}
-        </div>
+        <EmptyState
+          title="No plans in this view"
+          description="Create a new plan to get started."
+          action={
+            filter === 'active' ? (
+              <ButtonLink href="/admin/plans/new" variant="secondary">Create a plan</ButtonLink>
+            ) : undefined
+          }
+        />
       ) : null}
 
       {!loading && filteredPlans.length > 0 ? (
-        <div className="plans-table">
-          <div className="plans-table-row plans-table-header">
-            <span>Title</span>
-            <span>Type</span>
-            <span>Catalog</span>
-            <span>Browse</span>
-            <span>Updated</span>
-            <span>Actions</span>
-          </div>
-          {filteredPlans.map((plan) => {
+        <DataTable
+          tableClassName="admin-table-plans"
+          columns={COLUMNS}
+          rows={filteredPlans}
+          rowKey={(plan) => plan.id}
+          renderCell={(plan, key) => {
             const busy = busyId === plan.id;
             const archived = Boolean(plan.is_archived);
             const published = Boolean(plan.is_published);
             const builtin = Boolean(plan.is_builtin);
-            return (
-              <div key={plan.id} className="plans-table-row">
-                <span className="plans-table-title">
-                  {plan.title}
-                  {builtin ? <span className="plans-badge plans-badge-builtin">Built-in</span> : null}
-                </span>
-                <span className="muted">{planTypeLabel(plan.plan_type)}</span>
-                <span>{catalogLabel(plan)}</span>
-                <span>{browseSummary(plan)}</span>
-                <span className="muted">{new Date(plan.updated_at).toLocaleString()}</span>
-                <span className="plans-table-actions">
-                  <Link href={`/admin/plans/${plan.id}`} className="btn btn-link">
-                    Edit
-                  </Link>
-                  {!archived && !published ? (
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      disabled={busy}
-                      onClick={() => void runCatalogPatch(plan.id, { is_published: true })}
-                    >
-                      Publish
-                    </button>
-                  ) : null}
-                  {!archived && published ? (
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      disabled={busy}
-                      onClick={() => void runCatalogPatch(plan.id, { is_published: false })}
-                    >
-                      Unpublish
-                    </button>
-                  ) : null}
-                  {!archived ? (
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      disabled={busy}
-                      onClick={() => void runCatalogPatch(plan.id, { is_archived: true })}
-                    >
-                      Archive
-                    </button>
-                  ) : (
-                    <button
-                      type="button"
-                      className="btn btn-secondary"
-                      disabled={busy}
-                      onClick={() => void runCatalogPatch(plan.id, { is_archived: false })}
-                    >
-                      Unarchive
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className="btn btn-danger"
-                    disabled={busy || builtin}
-                    title={builtin ? 'Built-in plans cannot be deleted.' : undefined}
-                    onClick={() => void runDelete(plan)}
-                  >
-                    Delete
-                  </button>
-                </span>
-              </div>
-            );
-          })}
-        </div>
+
+            switch (key) {
+              case 'title':
+                return (
+                  <span className="admin-table-title">
+                    {plan.title}
+                    {builtin ? <Badge tone="info">Built-in</Badge> : null}
+                  </span>
+                );
+              case 'type':
+                return <span className="admin-muted">{planTypeLabel(plan.plan_type)}</span>;
+              case 'catalog':
+                if (archived) {
+                  return (
+                    <span className="admin-table-cell-stack">
+                      <Badge tone="neutral">Archived</Badge>
+                    </span>
+                  );
+                }
+                return published ? <Badge tone="success">Published</Badge> : <Badge tone="neutral">Draft</Badge>;
+              case 'browse': {
+                const visible = plan.browse_visible !== false;
+                return (
+                  <span className="admin-table-cell-stack">
+                    {visible ? <Badge tone="success">Visible</Badge> : <Badge tone="neutral">Hidden</Badge>}
+                    {visible && plan.featured_rank != null ? (
+                      <span className="admin-muted">Featured #{plan.featured_rank}</span>
+                    ) : null}
+                  </span>
+                );
+              }
+              case 'updated':
+                return <span className="admin-muted">{new Date(plan.updated_at).toLocaleString()}</span>;
+              case 'actions':
+                return (
+                  <PlanCatalogRowActions
+                    plan={plan}
+                    busy={busy}
+                    onPublish={() => void handlePatch(plan.id, { is_published: true })}
+                    onUnpublish={() => void handlePatch(plan.id, { is_published: false })}
+                    onArchive={() => void handlePatch(plan.id, { is_archived: true })}
+                    onUnarchive={() => void handlePatch(plan.id, { is_archived: false })}
+                    onDelete={() => void handleDelete(plan)}
+                  />
+                );
+              default:
+                return null;
+            }
+          }}
+        />
       ) : null}
-    </main>
+    </>
   );
 }

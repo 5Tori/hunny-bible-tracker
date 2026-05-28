@@ -1,5 +1,6 @@
-import { DecodedIdToken } from 'firebase-admin/auth';
-import { verifyFirebaseBearerToken } from '@/lib/auth/verify-firebase-token';
+import type { User } from '@supabase/supabase-js';
+
+import { verifySupabaseBearerToken } from '@/lib/auth/verify-supabase-token';
 
 export class AdminAuthError extends Error {
   status: number;
@@ -38,15 +39,15 @@ export function isAdminEmail(email?: string | null) {
   return getAdminEmailSet().has(email.toLowerCase());
 }
 
-export async function verifyAdminToken(token: string): Promise<DecodedIdToken> {
-  const payload = await verifyFirebaseBearerToken(token);
-  if (!isAdminEmail(typeof payload.email === 'string' ? payload.email : null)) {
+export async function verifyAdminToken(token: string): Promise<User> {
+  const user = await verifySupabaseBearerToken(token);
+  if (!isAdminEmail(user.email)) {
     throw new AdminAuthError('not_authorized', 'User is not configured as an admin', 403);
   }
-  return payload;
+  return user;
 }
 
-export async function requireAdminUser(req: Request): Promise<DecodedIdToken> {
+export async function requireAdminUser(req: Request): Promise<User> {
   const token = parseBearerToken(req);
   try {
     return await verifyAdminToken(token);
@@ -54,6 +55,6 @@ export async function requireAdminUser(req: Request): Promise<DecodedIdToken> {
     if (error instanceof AdminAuthError) {
       throw error;
     }
-    throw new AdminAuthError('invalid_token', 'Unable to verify Firebase token', 401);
+    throw new AdminAuthError('invalid_token', 'Unable to verify Supabase token', 401);
   }
 }

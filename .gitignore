@@ -25,8 +25,12 @@ apps/mobile/web/
 # Node
 node_modules/
 .next/
+.open-next/
+.wrangler/
 out/
 apps/web/tsconfig.tsbuildinfo
+apps/web/.dev.vars
+apps/web/cloudflare-env.d.ts
 
 # apps/web is part of the pnpm workspace; a nested npm lockfile confuses Next.js
 # monorepo root detection and can contribute to broken /_next/static asset paths.
@@ -48,3 +52,4 @@ apps/mobile/.env*.json
 
 # Deprecated mobile icon source kept locally only.
 apps/mobile/assets/icon/app-icon.png
+supabase/.temp/

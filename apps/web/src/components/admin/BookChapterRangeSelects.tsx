@@ -45,7 +45,7 @@ export function BookChapterRangeSelects({
 
   if (disabled) {
     return (
-      <div className="field-row group-grid">
+      <div className="admin-field admin-form-grid-2">
         <div>
           <label htmlFor={startId}>Start chapter</label>
           <select id={startId} className="chapter-range-select" disabled value="">
@@ -66,7 +66,7 @@ export function BookChapterRangeSelects({
   const endOptions = chapterOptionValues(max).filter((chapter) => chapter >= start);
 
   return (
-    <div className="field-row group-grid">
+    <div className="admin-field admin-form-grid-2">
       <div>
         <label htmlFor={startId}>Start chapter</label>
         <select

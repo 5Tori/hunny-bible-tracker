@@ -1,8 +1,6 @@
 'use client';
 
-import { signOut } from 'firebase/auth';
-
-import { firebaseAuth } from '@/lib/firebase/client';
+import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
 const ADMIN_TOKEN_KEY = 'hunny-admin-token';
 
@@ -21,33 +19,34 @@ export function clearAdminToken() {
   localStorage.removeItem(ADMIN_TOKEN_KEY);
 }
 
-/** Sync localStorage bearer from Firebase (refreshes ID token when expired or near expiry). */
-export async function refreshAdminTokenFromFirebase(): Promise<void> {
+/** Sync localStorage bearer from Supabase (refreshes access token when needed). */
+export async function refreshAdminTokenFromSupabase(): Promise<void> {
   if (typeof window === 'undefined') return;
-  await firebaseAuth.authStateReady();
-  const user = firebaseAuth.currentUser;
-  if (!user) return;
-  const token = await user.getIdToken();
-  setAdminToken(token);
+  const supabase = getSupabaseBrowserClient();
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  if (token) {
+    setAdminToken(token);
+  }
 }
 
-/** Use after authStateReady so a persisted Firebase session repopulates the admin bearer without a new Google prompt. */
 export async function getAdminTokenOrRefresh(): Promise<string | null> {
-  await refreshAdminTokenFromFirebase();
+  await refreshAdminTokenFromSupabase();
   return getAdminToken();
 }
 
 export async function clearAdminSession(): Promise<void> {
   clearAdminToken();
   try {
-    await signOut(firebaseAuth);
+    const supabase = getSupabaseBrowserClient();
+    await supabase.auth.signOut();
   } catch {
     // ignore sign-out network errors
   }
 }
 
 export async function adminFetch(input: RequestInfo, init?: RequestInit) {
-  await refreshAdminTokenFromFirebase();
+  await refreshAdminTokenFromSupabase();
   const token = getAdminToken();
   const headers = new Headers(init?.headers);
 

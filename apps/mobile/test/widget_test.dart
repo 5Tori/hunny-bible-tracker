@@ -2,7 +2,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hunny_bible_tracker/app/app.dart';
 import 'package:hunny_bible_tracker/core/auth/auth_repository.dart';
-import 'package:hunny_bible_tracker/core/auth/firebase_auth_config.dart';
+import 'package:hunny_bible_tracker/core/auth/supabase_auth_config.dart';
 import 'package:hunny_bible_tracker/core/database/app_database.dart';
 import 'package:hunny_bible_tracker/features/read/data/read_repository.dart';
 
@@ -13,13 +13,11 @@ void main() {
     await readRepository.initializeLocalData();
     await readRepository.completeOnboarding('beginner');
     final authRepository = AuthRepository(
-      firebaseConfig: const FirebaseAuthConfig(
-        apiKey: '',
-        appId: '',
-        messagingSenderId: '',
-        projectId: '',
+      supabaseConfig: const SupabaseAuthConfig(
+        url: '',
+        anonKey: '',
       ),
-      firebaseReady: false,
+      supabaseReady: false,
       readRepository: readRepository,
     );
 

@@ -8,7 +8,7 @@ This document contains local setup, run commands, build commands, and common tro
 - Xcode and iOS simulator for iOS development
 - Android Studio and Android SDK for Android development
 - pnpm for the web/API app
-- Firebase project with Android and iOS apps
+- Supabase project with Google OAuth configured (see `docs/SUPABASE_SETUP.md`)
 
 ## First-Time Mobile Setup
 
@@ -32,7 +32,7 @@ cp .env.example.json .env.ios.json
 cp .env.example.json .env.android.json
 ```
 
-Fill both files with Firebase values.
+Fill both files with Supabase and Google OAuth values.
 
 Use platform-specific API base URLs:
 

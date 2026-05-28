@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 
-import { upsertFirebaseAuthUser } from '@/lib/auth/auth-user-sync';
-import { verifyFirebaseBearerToken } from '@/lib/auth/verify-firebase-token';
+import { upsertSupabaseAuthUser } from '@/lib/auth/auth-user-sync';
+import { verifySupabaseBearerToken } from '@/lib/auth/verify-supabase-token';
 
 export async function POST(req: Request) {
   const auth = req.headers.get('authorization');
@@ -13,16 +13,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: 'missing_token' }, { status: 401 });
   }
 
-  let decoded;
+  let user;
   try {
-    decoded = await verifyFirebaseBearerToken(token);
+    user = await verifySupabaseBearerToken(token);
   } catch {
     return NextResponse.json({ error: 'invalid_token' }, { status: 401 });
   }
 
   try {
-    const user = await upsertFirebaseAuthUser(decoded);
-    return NextResponse.json({ user });
+    const profile = await upsertSupabaseAuthUser(user);
+    return NextResponse.json({ user: profile });
   } catch {
     return NextResponse.json({ error: 'sync_failed' }, { status: 500 });
   }

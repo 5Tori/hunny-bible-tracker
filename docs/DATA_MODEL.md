@@ -12,7 +12,7 @@ This document is the current data-model source of truth for the project.
 
 Local Drift schema version is `2`. During active MVP development, stale local data can be cleared by deleting/reinstalling the app or resetting the simulator/emulator build.
 
-During MVP development, the server migration history has been reset. Use `apps/web/db/schema.sql` as the source of truth for fresh Neon setup.
+During MVP development, the server migration history has been reset. Use `supabase/migrations/20260528000000_baseline.sql` as the source of truth for fresh Supabase setup (`apps/web/db/schema.sql` is a reference mirror).
 
 ## Conceptual Model
 
@@ -62,13 +62,13 @@ Seeded from `apps/mobile/assets/data/bible_books.en.json`.
 
 ### `local_users`
 
-One local profile row exists before remote sync. Firebase UID is stored in `auth_user_id` after sign-in.
+One local profile row exists before remote sync. Supabase user UUID is stored in `auth_user_id` after sign-in.
 
 | Column | Role |
 | --- | --- |
 | `id` | Short local device/user id |
 | `type` | `guest` or `authenticated` |
-| `auth_user_id` | Firebase `uid`, nullable |
+| `auth_user_id` | Supabase user UUID, nullable |
 | `sync_status`, `server_id`, `last_synced_at`, `client_revision` | Sync metadata |
 
 ### `plan_templates`
@@ -99,7 +99,7 @@ Important columns:
 Template source:
 
 - Plan templates are created and edited in the web admin dashboard.
-- Published templates are stored in Neon and served through `GET /api/v1/plans`.
+- Published templates are stored in Supabase and served through `GET /api/v1/plans`.
 - Mobile caches published template rows locally before Catalog / Start Plan flows.
 
 ### `plan_template_sections`
@@ -248,15 +248,16 @@ Examples:
 
 ## Server Tables
 
-`apps/web/db/schema.sql` is the server schema source for Neon.
+`supabase/migrations/` is the server schema source for Supabase.
 
 ### Identity
 
 ```text
-auth_users
+auth.users   # Supabase-managed
+profiles     # public.profiles, FK to auth.users
 ```
 
-Firebase Auth owns identity. `auth_users.firebase_uid` maps Firebase users to app data rows.
+Supabase Auth owns identity. `profiles.id` maps auth users to app data rows.
 
 ### Plan catalog
 
@@ -268,7 +269,7 @@ plan_tags
 plan_template_tags
 ```
 
-Admin-owned plan content is stored in Neon and published to mobile through `/api/v1/plans`.
+Admin-owned plan content is stored in Supabase and published to mobile through `/api/v1/plans`.
 
 ### Content catalog
 
@@ -376,7 +377,7 @@ One row per authenticated user stores the latest compact reading backup snapshot
 
 | Column | Role |
 | --- | --- |
-| `auth_user_id` | Unique owner, references `auth_users(id)` |
+| `auth_user_id` | Unique owner, references `profiles(id)` |
 | `backup_version` | Snapshot schema version |
 | `payload_jsonb` | Compact JSON backup payload |
 | `payload_hash` | Stable hash of canonical payload JSON |
@@ -436,6 +437,6 @@ Mobile Settings > Help & feedback posts to the server with:
 
 - Local Drift code uses `user_plan_id` for plan-run scoped rows.
 - Local denominator table is `user_plan_chapters`.
-- Firebase `uid` is stored locally in `local_users.auth_user_id`.
+- Supabase user UUID is stored locally in `local_users.auth_user_id`.
 - Compact backup does not depend on per-row `server_id` values.
 - Mobile still writes locally first; backup/restore is an authenticated secondary path.

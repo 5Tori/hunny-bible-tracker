@@ -22,7 +22,7 @@ class ReadRepository {
   final Uuid _uuid = const Uuid();
   final PlanCatalogApiClient _planCatalogApiClient;
 
-  /// Shown after Firebase creates a new account from Google sign-in.
+  /// Shown after Supabase creates a new account from Google sign-in.
   static const kAppSettingInitialBackupPromptDone =
       'initial_backup_prompt_done';
   static const kAppSettingLastReadingSyncAt = 'last_reading_sync_at';

@@ -1,0 +1,22 @@
+.admin-app {
+  --admin-bg: #ffffff;
+  --admin-bg-subtle: #fafafa;
+  --admin-border: #e5e5e5;
+  --admin-border-strong: #171717;
+  --admin-text: #171717;
+  --admin-text-muted: #737373;
+  /* Semantic only — primary CTA, focus, info (not nav/body links) */
+  --admin-blue: #2563eb;
+  --admin-blue-hover: #1d4ed8;
+  --admin-green: #16a34a;
+  --admin-green-hover: #15803d;
+  --admin-red: #dc2626;
+  --admin-red-hover: #b91c1c;
+  --admin-yellow: #ca8a04;
+  --admin-sidebar-width: 220px;
+  --admin-content-max: 1200px;
+  --admin-page-padding: 32px;
+  --admin-radius: 4px;
+  --admin-font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --admin-focus: 0 0 0 2px #fff, 0 0 0 4px #2563eb;
+}

@@ -25,11 +25,11 @@ This is the active cleanup checklist before the next closed-test build.
 
 ## Before Closed Testing Build
 
-- Apply `apps/web/db/schema.sql` in the target Neon environment.
+- Apply `supabase/migrations/20260528000000_baseline.sql` in the target Supabase project.
 - Apply required existing-environment migrations in `apps/web/db/migrations/`.
 - Confirm `ADMIN_EMAILS` includes the admin account.
 - Confirm Cloudinary env vars are set for plan, content, and Today’s Message image upload.
-- Confirm Firebase Android SHA-1 values for debug/release/Play App Signing.
+- Confirm Google OAuth Android SHA-1 values for debug/release/Play App Signing.
 - Confirm iOS Bundle ID before any iOS external testing.
 - Confirm `HUNNY_API_BASE_URL` points to the deployed API for release builds.
 - Run `flutter analyze`.

@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
-import { buildTodayMessageShareImageUrl } from '@/lib/cloudinary';
-import { sql } from '@/lib/db/neon';
+import { buildTodayMessageShareImageUrl } from '@/lib/cloudinary-share-url';
+import { sql } from '@/lib/db/postgres';
 
 export interface TodayMessageBase {
   id: string;

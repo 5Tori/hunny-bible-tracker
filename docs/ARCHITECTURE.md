@@ -7,18 +7,18 @@ This document is the system map for Hunny Bible Tracker. It should let a new age
 ```text
 Flutter mobile app
   -> Drift / SQLite local database
-  -> Firebase Auth SDK
+  -> Supabase Auth (supabase_flutter)
   -> optional authenticated Next.js API calls
 
 Next.js web/API/admin app
-  -> Firebase Admin SDK token verification
-  -> Neon Postgres
+  -> Supabase JWT verification (service role)
+  -> Supabase Postgres
   -> Cloudinary image upload for admin-managed media
 ```
 
 The mobile app is offline-first. SQLite is the first write target for reading plans, chapter progress, reading activities, settings, and local Today’s Message flags. Home and Read should render from local state first. API calls use short timeouts and cached reachability so offline startup does not wait on repeated network failures.
 
-The web/API app serves admin tools, public content APIs, Firebase-authenticated account APIs, reading backup/restore APIs, and shareable Today’s Message pages.
+The web/API app serves admin tools, public content APIs, Supabase-authenticated account APIs, reading backup/restore APIs, and shareable Today’s Message pages.
 
 ## Applications
 
@@ -35,7 +35,7 @@ The web/API app serves admin tools, public content APIs, Firebase-authenticated 
 | `lib/app/app.dart` | Top-level app composition |
 | `lib/core/database/app_database.dart` | Drift schema source |
 | `lib/core/database/app_database.g.dart` | Generated Drift code |
-| `lib/core/auth/` | Firebase Auth config, auth repository, auth DTOs |
+| `lib/core/auth/` | Supabase Auth config, auth repository, auth DTOs |
 | `lib/core/api/` | API config, shared Dio timeout/reachability client, and sync response models |
 | `lib/features/root/root_shell.dart` | Bottom tab shell: Home, Discover, Read, Settings |
 | `lib/features/content/` | Content API client and shared content DTOs |
@@ -64,8 +64,8 @@ The web/API app serves admin tools, public content APIs, Firebase-authenticated 
 | `apps/web/src/components/public/SiteShell.tsx` | Public web header/footer and shared chrome |
 | `apps/web/postcss.config.mjs` | Tailwind v4 PostCSS setup |
 | `apps/web/src/app/api/health/route.ts` | Health check |
-| `apps/web/src/app/api/v1/auth/sync/route.ts` | Firebase token verify + Neon auth user upsert |
-| `apps/web/src/app/api/v1/me/route.ts` | Firebase token verify + current user response |
+| `apps/web/src/app/api/v1/auth/sync/route.ts` | Supabase token verify + profiles upsert |
+| `apps/web/src/app/api/v1/me/route.ts` | Supabase token verify + current user response |
 | `apps/web/src/app/api/v1/plans` | Published plan catalog APIs |
 | `apps/web/src/app/api/v1/content` | Published content catalog APIs |
 | `apps/web/src/app/api/v1/admin/content` | Admin content CRUD and content upload APIs |
@@ -73,14 +73,15 @@ The web/API app serves admin tools, public content APIs, Firebase-authenticated 
 | `apps/web/src/app/api/v1/sync/bootstrap/route.ts` | Authenticated reading backup restore/bootstrap |
 | `apps/web/src/app/api/v1/today-message` | Public Today’s Message API and engagement routes |
 | `apps/web/src/app/api/v1/feedback/route.ts` | Mobile Help & feedback submission |
-| `apps/web/src/lib/auth/` | Firebase Admin token verification and auth user sync |
+| `apps/web/src/lib/auth/` | Supabase token verification and profile sync |
 | `apps/web/src/lib/plans.ts` | Plan template CRUD and public serialization |
 | `apps/web/src/lib/content.ts` | General content CRUD, public lookup, authors, tags, assets, related plans |
 | `apps/web/src/lib/today-messages.ts` | Today’s Message CRUD, public lookup, engagement counters |
 | `apps/web/src/lib/sync/reading-sync.ts` | Reading backup/restore server logic |
 | `apps/web/src/lib/feedback.ts` | Feedback validation and insert logic |
-| `apps/web/src/lib/db/neon.ts` | Neon serverless SQL client |
-| `apps/web/db/schema.sql` | Active server DB schema source |
+| `apps/web/src/lib/db/postgres.ts` | Supabase Postgres SQL client |
+| `supabase/migrations/` | Active server DB migration source |
+| `apps/web/db/schema.sql` | Reference schema mirror |
 
 ## Data Flow: Reading Progress
 
@@ -112,20 +113,20 @@ Current plans can be archived from Plans. Archive preserves progress and activit
 
 ```text
 Admin edits/publishes plan
-  -> Neon plan_templates / sections / items
+  -> Supabase plan_templates / sections / items
   -> GET /api/v1/plans
   -> mobile caches template rows in Drift
   -> user starts a plan
   -> user_plan_chapters snapshot is created locally
 ```
 
-Started plan runs create local derived `user_plan_chapters` rows for offline UI and progress denominators. Compact server backup keeps these rows out of Neon and regenerates them from plan templates on restore.
+Started plan runs create local derived `user_plan_chapters` rows for offline UI and progress denominators. Compact server backup keeps these rows out of Supabase and regenerates them from plan templates on restore.
 
 ## Data Flow: Today’s Message
 
 ```text
 Admin creates/publishes Today’s Message
-  -> today_messages row in Neon
+  -> today_messages row in Supabase
   -> GET /api/v1/today-message?date=YYYY-MM-DD&language=en
   -> Home card renders image, verse, version, actions, hint, Read More
   -> Read More modal can start/continue related plan
@@ -139,7 +140,7 @@ On mobile, Home first checks today’s local cache, then the last cached Today�
 
 ```text
 Admin creates/publishes content
-  -> Neon contents / content_sections / content_assets / content_tags / content_plan_links
+  -> Supabase contents / content_sections / content_assets / content_tags / content_plan_links
   -> GET /api/v1/content?sort=featured&language=en
   -> mobile Discover loads content through ContentApiClient
   -> user searches, filters by type/tag, and opens a content detail sheet
@@ -153,10 +154,10 @@ Discover is online-only for now. If the API is not reachable, the mobile tab sho
 
 ```text
 Continue with Google
-  -> Firebase Auth native sign-in
-  -> local_users.auth_user_id = Firebase uid
+  -> Supabase Auth (Google ID token)
+  -> local_users.auth_user_id = Supabase user UUID
   -> POST /api/v1/auth/sync
-  -> Neon auth_users upsert
+  -> public.profiles upsert
   -> optional POST /api/v1/sync/push
 ```
 
@@ -171,14 +172,14 @@ Settings -> Restore backup
   -> progress, activities, completion events, and settings restored
 ```
 
-Firebase Auth owns identity. Neon stores application data and server-side user profile rows.
+Supabase Auth owns identity. Supabase Postgres stores application data; `public.profiles` mirrors auth users for app FKs.
 
 ## Current Boundaries
 
 - Mobile reads/writes progress locally first.
 - Backup/restore is for account recovery, not live collaborative sync.
 - Automatic incremental pull/merge and conflict UI are not implemented.
-- Mobile must not connect directly to Neon.
+- Mobile must not connect directly to Supabase Postgres.
 - Discover is enabled as a public-content finder/list.
 - Saved/List remains hidden for MVP closed testing.
 

@@ -1,15 +1,28 @@
-import type { DecodedIdToken } from 'firebase-admin/auth';
+import type { User } from '@supabase/supabase-js';
 
-import { sql } from '@/lib/db/neon';
+import { sql } from '@/lib/db/postgres';
 
-export async function upsertFirebaseAuthUser(token: DecodedIdToken) {
-  const email = typeof token.email === 'string' ? token.email : null;
-  const name = typeof token.name === 'string' ? token.name : null;
-  const picture = typeof token.picture === 'string' ? token.picture : null;
+function displayNameFromUser(user: User): string | null {
+  const meta = user.user_metadata ?? {};
+  const name = meta.full_name ?? meta.name;
+  return typeof name === 'string' ? name : null;
+}
+
+function photoUrlFromUser(user: User): string | null {
+  const meta = user.user_metadata ?? {};
+  const url = meta.avatar_url ?? meta.picture;
+  return typeof url === 'string' ? url : null;
+}
+
+export async function upsertSupabaseAuthUser(user: User) {
+  const email = typeof user.email === 'string' ? user.email : null;
+  const displayName = displayNameFromUser(user);
+  const photoUrl = photoUrlFromUser(user);
+  const emailVerified = Boolean(user.email_confirmed_at);
 
   const rows = (await sql`
-    insert into auth_users (
-      firebase_uid,
+    insert into profiles (
+      id,
       email,
       display_name,
       photo_url,
@@ -18,15 +31,15 @@ export async function upsertFirebaseAuthUser(token: DecodedIdToken) {
       updated_at
     )
     values (
-      ${token.uid},
+      ${user.id},
       ${email},
-      ${name},
-      ${picture},
-      ${Boolean(token.email_verified)},
+      ${displayName},
+      ${photoUrl},
+      ${emailVerified},
       now(),
       now()
     )
-    on conflict (firebase_uid)
+    on conflict (id)
     do update set
       email = excluded.email,
       display_name = excluded.display_name,
@@ -34,7 +47,8 @@ export async function upsertFirebaseAuthUser(token: DecodedIdToken) {
       email_verified = excluded.email_verified,
       last_seen_at = now(),
       updated_at = now()
-    returning id, firebase_uid, email, display_name, photo_url, email_verified, created_at, updated_at, last_seen_at
+    returning id, email, display_name, photo_url, email_verified, created_at, updated_at, last_seen_at
   `) as Array<Record<string, unknown>>;
+
   return rows[0];
 }
