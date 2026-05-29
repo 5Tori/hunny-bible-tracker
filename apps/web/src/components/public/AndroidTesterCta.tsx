@@ -1,32 +1,40 @@
 "use client";
 
+import Image from "next/image";
 import { useEffect, useId, useState } from "react";
 
 import { siteConfig } from "@/lib/site-config";
 
 type AndroidTesterCtaVariant = "store" | "header" | "hb";
 
+/** Display aspect from optimized exports (long edge 720px). */
+const STEP_IMAGE_WIDTH = 341;
+const STEP_IMAGE_HEIGHT = 720;
+
 const testerSteps = [
   {
     label: "1",
-    title: "Join the tester group",
-    body: "Join the Google Group first so Google Play can recognize your testing access.",
+    title: "Join tester group",
+    body: "Open the Google Group and tap Join.",
+    image: "/android-tester/step-1.png",
     href: siteConfig.androidTesterGroupUrl,
-    cta: "Join tester group",
+    cta: "Join group",
   },
   {
     label: "2",
-    title: "Opt in on Google Play",
-    body: "Tell Google Play you'd like to participate in the closed test.",
+    title: "Opt in on Play",
+    body: "On Google Play, become a tester.",
+    image: "/android-tester/step-2.png",
     href: siteConfig.androidTesterOptInUrl,
-    cta: "Join closed test",
+    cta: "Join test",
   },
   {
     label: "3",
-    title: "Install and explore",
-    body: "Install the current test build, try it out, and let me know if anything feels confusing or broken.",
+    title: "Install the app",
+    body: "Install Hunny from the Play Store.",
+    image: "/android-tester/step-3.png",
     href: siteConfig.googlePlayUrl,
-    cta: "Install app",
+    cta: "Install",
   },
 ] as const;
 
@@ -93,7 +101,7 @@ export function AndroidTesterCta({
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-border bg-card p-5 text-foreground shadow-card sm:p-7"
+            className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-border bg-card p-5 text-foreground shadow-card sm:p-7 lg:max-w-6xl"
           >
             <div className="flex items-start justify-between gap-5">
               <div>
@@ -105,14 +113,14 @@ export function AndroidTesterCta({
                 </h2>
                 <div className="mt-3 max-w-xl space-y-3 text-sm leading-relaxed text-foreground/70">
                   <p>
-                    Hunny is currently in closed testing, and I&apos;d genuinely
-                    appreciate your help.
+                    Hunny is currently in closed testing, and I&apos;d genuinely appreciate your
+                    help.
                   </p>
                   <p>
-                    It&apos;s a simple Bible reading tracker designed to make
-                    Scripture feel less overwhelming and easier to start.
+                    It&apos;s a simple Bible reading tracker designed to make Scripture feel less
+                    overwhelming and easier to start.
                   </p>
-                  <p>Joining only takes a minute.</p>
+                  <p>Joining only takes a minute — follow the three steps below.</p>
                 </div>
               </div>
               <button
@@ -125,26 +133,44 @@ export function AndroidTesterCta({
               </button>
             </div>
 
-            <ol className="mt-7 grid gap-3">
+            <ol className="mt-7 grid gap-4 lg:grid-cols-3 lg:gap-5">
               {testerSteps.map((step) => (
                 <li
                   key={step.title}
-                  className="grid gap-4 rounded-2xl border border-border bg-cream/50 p-4 sm:grid-cols-[auto_1fr_auto] sm:items-center"
+                  className="rounded-2xl border border-border bg-cream/50 p-4 lg:p-5"
                 >
-                  <span className="flex h-9 w-9 items-center justify-center rounded-full bg-honey text-sm font-semibold text-[#3b2710]">
-                    {step.label}
-                  </span>
-                  <span>
-                    <strong className="block text-base">{step.title}</strong>
-                    <span className="mt-1 block text-sm leading-relaxed text-foreground/70">
-                      {step.body}
-                    </span>
-                  </span>
+                  <div className="flex items-start gap-3 lg:flex-col lg:items-center lg:text-center">
+                    <div className="flex min-w-0 flex-1 flex-col lg:w-full">
+                      <div className="flex items-center gap-2 lg:justify-center">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-honey text-sm font-semibold text-[#3b2710]">
+                          {step.label}
+                        </span>
+                        <strong className="text-base leading-snug">{step.title}</strong>
+                      </div>
+                      <p className="mt-2 text-sm leading-snug text-foreground/70">{step.body}</p>
+                      <a
+                        href={step.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-2xl bg-[#211105] px-4 text-sm font-medium text-white transition hover:bg-[#332010] sm:w-auto lg:hidden"
+                      >
+                        {step.cta}
+                      </a>
+                    </div>
+                    <Image
+                      src={step.image}
+                      alt=""
+                      width={STEP_IMAGE_WIDTH}
+                      height={STEP_IMAGE_HEIGHT}
+                      className="w-[min(38vw,140px)] shrink-0 rounded-xl border border-border/80 bg-background object-contain shadow-soft sm:w-[148px] lg:mx-auto lg:mt-1 lg:w-full lg:max-w-[220px]"
+                      sizes="(max-width: 1024px) 148px, 220px"
+                    />
+                  </div>
                   <a
                     href={step.href}
                     target="_blank"
                     rel="noreferrer"
-                    className="inline-flex min-h-11 items-center justify-center rounded-2xl bg-[#211105] px-4 text-sm font-medium text-white transition hover:bg-[#332010]"
+                    className="mt-4 hidden min-h-10 w-full items-center justify-center rounded-2xl bg-[#211105] px-4 text-sm font-medium text-white transition hover:bg-[#332010] lg:inline-flex"
                   >
                     {step.cta}
                   </a>

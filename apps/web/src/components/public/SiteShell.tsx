@@ -1,6 +1,7 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
+import { BrandLogo } from "@/components/public/BrandLogo";
 import { AndroidTesterCta } from "@/components/public/AndroidTesterCta";
 import { siteConfig } from "@/lib/site-config";
 
@@ -9,10 +10,9 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-md">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5 sm:px-8">
         <Link href="/" className="flex items-center gap-2.5">
-          <HoneyMark className="h-7 w-7" />
-          <span className="font-display text-lg tracking-normal">Hunny</span>
-          <span className="hidden text-sm text-muted-foreground sm:inline">
-            Bible Tracker
+          <BrandLogo className="h-7 w-auto shrink-0" priority />
+          <span className="font-display text-lg tracking-normal text-foreground">
+            {siteConfig.name}
           </span>
         </Link>
         <nav className="flex items-center gap-1 text-sm">
@@ -36,7 +36,7 @@ export function SiteFooter() {
         <div className="flex flex-col gap-8 sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-sm">
             <div className="flex items-center gap-2.5">
-              <HoneyMark className="h-6 w-6" />
+              <BrandLogo className="h-6 w-auto shrink-0" />
               <span className="font-display text-base">Hunny Bible Tracker</span>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
@@ -95,34 +95,6 @@ function FooterLink({ href, children }: { href: string; children: ReactNode }) {
         {children}
       </Link>
     </li>
-  );
-}
-
-export function HoneyMark({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 32 32" className={className} aria-hidden="true">
-      <defs>
-        <linearGradient id="hg" x1="0" x2="0" y1="0" y2="1">
-          <stop offset="0%" stopColor="#fcd97a" />
-          <stop offset="100%" stopColor="#e9a23b" />
-        </linearGradient>
-      </defs>
-      <path
-        d="M16 2 L28 9 L28 23 L16 30 L4 23 L4 9 Z"
-        fill="url(#hg)"
-        stroke="#b9791a"
-        strokeOpacity="0.25"
-        strokeWidth="0.6"
-      />
-      <path
-        d="M12 12.5 L20 12.5 M16 12.5 L16 20.5 M12.5 20.5 L19.5 20.5"
-        stroke="#3b2710"
-        strokeWidth="1.6"
-        strokeLinecap="round"
-        fill="none"
-        opacity="0.78"
-      />
-    </svg>
   );
 }
 

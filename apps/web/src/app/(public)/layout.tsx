@@ -35,9 +35,9 @@ export const metadata: Metadata = {
       "Bible reading, without the overwhelm. Start small, track your progress, and build a gentle Scripture reading habit.",
     images: [
       {
-        url: "/icon.png",
-        width: 512,
-        height: 512,
+        url: "/brand/hunny-mark.png",
+        width: 235,
+        height: 256,
         alt: siteConfig.name,
       },
     ],
@@ -47,7 +47,7 @@ export const metadata: Metadata = {
     title: siteConfig.name,
     description:
       "Bible reading, without the overwhelm. Start small, track your progress, and build a gentle Scripture reading habit.",
-    images: ["/icon.png"],
+    images: ["/brand/hunny-mark.png"],
   },
   robots: {
     index: true,

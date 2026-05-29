@@ -34,6 +34,6 @@ export const config = {
      * Skip static assets and Next internals; apply to public pages, admin, and API paths
      * so workers.dev API calls also consolidate on the custom domain.
      */
-    "/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
+    "/((?!_next/static|_next/image|favicon.ico|icon.png|apple-icon.png|android-tester/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico)$).*)",
   ],
 };

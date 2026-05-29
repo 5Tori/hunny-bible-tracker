@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BrandLogo } from "@/components/public/BrandLogo";
 import { siteConfig } from "@/lib/site-config";
 
 export default function MarketingFooter() {
@@ -9,11 +10,7 @@ export default function MarketingFooter() {
       <div className="hb-container hb-footer__inner">
         <div className="hb-footer__brand">
           <Link href="/" className="hb-brand" aria-label={siteConfig.name}>
-            <span className="hb-brand__mark" aria-hidden>
-              <span />
-              <span />
-              <span />
-            </span>
+            <BrandLogo className="h-[23px] w-auto shrink-0" />
             <span>{siteConfig.name}</span>
           </Link>
           <p>

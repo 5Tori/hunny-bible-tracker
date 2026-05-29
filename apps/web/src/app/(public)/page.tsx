@@ -2,7 +2,8 @@ import Link from "next/link";
 import type { ReactNode } from "react";
 
 import { AndroidTesterCta } from "@/components/public/AndroidTesterCta";
-import { HoneyMark, SiteFooter, SiteHeader } from "@/components/public/SiteShell";
+import { BrandLogo } from "@/components/public/BrandLogo";
+import { SiteFooter, SiteHeader } from "@/components/public/SiteShell";
 
 const plans = [
   {
@@ -175,7 +176,7 @@ export default function HomePage() {
               >
                 <div className="flex items-center justify-between">
                   <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-honey-soft">
-                    <HoneyMark className="h-5 w-5" />
+                    <BrandLogo className="h-5 w-auto shrink-0" />
                   </div>
                   <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
                     Plan
@@ -297,7 +298,7 @@ export default function HomePage() {
         </section>
 
         <section className="mx-auto mt-24 max-w-3xl px-5 text-center sm:px-8">
-          <HoneyMark className="mx-auto h-10 w-10" />
+          <BrandLogo className="mx-auto h-10 w-auto shrink-0" />
           <h2 className="mt-5 text-balance font-display text-3xl leading-tight sm:text-5xl">
             Let your reading journey grow.
           </h2>
@@ -378,7 +379,7 @@ function PhoneMockup() {
                 </p>
                 <p className="mt-1 font-display text-lg">Joseph's Story</p>
               </div>
-              <HoneyMark className="h-7 w-7" />
+              <BrandLogo className="h-7 w-auto shrink-0" />
             </div>
 
             <div className="mt-4 rounded-2xl bg-white p-4 shadow-soft">

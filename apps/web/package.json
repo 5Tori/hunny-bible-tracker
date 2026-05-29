@@ -12,7 +12,8 @@
     "cf:build": "opennextjs-cloudflare build",
     "cf:deploy": "opennextjs-cloudflare deploy",
     "deploy": "NEXT_PUBLIC_SITE_URL=https://hunnybibletracker.com NEXT_PUBLIC_GTM_ID=GTM-TWDZMRJW pnpm run cf:build && pnpm run cf:deploy",
-    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
+    "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
+    "icons:sync": "bash scripts/sync-brand-icons.sh"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.19.0",
