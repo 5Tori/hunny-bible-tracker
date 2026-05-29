@@ -9,7 +9,7 @@
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
     "preview": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy": "NEXT_PUBLIC_SITE_URL=https://hunnybibletracker.com NEXT_PUBLIC_GA_MEASUREMENT_ID=G-8RSLHM5PHV opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "deploy": "NEXT_PUBLIC_SITE_URL=https://hunnybibletracker.com NEXT_PUBLIC_GTM_ID=GTM-TWDZMRJW opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts"
   },
   "dependencies": {

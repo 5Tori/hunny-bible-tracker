@@ -18,10 +18,15 @@
 
 ### 사이트에 태그 넣기 (완료)
 
-`apps/web`에 측정 ID가 연결되어 있습니다.
+프로덕션은 **GTM**으로 로드합니다 (GA4는 GTM 컨테이너 안에서 설정).
 
-- `wrangler.jsonc` → `NEXT_PUBLIC_GA_MEASUREMENT_ID`
+| 항목 | 값 |
+| --- | --- |
+| GTM 컨테이너 ID | `GTM-TWDZMRJW` |
+
+- `wrangler.jsonc` → `NEXT_PUBLIC_GTM_ID`
 - 배포 시 `pnpm run deploy`가 빌드에 동일 ID를 주입
+- GTM 안에 **GA4 구성** 태그(측정 ID `G-8RSLHM5PHV`)가 있어야 Analytics에 데이터가 들어갑니다
 
 **배포 후 확인**
 
@@ -33,15 +38,15 @@
 
 ---
 
-## 2. GTM (Google Tag Manager) — 선택
+## 2. GTM (Google Tag Manager) — 기본 사용 중
 
-GTM을 쓰면 **태그를 대시보드에서** 바꿀 수 있습니다. GTM을 켜면 코드의 **직접 GA4(gtag)는 자동으로 끕니다** (이중 집계 방지).
+컨테이너 ID: **`GTM-TWDZMRJW`**
 
-### GTM 컨테이너 만들기
+GTM을 켜면 코드의 **직접 GA4(gtag)는 자동으로 끕니다** (이중 집계 방지). GA4 데이터는 GTM 태그로만 수집합니다.
 
-1. [tagmanager.google.com](https://tagmanager.google.com/) → **계정 만들기**
-2. 컨테이너 이름: `Hunny Bible Tracker` · 플랫폼: **웹**
-3. 컨테이너 ID 복사: `GTM-XXXXXXX`
+### GTM 컨테이너 (이미 있음)
+
+1. [tagmanager.google.com](https://tagmanager.google.com/) → 컨테이너 `GTM-TWDZMRJW`
 
 ### GA4 태그를 GTM 안에 연결
 
@@ -51,16 +56,9 @@ GTM을 쓰면 **태그를 대시보드에서** 바꿀 수 있습니다. GTM을 �
 4. 트리거: **All Pages** (`Initialization - All Pages` 또는 `Page View - All Pages`)
 5. **제출** → **게시**
 
-### 사이트에 GTM ID 넣기
+### 사이트에 GTM ID 넣기 (완료)
 
-`apps/web/wrangler.jsonc` (또는 Cloudflare Worker 환경 변수):
-
-```jsonc
-"NEXT_PUBLIC_GTM_ID": "GTM-XXXXXXX",
-"NEXT_PUBLIC_GA_MEASUREMENT_ID": "",
-```
-
-`NEXT_PUBLIC_GA_MEASUREMENT_ID`를 비우고 GTM만 켜야 합니다. 그다음:
+`wrangler.jsonc`에 `NEXT_PUBLIC_GTM_ID": "GTM-TWDZMRJW"` 가 설정되어 있습니다. 변경 후:
 
 ```bash
 cd apps/web && pnpm run deploy
@@ -118,7 +116,7 @@ Search Console이 보여 주는 메타 태그 예:
 | 변수 | 예시 | 용도 |
 | --- | --- | --- |
 | `NEXT_PUBLIC_GA_MEASUREMENT_ID` | `G-8RSLHM5PHV` | 직접 GA4 (GTM 미사용 시) |
-| `NEXT_PUBLIC_GTM_ID` | `GTM-XXXXXXX` | GTM 사용 시 (GA4는 GTM 태그로) |
+| `NEXT_PUBLIC_GTM_ID` | `GTM-TWDZMRJW` | 프로덕션 기본 (GA4는 GTM 태그로) |
 | `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` | Search Console `content` 값 | 소유권 확인 메타 태그 |
 
 ---
