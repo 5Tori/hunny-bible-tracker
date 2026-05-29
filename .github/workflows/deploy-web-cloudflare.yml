@@ -19,9 +19,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Version comes from root package.json "packageManager" (do not set version here — duplicates cause CI failure).
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10
 
       - uses: actions/setup-node@v4
         with:
@@ -33,7 +32,7 @@ jobs:
         working-directory: ${{ github.workspace }}
 
       - name: Build and deploy
-        run: pnpm deploy
+        run: pnpm run deploy
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
