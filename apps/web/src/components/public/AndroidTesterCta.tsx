@@ -74,7 +74,7 @@ export function AndroidTesterCta({
       >
         {variant === "store" ? (
           <>
-            <span className="text-honey">
+            <span className="text-[#d99a12]">
               <PlayIcon />
             </span>
             <span className="text-left leading-tight">
@@ -91,7 +91,7 @@ export function AndroidTesterCta({
 
       {open ? (
         <div
-          className="fixed inset-0 z-50 flex items-end justify-center bg-[#211105]/50 px-4 py-5 backdrop-blur-sm sm:items-center sm:p-6"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-neutral-900/40 px-4 py-5 sm:items-center sm:p-6"
           role="presentation"
           onMouseDown={(event) => {
             if (event.target === event.currentTarget) setOpen(false);
@@ -101,17 +101,15 @@ export function AndroidTesterCta({
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
-            className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-border bg-card p-5 text-foreground shadow-card sm:p-7 lg:max-w-6xl"
+            className="max-h-[92vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-neutral-200 bg-white p-5 text-neutral-900 shadow-lg sm:p-7 lg:max-w-6xl"
           >
             <div className="flex items-start justify-between gap-5">
               <div>
-                <p className="text-xs font-medium uppercase tracking-[0.18em] text-honey-ink">
-                  Android closed testing
-                </p>
-                <h2 id={titleId} className="mt-2 font-display text-3xl leading-tight sm:text-4xl">
+                <p className="mkt-kicker">Android closed testing</p>
+                <h2 id={titleId} className="mt-2 text-2xl font-semibold leading-tight sm:text-3xl">
                   Help test Hunny for Android
                 </h2>
-                <div className="mt-3 max-w-xl space-y-3 text-sm leading-relaxed text-foreground/70">
+                <div className="mt-3 max-w-xl space-y-3 text-sm leading-relaxed text-neutral-600">
                   <p>
                     Hunny is currently in closed testing, and I&apos;d genuinely appreciate your
                     help.
@@ -126,7 +124,7 @@ export function AndroidTesterCta({
               <button
                 type="button"
                 onClick={() => setOpen(false)}
-                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-background text-xl leading-none text-foreground/70 transition hover:text-foreground"
+                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-neutral-200 bg-white text-xl leading-none text-neutral-500 transition hover:text-neutral-900"
                 aria-label="Close tester instructions"
               >
                 ×
@@ -137,22 +135,22 @@ export function AndroidTesterCta({
               {testerSteps.map((step) => (
                 <li
                   key={step.title}
-                  className="rounded-2xl border border-border bg-cream/50 p-4 lg:p-5"
+                  className="rounded-2xl border border-neutral-200 bg-white p-4 lg:p-5"
                 >
                   <div className="flex items-start gap-3 lg:flex-col lg:items-center lg:text-center">
                     <div className="flex min-w-0 flex-1 flex-col lg:w-full">
                       <div className="flex items-center gap-2 lg:justify-center">
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-honey text-sm font-semibold text-[#3b2710]">
+                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-neutral-900 text-sm font-semibold text-white">
                           {step.label}
                         </span>
                         <strong className="text-base leading-snug">{step.title}</strong>
                       </div>
-                      <p className="mt-2 text-sm leading-snug text-foreground/70">{step.body}</p>
+                      <p className="mt-2 text-sm leading-snug text-neutral-600">{step.body}</p>
                       <a
                         href={step.href}
                         target="_blank"
                         rel="noreferrer"
-                        className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-2xl bg-[#211105] px-4 text-sm font-medium text-white transition hover:bg-[#332010] sm:w-auto lg:hidden"
+                        className="mt-3 inline-flex min-h-10 w-full items-center justify-center rounded-xl bg-neutral-900 px-4 text-sm font-medium text-white transition hover:bg-black sm:w-auto lg:hidden"
                       >
                         {step.cta}
                       </a>
@@ -162,7 +160,7 @@ export function AndroidTesterCta({
                       alt=""
                       width={STEP_IMAGE_WIDTH}
                       height={STEP_IMAGE_HEIGHT}
-                      className="w-[min(38vw,140px)] shrink-0 rounded-xl border border-border/80 bg-background object-contain shadow-soft sm:w-[148px] lg:mx-auto lg:mt-1 lg:w-full lg:max-w-[220px]"
+                      className="w-[min(38vw,140px)] shrink-0 rounded-xl border border-neutral-200 bg-white object-contain sm:w-[148px] lg:mx-auto lg:mt-1 lg:w-full lg:max-w-[220px]"
                       sizes="(max-width: 1024px) 148px, 220px"
                     />
                   </div>
@@ -170,7 +168,7 @@ export function AndroidTesterCta({
                     href={step.href}
                     target="_blank"
                     rel="noreferrer"
-                    className="mt-4 hidden min-h-10 w-full items-center justify-center rounded-2xl bg-[#211105] px-4 text-sm font-medium text-white transition hover:bg-[#332010] lg:inline-flex"
+                    className="mt-4 hidden min-h-10 w-full items-center justify-center rounded-xl bg-neutral-900 px-4 text-sm font-medium text-white transition hover:bg-black lg:inline-flex"
                   >
                     {step.cta}
                   </a>
@@ -186,14 +184,14 @@ export function AndroidTesterCta({
 
 function getButtonClassName(variant: AndroidTesterCtaVariant) {
   if (variant === "header") {
-    return "ml-1 hidden rounded-full bg-[#211105] px-4 py-2 text-sm text-white transition hover:bg-[#332010] sm:inline-flex";
+    return "ml-1 hidden rounded-lg bg-neutral-900 px-4 py-2 text-sm text-white transition hover:bg-black sm:inline-flex";
   }
 
   if (variant === "hb") {
     return "hb-button hb-button--dark";
   }
 
-  return "inline-flex items-center gap-3 rounded-2xl bg-[#211105] px-5 py-3 text-white transition hover:bg-[#332010]";
+  return "inline-flex items-center gap-3 rounded-xl bg-neutral-900 px-5 py-3 text-white transition hover:bg-black";
 }
 
 function PlayIcon() {

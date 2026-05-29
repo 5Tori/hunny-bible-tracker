@@ -12,20 +12,18 @@ export const metadata: Metadata = {
 
 export default function SupportPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SiteHeader />
       <PageContainer>
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-honey-ink">
-          Help
-        </p>
-        <h1 className="mt-3 font-display text-4xl sm:text-5xl">Support</h1>
-        <p className="mt-4 max-w-xl text-foreground/70">
+        <p className="mkt-kicker">Help</p>
+        <h1 className="mkt-heading mt-3">Support</h1>
+        <p className="mkt-lead mt-4 max-w-xl">
           We would love to help. Email is the fastest way to reach us.
         </p>
 
         <a
           href={`mailto:${siteConfig.supportEmail}`}
-          className="mt-8 inline-flex items-center justify-between gap-6 rounded-2xl border border-honey/40 bg-honey-soft px-5 py-4 text-honey-ink shadow-soft transition hover:shadow-card"
+          className="mt-8 inline-flex w-full max-w-md items-center justify-between gap-6 rounded-2xl border border-neutral-200 bg-white px-5 py-4 transition hover:border-neutral-300"
         >
           <span>
             <span className="block text-[11px] font-medium uppercase tracking-[0.18em] opacity-80">
@@ -91,6 +89,6 @@ export default function SupportPage() {
         </div>
       </PageContainer>
       <SiteFooter />
-    </div>
+    </>
   );
 }

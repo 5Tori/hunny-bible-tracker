@@ -1,11 +1,13 @@
-import MarketingFooter from "@/components/marketing/MarketingFooter";
-import MarketingHeader from "@/components/marketing/MarketingHeader";
+import type { ReactNode } from "react";
+
+import { MarketingProse } from "@/components/marketing/ui/MarketingProse";
+import { PageContainer, SiteFooter, SiteHeader } from "@/components/public/SiteShell";
 
 type LegalPageLayoutProps = {
   title: string;
   description?: string;
   lastUpdated: string;
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 export default function LegalPageLayout({
@@ -16,19 +18,17 @@ export default function LegalPageLayout({
 }: LegalPageLayoutProps) {
   return (
     <>
-      <MarketingHeader />
-      <main className="hb-legal-page">
-        <div className="hb-container">
-          <article className="hb-legal-card">
-            <p className="hb-kicker">Hunny Bible Tracker</p>
-            <h1>{title}</h1>
-            {description ? <p className="hb-legal-card__description">{description}</p> : null}
-            <p className="hb-legal-card__updated">Last updated: {lastUpdated}</p>
-            <div className="hb-legal-content">{children}</div>
-          </article>
+      <SiteHeader />
+      <PageContainer>
+        <p className="mkt-kicker">Hunny Bible Tracker</p>
+        <h1 className="mkt-heading mt-3">{title}</h1>
+        {description ? <p className="mkt-lead mt-4 max-w-2xl">{description}</p> : null}
+        <p className="mt-3 text-sm text-neutral-500">Last updated: {lastUpdated}</p>
+        <div className="mt-10">
+          <MarketingProse>{children}</MarketingProse>
         </div>
-      </main>
-      <MarketingFooter />
+      </PageContainer>
+      <SiteFooter />
     </>
   );
 }

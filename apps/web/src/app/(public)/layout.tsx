@@ -66,7 +66,7 @@ export const viewport: Viewport = {
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="public-site min-h-screen">
+    <div className="mkt-site public-site min-h-screen">
       <PublicAnalytics />
       <WebsiteJsonLd />
       {children}

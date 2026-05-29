@@ -55,12 +55,19 @@ The web/API app serves admin tools, public content APIs, Supabase-authenticated 
 
 | Path | Role |
 | --- | --- |
-| `apps/web/src/app/(public)/page.tsx` | Public landing page |
+| `apps/web/src/app/(public)/page.tsx` | Public landing page (marketing sections in `components/home/`) |
 | `apps/web/src/app/(public)/privacy/page.tsx` | Privacy page |
 | `apps/web/src/app/(public)/terms/page.tsx` | Terms page |
 | `apps/web/src/app/(public)/support/page.tsx` | Support page |
+| `apps/web/src/app/(browse)/today/page.tsx` | Redirect to latest published Today’s Message (`/today-message/YYYY-MM-DD`) |
+| `apps/web/src/app/(browse)/today-message/[slug]/page.tsx` | Today’s Message browse page (date or id slug) |
+| `apps/web/src/app/(browse)/discover/page.tsx` | Discover content grid (`?type=` filter) |
+| `apps/web/src/app/(browse)/content/[slug]/page.tsx` | Single published content item |
+| `apps/web/src/app/(browse)/layout.tsx` | Browse shell (shared header, app promo, footer) |
 | `apps/web/src/app/admin` | Admin dashboard pages |
-| `apps/web/src/app/(public)/today-message/[slug]/page.tsx` | Public share page for Today’s Message |
+| `apps/web/src/components/marketing/ui/` | Marketing layout primitives (container, section, button, prose) |
+| `apps/web/src/components/browse/` | Browse UI (`TodayMessageView`, `ContentCard`, `ContentDetail`, filters) |
+| `apps/web/src/styles/marketing.css` | Minimal marketing design tokens (`.mkt-*`) |
 | `apps/web/src/components/public/SiteShell.tsx` | Public web header/footer and shared chrome |
 | `apps/web/postcss.config.mjs` | Tailwind v4 PostCSS setup |
 | `apps/web/src/app/api/health/route.ts` | Health check |

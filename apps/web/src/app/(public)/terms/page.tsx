@@ -12,16 +12,12 @@ export const metadata: Metadata = {
 
 export default function TermsPage() {
   return (
-    <div className="min-h-screen bg-background">
+    <>
       <SiteHeader />
       <PageContainer>
-        <p className="text-xs font-medium uppercase tracking-[0.2em] text-honey-ink">
-          Legal
-        </p>
-        <h1 className="mt-3 font-display text-4xl sm:text-5xl">
-          Terms of Service
-        </h1>
-        <p className="mt-3 text-sm text-muted-foreground">
+        <p className="mkt-kicker">Legal</p>
+        <h1 className="mkt-heading mt-3">Terms of Service</h1>
+        <p className="mt-3 text-sm text-neutral-500">
           Last updated: May 18, 2026
         </p>
 
@@ -80,6 +76,6 @@ export default function TermsPage() {
         </div>
       </PageContainer>
       <SiteFooter />
-    </div>
+    </>
   );
 }

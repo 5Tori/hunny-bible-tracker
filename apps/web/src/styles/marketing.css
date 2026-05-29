@@ -1,0 +1,105 @@
+/* Public marketing site — minimal white / black + honey accent */
+
+.mkt-site {
+  background-color: #ffffff;
+  color: #171717;
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.mkt-kicker {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d99a12;
+}
+
+.mkt-lead {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  color: #525252;
+}
+
+.mkt-heading {
+  font-size: clamp(2rem, 4vw, 2.75rem);
+  font-weight: 600;
+  letter-spacing: -0.03em;
+  line-height: 1.12;
+  color: #171717;
+}
+
+.mkt-heading-sm {
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  line-height: 1.2;
+  color: #171717;
+}
+
+.mkt-prose {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+  color: #525252;
+}
+
+.mkt-prose h2 {
+  margin-top: 2.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #171717;
+}
+
+.mkt-prose h3 {
+  margin-top: 1.75rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #171717;
+}
+
+.mkt-prose p {
+  margin-top: 0.75rem;
+}
+
+.mkt-prose ul {
+  margin-top: 0.75rem;
+  padding-left: 1.25rem;
+  list-style: disc;
+}
+
+.mkt-prose li {
+  margin-top: 0.35rem;
+}
+
+.mkt-prose a {
+  color: #171717;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.mkt-prose a:hover {
+  color: #d99a12;
+}
+
+.mkt-prose strong {
+  color: #171717;
+  font-weight: 600;
+}
+
+.mkt-faq details {
+  border-bottom: 1px solid #e5e5e5;
+}
+
+.mkt-faq details:last-child {
+  border-bottom: none;
+}
+
+.mkt-faq summary {
+  cursor: pointer;
+  list-style: none;
+}
+
+.mkt-faq summary::-webkit-details-marker {
+  display: none;
+}
