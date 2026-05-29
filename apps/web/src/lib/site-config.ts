@@ -27,6 +27,13 @@ export const siteConfig = {
   iosStatusLabel: "iOS coming soon",
 } as const;
 
+export const navLinks = [
+  { href: "/#plans", label: "Plans" },
+  { href: "/#progress", label: "Progress" },
+  { href: "/#faq", label: "FAQ" },
+  { href: "/support", label: "Support" },
+] as const;
+
 export function getCanonicalHost(): string {
   return new URL(siteConfig.url).host.toLowerCase();
 }
