@@ -88,13 +88,16 @@ pnpm run deploy
 
 **GitHub Actions 워크플로는 사용하지 않습니다** (push마다 Secrets 없이 실패하던 중복 경로). GA4/GTM/Search Console도 GitHub 설정과 무관합니다.
 
-### 나중에 push 시 자동 배포를 원할 때 (선택)
+### Git push 자동 배포 (권장)
 
-1. `.github/workflows/`에 Wrangler deploy 워크플로 추가  
-2. GitHub **Secrets**: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`  
-3. 또는 Cloudflare 대시보드 **Workers & Pages** → 프로젝트 → **Settings** → **Builds** 에서 GitHub 직접 연결 (Wrangler/OpenNext 빌드 명령을 맞출 것)
+Cloudflare **Workers Builds**로 GitHub를 연결합니다. 대시보드 필드·Secrets·watch path는 **[`CLOUDFLARE_GIT_BUILDS.md`](CLOUDFLARE_GIT_BUILDS.md)** 를 그대로 따르세요.
 
-개인 프로젝트에서 로컬 배포만 해도 충분하면 위 CI는 생략해도 됩니다.
+요약:
+
+- **Root directory**: *(비움 — repo root)*
+- **Build**: `pnpm install --frozen-lockfile && pnpm --filter @hunny-bible-tracker/web run cf:build`
+- **Deploy**: `pnpm --filter @hunny-bible-tracker/web run cf:deploy`
+- **Build variables**: `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_GTM_ID`
 
 After adding a custom domain in Cloudflare → **Domains**, set `NEXT_PUBLIC_SITE_URL` to `https://hunnybibletracker.com` and redeploy so metadata, sitemap, and share URLs use the canonical host.
 
