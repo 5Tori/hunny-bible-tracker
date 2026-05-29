@@ -27,6 +27,7 @@
   "vars": {
     "NEXTJS_ENV": "production",
     "NEXT_PUBLIC_SITE_URL": "https://hunnybibletracker.com",
+    "CANONICAL_SITE_HOST": "hunnybibletracker.com",
     "NEXT_PUBLIC_SUPABASE_URL": "https://tbexpdwipdjgcjtlujis.supabase.co",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRiZXhwZHdpcGRqZ2NqdGx1amlzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk5NDAyODcsImV4cCI6MjA5NTUxNjI4N30.NPeR49lPukRiT1BQ0nMO2hf0JGu1bfZtLKOMhnxBhU4",
     "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME": "doqeo9qgt",

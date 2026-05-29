@@ -74,7 +74,7 @@ If the Workers URL is missing from Redirect URLs, Google sign-in from the live s
 ```bash
 cd apps/web
 pnpm install
-pnpm deploy
+pnpm run deploy
 ```
 
 After adding a custom domain in Cloudflare → **Domains**, set `NEXT_PUBLIC_SITE_URL` to `https://hunnybibletracker.com` and redeploy so metadata, sitemap, and share URLs use the canonical host.
@@ -85,7 +85,7 @@ After adding a custom domain in Cloudflare → **Domains**, set `NEXT_PUBLIC_SIT
 | --- | --- |
 | `pnpm dev` | Next.js dev server (uses `.env.local`) |
 | `pnpm preview` | Build + Workers runtime locally (uses `.dev.vars`) |
-| `pnpm deploy` | Build + deploy to Cloudflare |
+| `pnpm run deploy` | Build + deploy to Cloudflare |
 
 ## Mobile API URL
 

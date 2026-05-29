@@ -1,23 +1,26 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 
-import { getCanonicalHost, LEGACY_WORKER_HOST } from "@/lib/site-config";
+import {
+  getMiddlewareCanonicalHost,
+  LEGACY_WORKER_HOST,
+} from "@/lib/site-config";
 
-function shouldRedirectToCanonicalHost(host: string): boolean {
+function shouldRedirectToCanonicalHost(host: string, canonicalHost: string): boolean {
   if (!host) return false;
   if (host === LEGACY_WORKER_HOST) return true;
-  if (host === `www.${getCanonicalHost()}`) return true;
+  if (host === `www.${canonicalHost}`) return true;
   return false;
 }
 
 export function middleware(request: NextRequest) {
   const host = request.headers.get("host")?.split(":")[0]?.toLowerCase() ?? "";
 
-  if (!shouldRedirectToCanonicalHost(host)) {
+  const canonicalHost = getMiddlewareCanonicalHost();
+
+  if (!shouldRedirectToCanonicalHost(host, canonicalHost)) {
     return NextResponse.next();
   }
-
-  const canonicalHost = getCanonicalHost();
   const destination = request.nextUrl.clone();
   destination.protocol = "https:";
   destination.host = canonicalHost;
