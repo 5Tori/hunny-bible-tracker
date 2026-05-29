@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 
+import { WebsiteJsonLd } from "@/components/public/WebsiteJsonLd";
 import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -26,15 +27,25 @@ export const metadata: Metadata = {
     type: "website",
     url: siteConfig.url,
     siteName: siteConfig.name,
+    locale: "en_US",
     title: siteConfig.name,
     description:
       "Bible reading, without the overwhelm. Start small, track your progress, and build a gentle Scripture reading habit.",
+    images: [
+      {
+        url: "/icon.png",
+        width: 512,
+        height: 512,
+        alt: siteConfig.name,
+      },
+    ],
   },
   twitter: {
     card: "summary",
     title: siteConfig.name,
     description:
       "Bible reading, without the overwhelm. Start small, track your progress, and build a gentle Scripture reading habit.",
+    images: ["/icon.png"],
   },
   robots: {
     index: true,
@@ -49,5 +60,10 @@ export const viewport: Viewport = {
 };
 
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
-  return <div className="public-site min-h-screen">{children}</div>;
+  return (
+    <div className="public-site min-h-screen">
+      <WebsiteJsonLd />
+      {children}
+    </div>
+  );
 }

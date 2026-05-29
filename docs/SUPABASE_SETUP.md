@@ -32,8 +32,8 @@ Authentication → URL configuration:
 | --- | --- | --- |
 | Local web admin | `http://127.0.0.1:3000` | `http://127.0.0.1:3000/admin/login` |
 | Local (alternate) | — | `http://localhost:3000/admin/login` |
-| Cloudflare Workers | `https://hunny-bible-tracker-web.hunnybibletracker.workers.dev` | `https://hunny-bible-tracker-web.hunnybibletracker.workers.dev/admin/login` |
-| Custom domain (later) | `https://YOUR_DOMAIN` | `https://YOUR_DOMAIN/admin/login` |
+| Production (custom domain) | `https://hunnybibletracker.com` | `https://hunnybibletracker.com/admin/login` |
+| Cloudflare workers.dev (legacy) | — | `https://hunny-bible-tracker-web.hunnybibletracker.workers.dev/admin/login` (optional) |
 | Mobile (deep link) | — | `com.hunnybibletracker.app://login-callback/` |
 
 **Important:** Supabase allows one **Site URL** (default redirect). If production `redirectTo` is missing from **Redirect URLs**, OAuth completes but sends the browser to **Site URL** instead — often `http://localhost:3000` with `#access_token=...` in the hash. Fix by adding the Workers URL to Redirect URLs and setting Site URL to production (keep local URLs in the redirect list for `next dev`).

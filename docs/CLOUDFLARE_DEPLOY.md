@@ -1,10 +1,13 @@
 # Cloudflare Workers deploy (OpenNext)
 
-`apps/web` deploys to **Cloudflare Workers** at:
+`apps/web` deploys to **Cloudflare Workers**. Production URLs:
 
-`https://hunny-bible-tracker-web.<your-account-subdomain>.workers.dev`
+| URL | Role |
+| --- | --- |
+| `https://hunnybibletracker.com` | **Canonical** (custom domain; set `NEXT_PUBLIC_SITE_URL` to this) |
+| `https://hunny-bible-tracker-web.<subdomain>.workers.dev` | Legacy worker hostname — **301** to the custom domain via middleware |
 
-Set `NEXT_PUBLIC_SITE_URL` to that URL after the first deploy (Vercel env, `.env.local`, and Supabase redirect URLs).
+`www.hunnybibletracker.com` also **301**s to the apex. Preview deploy URLs (`*-hunny-bible-tracker-web...workers.dev`) are not redirected.
 
 ## Prerequisites
 
@@ -48,7 +51,7 @@ For **build-time** public env, set in Cloudflare dashboard → Worker → Settin
 
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-- `NEXT_PUBLIC_SITE_URL` (workers.dev URL after first deploy)
+- `NEXT_PUBLIC_SITE_URL` (`https://hunnybibletracker.com` in `wrangler.jsonc`)
 - `SUPABASE_URL`
 - `ADMIN_EMAILS`
 
@@ -57,11 +60,12 @@ For **build-time** public env, set in Cloudflare dashboard → Worker → Settin
 In **Authentication** → **URL configuration**:
 
 1. **Site URL** (default redirect):  
-   `https://hunny-bible-tracker-web.hunnybibletracker.workers.dev`
+   `https://hunnybibletracker.com`
 2. **Redirect URLs** (allow list — add every environment you use):  
-   - `https://hunny-bible-tracker-web.hunnybibletracker.workers.dev/admin/login`  
+   - `https://hunnybibletracker.com/admin/login`  
+   - `https://hunny-bible-tracker-web.hunnybibletracker.workers.dev/admin/login` (optional; workers.dev 301s to apex)  
    - `http://127.0.0.1:3000/admin/login` (local `next dev`)  
-   - `http://localhost:3000/admin/login` (optional, if you open admin via localhost)
+   - `http://localhost:3000/admin/login` (optional)
 
 If the Workers URL is missing from Redirect URLs, Google sign-in from the live site can still succeed but Supabase will send you to **Site URL** (e.g. `http://localhost:3000/#access_token=...`).
 
@@ -73,7 +77,7 @@ pnpm install
 pnpm deploy
 ```
 
-First deploy prints the workers.dev URL. Update `NEXT_PUBLIC_SITE_URL` and redeploy.
+After adding a custom domain in Cloudflare → **Domains**, set `NEXT_PUBLIC_SITE_URL` to `https://hunnybibletracker.com` and redeploy so metadata, sitemap, and share URLs use the canonical host.
 
 ## 5. Local commands
 
@@ -88,11 +92,12 @@ First deploy prints the workers.dev URL. Update `NEXT_PUBLIC_SITE_URL` and redep
 Production/staging mobile builds:
 
 ```json
-"HUNNY_API_BASE_URL": "https://hunny-bible-tracker-web.<subdomain>.workers.dev"
+"HUNNY_API_BASE_URL": "https://hunnybibletracker.com"
 ```
 
 ## Troubleshooting
 
 - **DB errors on Workers**: Hyperdrive id missing/wrong in `wrangler.jsonc`, or pooler URL incorrect.
-- **Admin OAuth redirect**: `NEXT_PUBLIC_SITE_URL` and Supabase redirect must match the workers.dev URL exactly.
+- **Admin OAuth redirect**: Supabase **Site URL** and **Redirect URLs** must include `https://hunnybibletracker.com/admin/login` when using the custom domain.
+- **SEO**: `sitemap.xml`, `robots.txt`, OG tags, and JSON-LD use `NEXT_PUBLIC_SITE_URL`. Middleware consolidates `www` and the production workers.dev host onto the apex.
 - **Unstyled site**: ensure `public/_headers` is present and OpenNext build completed (`.open-next/`).
