@@ -19,7 +19,7 @@ insert into public.plan_templates (
   'story',
   'new_testament',
   'easy',
-  3,
+  6,
   1,
   1,
   'luke',

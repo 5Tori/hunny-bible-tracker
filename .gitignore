@@ -24,6 +24,7 @@ apps/mobile/web/
 
 # Node
 node_modules/
+scripts/data/
 .next/
 .open-next/
 .wrangler/

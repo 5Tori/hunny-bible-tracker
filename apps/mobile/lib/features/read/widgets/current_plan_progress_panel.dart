@@ -18,7 +18,7 @@ class CurrentPlanProgressPanel extends StatelessWidget {
   final bool showContinueReading;
   final VoidCallback? onContinueReading;
 
-  static const double _minutesPerChapter = 4.0;
+  static const double _fallbackMinutesPerChapter = 4.0;
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +27,10 @@ class CurrentPlanProgressPanel extends StatelessWidget {
     final progress = planStats?.progress ?? 0.0;
     final chaptersPerDay =
         planStats?.averageChaptersPerReadingDayInPlan ?? 0.0;
-    final minutesPerDay = chaptersPerDay * _minutesPerChapter;
+    final minutesPerChapter = (planStats?.averageMinutesPerChapter ?? 0) > 0
+        ? planStats!.averageMinutesPerChapter
+        : _fallbackMinutesPerChapter;
+    final minutesPerDay = chaptersPerDay * minutesPerChapter;
 
     return Container(
       padding: const EdgeInsets.all(20),

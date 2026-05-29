@@ -1143,7 +1143,7 @@ class _RelatedPlanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final details = [
       if (chapters > 0) '$chapters chapters',
-      if (minutes > 0) '~$minutes min',
+      if (minutes > 0) '~$minutes min/ch',
     ].join(' · ');
 
     return Container(

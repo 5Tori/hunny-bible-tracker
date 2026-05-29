@@ -40,6 +40,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/data/bible_books.en.json
+    - assets/data/bible_chapters.json
     - assets/brand/google_g.svg
     - assets/image/honeycomb.jpg
 

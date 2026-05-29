@@ -244,12 +244,16 @@ class PlanProgressStats {
     required this.totalChapters,
     required this.readingDaysInPlan,
     required this.averageChaptersPerReadingDayInPlan,
+    this.averageMinutesPerChapter = 0,
   });
 
   final int completedChapters;
   final int totalChapters;
   final int readingDaysInPlan;
   final double averageChaptersPerReadingDayInPlan;
+
+  /// Average estimated reading minutes per chapter in this plan (0 if unknown).
+  final double averageMinutesPerChapter;
 
   double get progress =>
       totalChapters == 0 ? 0 : completedChapters / totalChapters;

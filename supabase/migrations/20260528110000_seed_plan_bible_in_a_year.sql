@@ -37,7 +37,7 @@ insert into public.plan_templates (
   'journey',
   'whole_bible',
   'medium',
-  15,
+  4,
   365,
   1189,
   'genesis',

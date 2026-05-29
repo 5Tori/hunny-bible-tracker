@@ -461,7 +461,7 @@ class _PlanChoiceCard extends StatelessWidget {
         : plan.description.trim();
     final estimatedTime = plan.estimatedMinutes == null
         ? 'Time varies'
-        : '~${plan.estimatedMinutes} min';
+        : '~${plan.estimatedMinutes} min/ch';
     final difficulty = _titleCase(plan.difficulty ?? 'Flexible');
 
     return Material(

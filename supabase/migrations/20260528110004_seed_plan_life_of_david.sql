@@ -19,7 +19,7 @@ insert into public.plan_templates (
   'character',
   'old_testament',
   'medium',
-  6,
+  4,
   17,
   17,
   '1_samuel',

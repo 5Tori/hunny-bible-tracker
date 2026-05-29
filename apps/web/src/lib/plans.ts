@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 
+import { calculatePlanEstimatedMinutes } from '@/lib/plan-estimates';
 import { sql, type SqlLike } from '@/lib/db/postgres';
 import { normalizeDifficulty, normalizePlanType, normalizeTestamentScope } from '@/lib/plan-taxonomy';
 
@@ -208,7 +209,7 @@ function normalizeInput(input: AdminPlanInput): AdminPlanInput {
     plan_type: planType,
     testament_scope: emptyToNull(normalizeTestamentScope(String(input.testament_scope ?? ''))),
     difficulty: emptyToNull(normalizeDifficulty(String(input.difficulty ?? ''))),
-    estimated_minutes: normalizeNullableNumber(input.estimated_minutes),
+    estimated_minutes: calculatePlanEstimatedMinutes(sections),
     estimated_days: normalizeNullableNumber(input.estimated_days),
     total_chapters: calculateTotalChapters(sections),
     primary_book_key: emptyToNull(input.primary_book_key),

@@ -19,7 +19,7 @@ insert into public.plan_templates (
   'story',
   'old_testament',
   'easy',
-  4,
+  2,
   4,
   4,
   'jonah',

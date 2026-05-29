@@ -17,6 +17,17 @@ class BibleBooks extends Table {
   IntColumn get chapterCount => integer()();
 }
 
+class BibleChapters extends Table {
+  TextColumn get bookKey => text()();
+  IntColumn get chapterNumber => integer()();
+  IntColumn get verseCount => integer()();
+  IntColumn get estimatedReadingSeconds => integer()();
+  IntColumn get estimatedReadingMinutes => integer()();
+
+  @override
+  Set<Column> get primaryKey => {bookKey, chapterNumber};
+}
+
 class LocalUsers extends Table {
   TextColumn get id => text()();
   TextColumn get type => text().withDefault(const Constant('guest'))();
@@ -247,6 +258,7 @@ class AppSettings extends Table {
 @DriftDatabase(
   tables: [
     BibleBooks,
+    BibleChapters,
     LocalUsers,
     PlanTemplates,
     PlanTemplateSections,
@@ -267,7 +279,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -276,6 +288,9 @@ class AppDatabase extends _$AppDatabase {
           if (from < 2) {
             await m.addColumn(planTemplates, planTemplates.featuredRank);
             await m.addColumn(planTemplates, planTemplates.browseVisible);
+          }
+          if (from < 3) {
+            await m.createTable(bibleChapters);
           }
         },
       );

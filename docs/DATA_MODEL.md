@@ -10,7 +10,7 @@ This document is the current data-model source of truth for the project.
 | Generated Drift code | `apps/mobile/lib/core/database/app_database.g.dart` |
 | Server database | `apps/web/db/schema.sql` |
 
-Local Drift schema version is `2`. During active MVP development, stale local data can be cleared by deleting/reinstalling the app or resetting the simulator/emulator build.
+Local Drift schema version is `3`. During active MVP development, stale local data can be cleared by deleting/reinstalling the app or resetting the simulator/emulator build.
 
 During MVP development, the server migration history has been reset. Use `supabase/migrations/20260528000000_baseline.sql` as the source of truth for fresh Supabase setup (`apps/web/db/schema.sql` is a reference mirror).
 
@@ -60,6 +60,33 @@ Seeded from `apps/mobile/assets/data/bible_books.en.json`.
 | `display_name_ko` | Nullable future localization |
 | `chapter_count` | Canonical chapter count |
 
+### `bible_chapters`
+
+Seeded from `apps/mobile/assets/data/bible_chapters.json` (1,189 Protestant canon chapters).
+
+| Column | Role |
+| --- | --- |
+| `book_key` | FK-style key matching `bible_books.book_key` |
+| `chapter_number` | 1 … `chapter_count` for that book |
+| `verse_count` | Verses in the chapter (KJV structure via generation script) |
+| `estimated_reading_seconds` | `verse_count × 7` |
+| `estimated_reading_minutes` | `max(1, ceil(seconds / 60))` |
+
+Primary key: `(book_key, chapter_number)`.
+
+Regenerate the JSON after changing `bible_books.en.json`:
+
+```bash
+pnpm run bible-chapters:generate
+```
+
+Source for verse counts: [thiagobodruk/bible](https://github.com/thiagobodruk/bible) `en_kjv.json` (cached under `scripts/data/` on first run; gitignored).
+
+Lookup helpers:
+
+- Mobile: `apps/mobile/lib/core/bible/bible_chapter_metadata.dart`
+- Web admin (build-time JSON): `apps/web/src/lib/bible-chapters.ts`
+
 ### `local_users`
 
 One local profile row exists before remote sync. Supabase user UUID is stored in `auth_user_id` after sign-in.
@@ -86,7 +113,7 @@ Important columns:
 - `plan_type`
 - `testament_scope`
 - `difficulty`
-- `estimated_minutes`
+- `estimated_minutes` — average estimated reading minutes **per chapter** in the plan; computed automatically from `bible_chapters.json` on admin save (not manually edited)
 - `estimated_days`
 - `total_chapters`
 - `primary_book_key`

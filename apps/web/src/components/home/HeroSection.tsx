@@ -1,10 +1,10 @@
 import Link from "next/link";
-import type { ReactNode } from "react";
 
 import { MarketingContainer } from "@/components/marketing/ui/MarketingContainer";
 import { MarketingSection } from "@/components/marketing/ui/MarketingSection";
 import { BrandLogo } from "@/components/public/BrandLogo";
 import { AndroidTesterCta } from "@/components/public/AndroidTesterCta";
+import { AppStoreDownloadButton } from "@/components/public/StoreDownloadButtons";
 
 export function HeroSection() {
   return (
@@ -25,13 +25,7 @@ export function HeroSection() {
 
             <div id="download" className="mt-8 flex flex-wrap items-center gap-3">
               <AndroidTesterCta />
-              <StoreButton
-                store="App Store"
-                caption="Coming soon to"
-                href="#"
-                icon={<AppleIcon />}
-                disabled
-              />
+              <AppStoreDownloadButton />
             </div>
 
             <p className="mt-5 text-sm text-neutral-500">
@@ -58,40 +52,6 @@ export function HeroSection() {
         </div>
       </MarketingContainer>
     </MarketingSection>
-  );
-}
-
-function StoreButton({
-  store,
-  caption,
-  href,
-  icon,
-  disabled,
-}: {
-  store: string;
-  caption: string;
-  href: string;
-  icon: ReactNode;
-  disabled?: boolean;
-}) {
-  return (
-    <a
-      href={href}
-      aria-disabled={disabled}
-      className={`inline-flex items-center gap-3 rounded-xl px-5 py-3 ${
-        disabled
-          ? "pointer-events-none border border-neutral-200 bg-neutral-100 text-neutral-500"
-          : "bg-neutral-900 text-white transition hover:bg-black"
-      }`}
-    >
-      {!disabled ? <span className="text-[#d99a12]">{icon}</span> : icon}
-      <span className="text-left leading-tight">
-        <span className="block text-[10px] uppercase tracking-[0.15em] opacity-70">
-          {caption}
-        </span>
-        <span className="block text-sm font-medium">{store}</span>
-      </span>
-    </a>
   );
 }
 
@@ -150,13 +110,5 @@ function PhoneMockup() {
         </div>
       </div>
     </div>
-  );
-}
-
-function AppleIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M16.4 12.7c0-2.4 2-3.6 2.1-3.6-1.1-1.6-2.9-1.9-3.5-1.9-1.5-.2-2.9.9-3.7.9-.8 0-1.9-.9-3.2-.9-1.6 0-3.2 1-4 2.5-1.7 3-.4 7.4 1.2 9.8.8 1.2 1.8 2.5 3 2.5 1.2 0 1.7-.8 3.1-.8s1.9.8 3.2.8c1.3 0 2.2-1.2 3-2.4.9-1.4 1.3-2.7 1.3-2.8-.1 0-2.5-1-2.5-3.1zM14.2 5.2c.7-.8 1.1-2 1-3.2-1 .1-2.2.7-2.9 1.5-.6.7-1.2 1.9-1.1 3 1.1.1 2.3-.5 3-1.3z" />
-    </svg>
   );
 }

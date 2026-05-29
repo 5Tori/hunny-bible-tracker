@@ -61,8 +61,11 @@ pnpm-workspace.yaml
 | --- | --- |
 | `NEXT_PUBLIC_SITE_URL` | `https://hunnybibletracker.com` |
 | `NEXT_PUBLIC_GTM_ID` | `GTM-TWDZMRJW` |
+| `NEXT_PUBLIC_SUPABASE_URL` | `https://tbexpdwipdjgcjtlujis.supabase.co` |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase → Settings → API → anon (public) |
+| `NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME` | `doqeo9qgt` (optional if using wrangler `vars`) |
 
-`cf:build` / `deploy` 스크립트가 이 값을 읽어 OG·sitemap·GTM 스니펫을 빌드에 넣습니다.
+`cf:build` also reads `NEXT_PUBLIC_*` from [`wrangler.jsonc`](../apps/web/wrangler.jsonc) when a variable is not already set in the build environment. Admin login additionally injects Supabase config at runtime from Worker `vars`, so a missing build variable alone should not break `/admin/login` after deploy.
 
 ---
 

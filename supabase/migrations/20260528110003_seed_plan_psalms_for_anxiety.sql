@@ -19,7 +19,7 @@ insert into public.plan_templates (
   'devotional',
   'old_testament',
   'easy',
-  4,
+  2,
   12,
   12,
   'psalms',

@@ -46,6 +46,7 @@ The web/API app serves admin tools, public content APIs, Supabase-authenticated 
 | `lib/features/settings/` | Account, backup/restore, plan entrypoint, feedback UI |
 | `lib/features/list/` | Hidden Saved/List prototype retained for later |
 | `assets/data/bible_books.en.json` | Canonical book metadata seed |
+| `assets/data/bible_chapters.json` | Chapter verse counts + reading-time estimates (1,189 rows) |
 | `assets/brand/google_g.svg` | Google sign-in mark used in auth sheet |
 | `assets/image/honeycomb.jpg` | Today’s Message offline fallback image |
 | `assets/image/logo-and-name.jpg` | Source image for native launch screen assets |

@@ -26,3 +26,14 @@ if [[ -f "$ANDROID_SRC/step1.png" ]]; then
   done
   echo "Synced Android tester steps → apps/web/public/android-tester/step-{1,2,3}.png"
 fi
+
+STORE_OUT="$WEB/public/store"
+mkdir -p "$STORE_OUT"
+if [[ -f "$ANDROID_SRC/Google_Play_2022_icon.svg.png" ]]; then
+  sips -Z 88 "$ANDROID_SRC/Google_Play_2022_icon.svg.png" --out "$STORE_OUT/google-play-icon.png" >/dev/null
+  echo "Synced store badge → apps/web/public/store/google-play-icon.png"
+fi
+if [[ -f "$ANDROID_SRC/Apple_logo_white.svg.png" ]]; then
+  sips -Z 88 "$ANDROID_SRC/Apple_logo_white.svg.png" --out "$STORE_OUT/apple-logo-white.png" >/dev/null
+  echo "Synced store badge → apps/web/public/store/apple-logo-white.png"
+fi

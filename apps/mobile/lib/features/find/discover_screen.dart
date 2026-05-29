@@ -881,7 +881,7 @@ class _RelatedPlanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final meta = [
       if (plan.totalChapters != null) '${plan.totalChapters} chapters',
-      if (plan.estimatedMinutes != null) '${plan.estimatedMinutes} min',
+      if (plan.estimatedMinutes != null) '~${plan.estimatedMinutes} min/ch',
     ].join(' · ');
 
     return Container(

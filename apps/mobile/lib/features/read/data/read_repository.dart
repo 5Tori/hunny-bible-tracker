@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../core/api/hunny_api_models.dart';
+import '../../../core/bible/bible_chapter_metadata.dart';
 import '../../../core/bible/bible_com.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/local_user_id.dart';
@@ -32,10 +33,17 @@ class ReadRepository {
   static const kAppSettingBibleComVersionAbbr = 'bible_com_version_abbr';
 
   BibleComVersion? _cachedBibleComVersion;
+  BibleChapterMetadata? _chapterMetadata;
+
+  Future<BibleChapterMetadata> _getChapterMetadata() async {
+    _chapterMetadata ??= await BibleChapterMetadata.loadFromDatabase(db);
+    return _chapterMetadata!;
+  }
 
   Future<void> initializeLocalData() async {
     await db.transaction(() async {
       await _seedBibleBooksIfNeeded();
+      await _seedBibleChaptersIfNeeded();
       await _ensureGuestLocalUser();
       await _seedDefaultSettingsIfNeeded();
     });
@@ -910,11 +918,26 @@ class ReadRepository {
         ? 0.0
         : completed.length / readingDatesInPlan.length;
 
+    final metadata = await _getChapterMetadata();
+    var minutesTotal = 0;
+    var minutesCount = 0;
+    for (final chapter in planChapters) {
+      final estimate =
+          metadata.getChapter(chapter.bookKey, chapter.chapterNumber);
+      if (estimate == null) continue;
+      minutesTotal += estimate.estimatedReadingMinutes;
+      minutesCount += 1;
+    }
+    final averageMinutesPerChapter = minutesCount > 0
+        ? (minutesTotal / minutesCount).roundToDouble()
+        : 0.0;
+
     return PlanProgressStats(
       completedChapters: completed.length,
       totalChapters: planChapters.length,
       readingDaysInPlan: readingDatesInPlan.length,
       averageChaptersPerReadingDayInPlan: average,
+      averageMinutesPerChapter: averageMinutesPerChapter,
     );
   }
 
@@ -1336,6 +1359,31 @@ class ReadRepository {
             shortName: row['short_name'] as String,
             displayNameEn: row['display_name_en'] as String,
             chapterCount: row['chapter_count'] as int,
+          );
+        }).toList(),
+      );
+    });
+  }
+
+  Future<void> _seedBibleChaptersIfNeeded() async {
+    final existingCount = await db.select(db.bibleChapters).get();
+    if (existingCount.isNotEmpty) return;
+
+    final raw =
+        await rootBundle.loadString('assets/data/bible_chapters.json');
+    final rows =
+        (jsonDecode(raw) as List<dynamic>).cast<Map<String, dynamic>>();
+
+    await db.batch((batch) {
+      batch.insertAll(
+        db.bibleChapters,
+        rows.map((row) {
+          return BibleChaptersCompanion.insert(
+            bookKey: row['book_key'] as String,
+            chapterNumber: row['chapter_number'] as int,
+            verseCount: row['verse_count'] as int,
+            estimatedReadingSeconds: row['estimated_reading_seconds'] as int,
+            estimatedReadingMinutes: row['estimated_reading_minutes'] as int,
           );
         }).toList(),
       );

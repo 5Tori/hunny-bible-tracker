@@ -125,15 +125,7 @@ export function PlanBasicsSection({
           </select>
         </FormField>
       </FormGrid>
-      <FormGrid columns={3}>
-        <FormField label="Estimated minutes" htmlFor="estimated_minutes">
-          <input
-            id="estimated_minutes"
-            type="number"
-            value={plan.estimated_minutes ?? ''}
-            onChange={(e) => onPlanChange({ ...plan, estimated_minutes: parseNumber(e.target.value) })}
-          />
-        </FormField>
+      <FormGrid columns={2}>
         <FormField label="Estimated days" htmlFor="estimated_days">
           <input
             id="estimated_days"

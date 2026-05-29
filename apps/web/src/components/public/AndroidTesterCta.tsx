@@ -4,6 +4,11 @@ import Image from "next/image";
 import { useEffect, useId, useState } from "react";
 
 import { siteConfig } from "@/lib/site-config";
+import {
+  GooglePlayDownloadButtonShell,
+  GooglePlayStoreBadgeIcon,
+  StoreDownloadLabel,
+} from "@/components/public/StoreDownloadButtons";
 
 type AndroidTesterCtaVariant = "store" | "header" | "hb";
 
@@ -67,27 +72,23 @@ export function AndroidTesterCta({
 
   return (
     <>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className={className ?? getButtonClassName(variant)}
-      >
-        {variant === "store" ? (
-          <>
-            <span className="text-[#d99a12]">
-              <PlayIcon />
-            </span>
-            <span className="text-left leading-tight">
-              <span className="block text-[10px] uppercase tracking-[0.15em] opacity-70">
-                Join Android test
-              </span>
-              <span className="block text-sm font-medium">Google Play</span>
-            </span>
-          </>
-        ) : (
-          "Get the app"
-        )}
-      </button>
+      {variant === "store" ? (
+        <GooglePlayDownloadButtonShell
+          onClick={() => setOpen(true)}
+          className={className}
+        >
+          <GooglePlayStoreBadgeIcon />
+          <StoreDownloadLabel caption="Join Android test" store="Google Play" />
+        </GooglePlayDownloadButtonShell>
+      ) : (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className={className ?? getButtonClassName(variant)}
+        >
+          Get the app
+        </button>
+      )}
 
       {open ? (
         <div
@@ -191,13 +192,5 @@ function getButtonClassName(variant: AndroidTesterCtaVariant) {
     return "hb-button hb-button--dark";
   }
 
-  return "inline-flex items-center gap-3 rounded-xl bg-neutral-900 px-5 py-3 text-white transition hover:bg-black";
-}
-
-function PlayIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
-      <path d="M5 3.5v17l15-8.5L5 3.5z" />
-    </svg>
-  );
+  return "";
 }

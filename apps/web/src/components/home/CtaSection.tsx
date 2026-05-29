@@ -4,6 +4,7 @@ import { MarketingContainer } from "@/components/marketing/ui/MarketingContainer
 import { MarketingSection } from "@/components/marketing/ui/MarketingSection";
 import { BrandLogo } from "@/components/public/BrandLogo";
 import { AndroidTesterCta } from "@/components/public/AndroidTesterCta";
+import { AppStoreDownloadButton } from "@/components/public/StoreDownloadButtons";
 
 export function CtaSection() {
   return (
@@ -20,6 +21,7 @@ export function CtaSection() {
           </p>
           <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
             <AndroidTesterCta />
+            <AppStoreDownloadButton />
             <MarketingButton variant="secondary" href="/support">
               Contact support
             </MarketingButton>

@@ -438,6 +438,354 @@ class BibleBooksCompanion extends UpdateCompanion<BibleBook> {
   }
 }
 
+class $BibleChaptersTable extends BibleChapters
+    with TableInfo<$BibleChaptersTable, BibleChapter> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $BibleChaptersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _bookKeyMeta =
+      const VerificationMeta('bookKey');
+  @override
+  late final GeneratedColumn<String> bookKey = GeneratedColumn<String>(
+      'book_key', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _chapterNumberMeta =
+      const VerificationMeta('chapterNumber');
+  @override
+  late final GeneratedColumn<int> chapterNumber = GeneratedColumn<int>(
+      'chapter_number', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _verseCountMeta =
+      const VerificationMeta('verseCount');
+  @override
+  late final GeneratedColumn<int> verseCount = GeneratedColumn<int>(
+      'verse_count', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _estimatedReadingSecondsMeta =
+      const VerificationMeta('estimatedReadingSeconds');
+  @override
+  late final GeneratedColumn<int> estimatedReadingSeconds =
+      GeneratedColumn<int>('estimated_reading_seconds', aliasedName, false,
+          type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _estimatedReadingMinutesMeta =
+      const VerificationMeta('estimatedReadingMinutes');
+  @override
+  late final GeneratedColumn<int> estimatedReadingMinutes =
+      GeneratedColumn<int>('estimated_reading_minutes', aliasedName, false,
+          type: DriftSqlType.int, requiredDuringInsert: true);
+  @override
+  List<GeneratedColumn> get $columns => [
+        bookKey,
+        chapterNumber,
+        verseCount,
+        estimatedReadingSeconds,
+        estimatedReadingMinutes
+      ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'bible_chapters';
+  @override
+  VerificationContext validateIntegrity(Insertable<BibleChapter> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('book_key')) {
+      context.handle(_bookKeyMeta,
+          bookKey.isAcceptableOrUnknown(data['book_key']!, _bookKeyMeta));
+    } else if (isInserting) {
+      context.missing(_bookKeyMeta);
+    }
+    if (data.containsKey('chapter_number')) {
+      context.handle(
+          _chapterNumberMeta,
+          chapterNumber.isAcceptableOrUnknown(
+              data['chapter_number']!, _chapterNumberMeta));
+    } else if (isInserting) {
+      context.missing(_chapterNumberMeta);
+    }
+    if (data.containsKey('verse_count')) {
+      context.handle(
+          _verseCountMeta,
+          verseCount.isAcceptableOrUnknown(
+              data['verse_count']!, _verseCountMeta));
+    } else if (isInserting) {
+      context.missing(_verseCountMeta);
+    }
+    if (data.containsKey('estimated_reading_seconds')) {
+      context.handle(
+          _estimatedReadingSecondsMeta,
+          estimatedReadingSeconds.isAcceptableOrUnknown(
+              data['estimated_reading_seconds']!,
+              _estimatedReadingSecondsMeta));
+    } else if (isInserting) {
+      context.missing(_estimatedReadingSecondsMeta);
+    }
+    if (data.containsKey('estimated_reading_minutes')) {
+      context.handle(
+          _estimatedReadingMinutesMeta,
+          estimatedReadingMinutes.isAcceptableOrUnknown(
+              data['estimated_reading_minutes']!,
+              _estimatedReadingMinutesMeta));
+    } else if (isInserting) {
+      context.missing(_estimatedReadingMinutesMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {bookKey, chapterNumber};
+  @override
+  BibleChapter map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return BibleChapter(
+      bookKey: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}book_key'])!,
+      chapterNumber: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}chapter_number'])!,
+      verseCount: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}verse_count'])!,
+      estimatedReadingSeconds: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}estimated_reading_seconds'])!,
+      estimatedReadingMinutes: attachedDatabase.typeMapping.read(
+          DriftSqlType.int,
+          data['${effectivePrefix}estimated_reading_minutes'])!,
+    );
+  }
+
+  @override
+  $BibleChaptersTable createAlias(String alias) {
+    return $BibleChaptersTable(attachedDatabase, alias);
+  }
+}
+
+class BibleChapter extends DataClass implements Insertable<BibleChapter> {
+  final String bookKey;
+  final int chapterNumber;
+  final int verseCount;
+  final int estimatedReadingSeconds;
+  final int estimatedReadingMinutes;
+  const BibleChapter(
+      {required this.bookKey,
+      required this.chapterNumber,
+      required this.verseCount,
+      required this.estimatedReadingSeconds,
+      required this.estimatedReadingMinutes});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['book_key'] = Variable<String>(bookKey);
+    map['chapter_number'] = Variable<int>(chapterNumber);
+    map['verse_count'] = Variable<int>(verseCount);
+    map['estimated_reading_seconds'] = Variable<int>(estimatedReadingSeconds);
+    map['estimated_reading_minutes'] = Variable<int>(estimatedReadingMinutes);
+    return map;
+  }
+
+  BibleChaptersCompanion toCompanion(bool nullToAbsent) {
+    return BibleChaptersCompanion(
+      bookKey: Value(bookKey),
+      chapterNumber: Value(chapterNumber),
+      verseCount: Value(verseCount),
+      estimatedReadingSeconds: Value(estimatedReadingSeconds),
+      estimatedReadingMinutes: Value(estimatedReadingMinutes),
+    );
+  }
+
+  factory BibleChapter.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return BibleChapter(
+      bookKey: serializer.fromJson<String>(json['bookKey']),
+      chapterNumber: serializer.fromJson<int>(json['chapterNumber']),
+      verseCount: serializer.fromJson<int>(json['verseCount']),
+      estimatedReadingSeconds:
+          serializer.fromJson<int>(json['estimatedReadingSeconds']),
+      estimatedReadingMinutes:
+          serializer.fromJson<int>(json['estimatedReadingMinutes']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'bookKey': serializer.toJson<String>(bookKey),
+      'chapterNumber': serializer.toJson<int>(chapterNumber),
+      'verseCount': serializer.toJson<int>(verseCount),
+      'estimatedReadingSeconds':
+          serializer.toJson<int>(estimatedReadingSeconds),
+      'estimatedReadingMinutes':
+          serializer.toJson<int>(estimatedReadingMinutes),
+    };
+  }
+
+  BibleChapter copyWith(
+          {String? bookKey,
+          int? chapterNumber,
+          int? verseCount,
+          int? estimatedReadingSeconds,
+          int? estimatedReadingMinutes}) =>
+      BibleChapter(
+        bookKey: bookKey ?? this.bookKey,
+        chapterNumber: chapterNumber ?? this.chapterNumber,
+        verseCount: verseCount ?? this.verseCount,
+        estimatedReadingSeconds:
+            estimatedReadingSeconds ?? this.estimatedReadingSeconds,
+        estimatedReadingMinutes:
+            estimatedReadingMinutes ?? this.estimatedReadingMinutes,
+      );
+  BibleChapter copyWithCompanion(BibleChaptersCompanion data) {
+    return BibleChapter(
+      bookKey: data.bookKey.present ? data.bookKey.value : this.bookKey,
+      chapterNumber: data.chapterNumber.present
+          ? data.chapterNumber.value
+          : this.chapterNumber,
+      verseCount:
+          data.verseCount.present ? data.verseCount.value : this.verseCount,
+      estimatedReadingSeconds: data.estimatedReadingSeconds.present
+          ? data.estimatedReadingSeconds.value
+          : this.estimatedReadingSeconds,
+      estimatedReadingMinutes: data.estimatedReadingMinutes.present
+          ? data.estimatedReadingMinutes.value
+          : this.estimatedReadingMinutes,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BibleChapter(')
+          ..write('bookKey: $bookKey, ')
+          ..write('chapterNumber: $chapterNumber, ')
+          ..write('verseCount: $verseCount, ')
+          ..write('estimatedReadingSeconds: $estimatedReadingSeconds, ')
+          ..write('estimatedReadingMinutes: $estimatedReadingMinutes')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(bookKey, chapterNumber, verseCount,
+      estimatedReadingSeconds, estimatedReadingMinutes);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is BibleChapter &&
+          other.bookKey == this.bookKey &&
+          other.chapterNumber == this.chapterNumber &&
+          other.verseCount == this.verseCount &&
+          other.estimatedReadingSeconds == this.estimatedReadingSeconds &&
+          other.estimatedReadingMinutes == this.estimatedReadingMinutes);
+}
+
+class BibleChaptersCompanion extends UpdateCompanion<BibleChapter> {
+  final Value<String> bookKey;
+  final Value<int> chapterNumber;
+  final Value<int> verseCount;
+  final Value<int> estimatedReadingSeconds;
+  final Value<int> estimatedReadingMinutes;
+  final Value<int> rowid;
+  const BibleChaptersCompanion({
+    this.bookKey = const Value.absent(),
+    this.chapterNumber = const Value.absent(),
+    this.verseCount = const Value.absent(),
+    this.estimatedReadingSeconds = const Value.absent(),
+    this.estimatedReadingMinutes = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  BibleChaptersCompanion.insert({
+    required String bookKey,
+    required int chapterNumber,
+    required int verseCount,
+    required int estimatedReadingSeconds,
+    required int estimatedReadingMinutes,
+    this.rowid = const Value.absent(),
+  })  : bookKey = Value(bookKey),
+        chapterNumber = Value(chapterNumber),
+        verseCount = Value(verseCount),
+        estimatedReadingSeconds = Value(estimatedReadingSeconds),
+        estimatedReadingMinutes = Value(estimatedReadingMinutes);
+  static Insertable<BibleChapter> custom({
+    Expression<String>? bookKey,
+    Expression<int>? chapterNumber,
+    Expression<int>? verseCount,
+    Expression<int>? estimatedReadingSeconds,
+    Expression<int>? estimatedReadingMinutes,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (bookKey != null) 'book_key': bookKey,
+      if (chapterNumber != null) 'chapter_number': chapterNumber,
+      if (verseCount != null) 'verse_count': verseCount,
+      if (estimatedReadingSeconds != null)
+        'estimated_reading_seconds': estimatedReadingSeconds,
+      if (estimatedReadingMinutes != null)
+        'estimated_reading_minutes': estimatedReadingMinutes,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  BibleChaptersCompanion copyWith(
+      {Value<String>? bookKey,
+      Value<int>? chapterNumber,
+      Value<int>? verseCount,
+      Value<int>? estimatedReadingSeconds,
+      Value<int>? estimatedReadingMinutes,
+      Value<int>? rowid}) {
+    return BibleChaptersCompanion(
+      bookKey: bookKey ?? this.bookKey,
+      chapterNumber: chapterNumber ?? this.chapterNumber,
+      verseCount: verseCount ?? this.verseCount,
+      estimatedReadingSeconds:
+          estimatedReadingSeconds ?? this.estimatedReadingSeconds,
+      estimatedReadingMinutes:
+          estimatedReadingMinutes ?? this.estimatedReadingMinutes,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (bookKey.present) {
+      map['book_key'] = Variable<String>(bookKey.value);
+    }
+    if (chapterNumber.present) {
+      map['chapter_number'] = Variable<int>(chapterNumber.value);
+    }
+    if (verseCount.present) {
+      map['verse_count'] = Variable<int>(verseCount.value);
+    }
+    if (estimatedReadingSeconds.present) {
+      map['estimated_reading_seconds'] =
+          Variable<int>(estimatedReadingSeconds.value);
+    }
+    if (estimatedReadingMinutes.present) {
+      map['estimated_reading_minutes'] =
+          Variable<int>(estimatedReadingMinutes.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('BibleChaptersCompanion(')
+          ..write('bookKey: $bookKey, ')
+          ..write('chapterNumber: $chapterNumber, ')
+          ..write('verseCount: $verseCount, ')
+          ..write('estimatedReadingSeconds: $estimatedReadingSeconds, ')
+          ..write('estimatedReadingMinutes: $estimatedReadingMinutes, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $LocalUsersTable extends LocalUsers
     with TableInfo<$LocalUsersTable, LocalUser> {
   @override
@@ -6848,6 +7196,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $BibleBooksTable bibleBooks = $BibleBooksTable(this);
+  late final $BibleChaptersTable bibleChapters = $BibleChaptersTable(this);
   late final $LocalUsersTable localUsers = $LocalUsersTable(this);
   late final $PlanTemplatesTable planTemplates = $PlanTemplatesTable(this);
   late final $PlanTemplateSectionsTable planTemplateSections =
@@ -6874,6 +7223,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
         bibleBooks,
+        bibleChapters,
         localUsers,
         planTemplates,
         planTemplateSections,
@@ -7095,6 +7445,184 @@ typedef $$BibleBooksTableProcessedTableManager = ProcessedTableManager<
     $$BibleBooksTableUpdateCompanionBuilder,
     (BibleBook, BaseReferences<_$AppDatabase, $BibleBooksTable, BibleBook>),
     BibleBook,
+    PrefetchHooks Function()>;
+typedef $$BibleChaptersTableCreateCompanionBuilder = BibleChaptersCompanion
+    Function({
+  required String bookKey,
+  required int chapterNumber,
+  required int verseCount,
+  required int estimatedReadingSeconds,
+  required int estimatedReadingMinutes,
+  Value<int> rowid,
+});
+typedef $$BibleChaptersTableUpdateCompanionBuilder = BibleChaptersCompanion
+    Function({
+  Value<String> bookKey,
+  Value<int> chapterNumber,
+  Value<int> verseCount,
+  Value<int> estimatedReadingSeconds,
+  Value<int> estimatedReadingMinutes,
+  Value<int> rowid,
+});
+
+class $$BibleChaptersTableFilterComposer
+    extends Composer<_$AppDatabase, $BibleChaptersTable> {
+  $$BibleChaptersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get bookKey => $composableBuilder(
+      column: $table.bookKey, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get chapterNumber => $composableBuilder(
+      column: $table.chapterNumber, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get verseCount => $composableBuilder(
+      column: $table.verseCount, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get estimatedReadingSeconds => $composableBuilder(
+      column: $table.estimatedReadingSeconds,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get estimatedReadingMinutes => $composableBuilder(
+      column: $table.estimatedReadingMinutes,
+      builder: (column) => ColumnFilters(column));
+}
+
+class $$BibleChaptersTableOrderingComposer
+    extends Composer<_$AppDatabase, $BibleChaptersTable> {
+  $$BibleChaptersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get bookKey => $composableBuilder(
+      column: $table.bookKey, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get chapterNumber => $composableBuilder(
+      column: $table.chapterNumber,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get verseCount => $composableBuilder(
+      column: $table.verseCount, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get estimatedReadingSeconds => $composableBuilder(
+      column: $table.estimatedReadingSeconds,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get estimatedReadingMinutes => $composableBuilder(
+      column: $table.estimatedReadingMinutes,
+      builder: (column) => ColumnOrderings(column));
+}
+
+class $$BibleChaptersTableAnnotationComposer
+    extends Composer<_$AppDatabase, $BibleChaptersTable> {
+  $$BibleChaptersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get bookKey =>
+      $composableBuilder(column: $table.bookKey, builder: (column) => column);
+
+  GeneratedColumn<int> get chapterNumber => $composableBuilder(
+      column: $table.chapterNumber, builder: (column) => column);
+
+  GeneratedColumn<int> get verseCount => $composableBuilder(
+      column: $table.verseCount, builder: (column) => column);
+
+  GeneratedColumn<int> get estimatedReadingSeconds => $composableBuilder(
+      column: $table.estimatedReadingSeconds, builder: (column) => column);
+
+  GeneratedColumn<int> get estimatedReadingMinutes => $composableBuilder(
+      column: $table.estimatedReadingMinutes, builder: (column) => column);
+}
+
+class $$BibleChaptersTableTableManager extends RootTableManager<
+    _$AppDatabase,
+    $BibleChaptersTable,
+    BibleChapter,
+    $$BibleChaptersTableFilterComposer,
+    $$BibleChaptersTableOrderingComposer,
+    $$BibleChaptersTableAnnotationComposer,
+    $$BibleChaptersTableCreateCompanionBuilder,
+    $$BibleChaptersTableUpdateCompanionBuilder,
+    (
+      BibleChapter,
+      BaseReferences<_$AppDatabase, $BibleChaptersTable, BibleChapter>
+    ),
+    BibleChapter,
+    PrefetchHooks Function()> {
+  $$BibleChaptersTableTableManager(_$AppDatabase db, $BibleChaptersTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$BibleChaptersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$BibleChaptersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$BibleChaptersTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<String> bookKey = const Value.absent(),
+            Value<int> chapterNumber = const Value.absent(),
+            Value<int> verseCount = const Value.absent(),
+            Value<int> estimatedReadingSeconds = const Value.absent(),
+            Value<int> estimatedReadingMinutes = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              BibleChaptersCompanion(
+            bookKey: bookKey,
+            chapterNumber: chapterNumber,
+            verseCount: verseCount,
+            estimatedReadingSeconds: estimatedReadingSeconds,
+            estimatedReadingMinutes: estimatedReadingMinutes,
+            rowid: rowid,
+          ),
+          createCompanionCallback: ({
+            required String bookKey,
+            required int chapterNumber,
+            required int verseCount,
+            required int estimatedReadingSeconds,
+            required int estimatedReadingMinutes,
+            Value<int> rowid = const Value.absent(),
+          }) =>
+              BibleChaptersCompanion.insert(
+            bookKey: bookKey,
+            chapterNumber: chapterNumber,
+            verseCount: verseCount,
+            estimatedReadingSeconds: estimatedReadingSeconds,
+            estimatedReadingMinutes: estimatedReadingMinutes,
+            rowid: rowid,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$BibleChaptersTableProcessedTableManager = ProcessedTableManager<
+    _$AppDatabase,
+    $BibleChaptersTable,
+    BibleChapter,
+    $$BibleChaptersTableFilterComposer,
+    $$BibleChaptersTableOrderingComposer,
+    $$BibleChaptersTableAnnotationComposer,
+    $$BibleChaptersTableCreateCompanionBuilder,
+    $$BibleChaptersTableUpdateCompanionBuilder,
+    (
+      BibleChapter,
+      BaseReferences<_$AppDatabase, $BibleChaptersTable, BibleChapter>
+    ),
+    BibleChapter,
     PrefetchHooks Function()>;
 typedef $$LocalUsersTableCreateCompanionBuilder = LocalUsersCompanion Function({
   required String id,
@@ -10133,6 +10661,8 @@ class $AppDatabaseManager {
   $AppDatabaseManager(this._db);
   $$BibleBooksTableTableManager get bibleBooks =>
       $$BibleBooksTableTableManager(_db, _db.bibleBooks);
+  $$BibleChaptersTableTableManager get bibleChapters =>
+      $$BibleChaptersTableTableManager(_db, _db.bibleChapters);
   $$LocalUsersTableTableManager get localUsers =>
       $$LocalUsersTableTableManager(_db, _db.localUsers);
   $$PlanTemplatesTableTableManager get planTemplates =>

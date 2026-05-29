@@ -1,0 +1,8325 @@
+[
+  {
+    "book_key": "genesis",
+    "chapter_number": 1,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 2,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 3,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 4,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 5,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 6,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 7,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 8,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 9,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 10,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 11,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 12,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 13,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 14,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 15,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 16,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 17,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 18,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 19,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 20,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 21,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 22,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 23,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 24,
+    "verse_count": 67,
+    "estimated_reading_seconds": 469,
+    "estimated_reading_minutes": 8
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 25,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 26,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 27,
+    "verse_count": 46,
+    "estimated_reading_seconds": 322,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 28,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 29,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 30,
+    "verse_count": 43,
+    "estimated_reading_seconds": 301,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 31,
+    "verse_count": 55,
+    "estimated_reading_seconds": 385,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 32,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 33,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 34,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 35,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 36,
+    "verse_count": 43,
+    "estimated_reading_seconds": 301,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 37,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 38,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 39,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 40,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 41,
+    "verse_count": 57,
+    "estimated_reading_seconds": 399,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 42,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 43,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 44,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 45,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 46,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 47,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 48,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 49,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "genesis",
+    "chapter_number": 50,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 1,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 2,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 3,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 4,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 5,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 6,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 7,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 8,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 9,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 10,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 11,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 12,
+    "verse_count": 51,
+    "estimated_reading_seconds": 357,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 13,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 14,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 15,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 16,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 17,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 18,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 19,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 20,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 21,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 22,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 23,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 24,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 25,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 26,
+    "verse_count": 37,
+    "estimated_reading_seconds": 259,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 27,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 28,
+    "verse_count": 43,
+    "estimated_reading_seconds": 301,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 29,
+    "verse_count": 46,
+    "estimated_reading_seconds": 322,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 30,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 31,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 32,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 33,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 34,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 35,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 36,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 37,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 38,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 39,
+    "verse_count": 43,
+    "estimated_reading_seconds": 301,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "exodus",
+    "chapter_number": 40,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 1,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 2,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 3,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 4,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 5,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 6,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 7,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 8,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 9,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 10,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 11,
+    "verse_count": 47,
+    "estimated_reading_seconds": 329,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 12,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 13,
+    "verse_count": 59,
+    "estimated_reading_seconds": 413,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 14,
+    "verse_count": 57,
+    "estimated_reading_seconds": 399,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 15,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 16,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 17,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 18,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 19,
+    "verse_count": 37,
+    "estimated_reading_seconds": 259,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 20,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 21,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 22,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 23,
+    "verse_count": 44,
+    "estimated_reading_seconds": 308,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 24,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 25,
+    "verse_count": 55,
+    "estimated_reading_seconds": 385,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 26,
+    "verse_count": 46,
+    "estimated_reading_seconds": 322,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "leviticus",
+    "chapter_number": 27,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 1,
+    "verse_count": 54,
+    "estimated_reading_seconds": 378,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 2,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 3,
+    "verse_count": 51,
+    "estimated_reading_seconds": 357,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 4,
+    "verse_count": 49,
+    "estimated_reading_seconds": 343,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 5,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 6,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 7,
+    "verse_count": 89,
+    "estimated_reading_seconds": 623,
+    "estimated_reading_minutes": 11
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 8,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 9,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 10,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 11,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 12,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 13,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 14,
+    "verse_count": 45,
+    "estimated_reading_seconds": 315,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 15,
+    "verse_count": 41,
+    "estimated_reading_seconds": 287,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 16,
+    "verse_count": 50,
+    "estimated_reading_seconds": 350,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 17,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 18,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 19,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 20,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 21,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 22,
+    "verse_count": 41,
+    "estimated_reading_seconds": 287,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 23,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 24,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 25,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 26,
+    "verse_count": 65,
+    "estimated_reading_seconds": 455,
+    "estimated_reading_minutes": 8
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 27,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 28,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 29,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 30,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 31,
+    "verse_count": 54,
+    "estimated_reading_seconds": 378,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 32,
+    "verse_count": 42,
+    "estimated_reading_seconds": 294,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 33,
+    "verse_count": 56,
+    "estimated_reading_seconds": 392,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 34,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 35,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "numbers",
+    "chapter_number": 36,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 1,
+    "verse_count": 46,
+    "estimated_reading_seconds": 322,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 2,
+    "verse_count": 37,
+    "estimated_reading_seconds": 259,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 3,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 4,
+    "verse_count": 49,
+    "estimated_reading_seconds": 343,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 5,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 6,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 7,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 8,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 9,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 10,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 11,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 12,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 13,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 14,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 15,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 16,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 17,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 18,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 19,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 20,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 21,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 22,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 23,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 24,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 25,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 26,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 27,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 28,
+    "verse_count": 68,
+    "estimated_reading_seconds": 476,
+    "estimated_reading_minutes": 8
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 29,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 30,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 31,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 32,
+    "verse_count": 52,
+    "estimated_reading_seconds": 364,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 33,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "deuteronomy",
+    "chapter_number": 34,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 1,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 2,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 3,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 4,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 5,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 6,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 7,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 8,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 9,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 10,
+    "verse_count": 43,
+    "estimated_reading_seconds": 301,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 11,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 12,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 13,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 14,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 15,
+    "verse_count": 63,
+    "estimated_reading_seconds": 441,
+    "estimated_reading_minutes": 8
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 16,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 17,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 18,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 19,
+    "verse_count": 51,
+    "estimated_reading_seconds": 357,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 20,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 21,
+    "verse_count": 45,
+    "estimated_reading_seconds": 315,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 22,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 23,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "joshua",
+    "chapter_number": 24,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 1,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 2,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 3,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 4,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 5,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 6,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 7,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 8,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 9,
+    "verse_count": 57,
+    "estimated_reading_seconds": 399,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 10,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 11,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 12,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 13,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 14,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 15,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 16,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 17,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 18,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 19,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 20,
+    "verse_count": 48,
+    "estimated_reading_seconds": 336,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "judges",
+    "chapter_number": 21,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ruth",
+    "chapter_number": 1,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ruth",
+    "chapter_number": 2,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ruth",
+    "chapter_number": 3,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ruth",
+    "chapter_number": 4,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 1,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 2,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 3,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 4,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 5,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 6,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 7,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 8,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 9,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 10,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 11,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 12,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 13,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 14,
+    "verse_count": 52,
+    "estimated_reading_seconds": 364,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 15,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 16,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 17,
+    "verse_count": 58,
+    "estimated_reading_seconds": 406,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 18,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 19,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 20,
+    "verse_count": 43,
+    "estimated_reading_seconds": 301,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 21,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 22,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 23,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 24,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 25,
+    "verse_count": 44,
+    "estimated_reading_seconds": 308,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 26,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 27,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 28,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 29,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 30,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_samuel",
+    "chapter_number": 31,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 1,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 2,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 3,
+    "verse_count": 39,
+    "estimated_reading_seconds": 273,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 4,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 5,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 6,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 7,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 8,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 9,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 10,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 11,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 12,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 13,
+    "verse_count": 39,
+    "estimated_reading_seconds": 273,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 14,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 15,
+    "verse_count": 37,
+    "estimated_reading_seconds": 259,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 16,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 17,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 18,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 19,
+    "verse_count": 43,
+    "estimated_reading_seconds": 301,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 20,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 21,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 22,
+    "verse_count": 51,
+    "estimated_reading_seconds": 357,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 23,
+    "verse_count": 39,
+    "estimated_reading_seconds": 273,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "2_samuel",
+    "chapter_number": 24,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 1,
+    "verse_count": 53,
+    "estimated_reading_seconds": 371,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 2,
+    "verse_count": 46,
+    "estimated_reading_seconds": 322,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 3,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 4,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 5,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 6,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 7,
+    "verse_count": 51,
+    "estimated_reading_seconds": 357,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 8,
+    "verse_count": 66,
+    "estimated_reading_seconds": 462,
+    "estimated_reading_minutes": 8
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 9,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 10,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 11,
+    "verse_count": 43,
+    "estimated_reading_seconds": 301,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 12,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 13,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 14,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 15,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 16,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 17,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 18,
+    "verse_count": 46,
+    "estimated_reading_seconds": 322,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 19,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 20,
+    "verse_count": 43,
+    "estimated_reading_seconds": 301,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 21,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_kings",
+    "chapter_number": 22,
+    "verse_count": 54,
+    "estimated_reading_seconds": 378,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 1,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 2,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 3,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 4,
+    "verse_count": 44,
+    "estimated_reading_seconds": 308,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 5,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 6,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 7,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 8,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 9,
+    "verse_count": 37,
+    "estimated_reading_seconds": 259,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 10,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 11,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 12,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 13,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 14,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 15,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 16,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 17,
+    "verse_count": 41,
+    "estimated_reading_seconds": 287,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 18,
+    "verse_count": 37,
+    "estimated_reading_seconds": 259,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 19,
+    "verse_count": 37,
+    "estimated_reading_seconds": 259,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 20,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 21,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 22,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 23,
+    "verse_count": 37,
+    "estimated_reading_seconds": 259,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 24,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_kings",
+    "chapter_number": 25,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 1,
+    "verse_count": 54,
+    "estimated_reading_seconds": 378,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 2,
+    "verse_count": 55,
+    "estimated_reading_seconds": 385,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 3,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 4,
+    "verse_count": 43,
+    "estimated_reading_seconds": 301,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 5,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 6,
+    "verse_count": 81,
+    "estimated_reading_seconds": 567,
+    "estimated_reading_minutes": 10
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 7,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 8,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 9,
+    "verse_count": 44,
+    "estimated_reading_seconds": 308,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 10,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 11,
+    "verse_count": 47,
+    "estimated_reading_seconds": 329,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 12,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 13,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 14,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 15,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 16,
+    "verse_count": 43,
+    "estimated_reading_seconds": 301,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 17,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 18,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 19,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 20,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 21,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 22,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 23,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 24,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 25,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 26,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 27,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 28,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_chronicles",
+    "chapter_number": 29,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 1,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 2,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 3,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 4,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 5,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 6,
+    "verse_count": 42,
+    "estimated_reading_seconds": 294,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 7,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 8,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 9,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 10,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 11,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 12,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 13,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 14,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 15,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 16,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 17,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 18,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 19,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 20,
+    "verse_count": 37,
+    "estimated_reading_seconds": 259,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 21,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 22,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 23,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 24,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 25,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 26,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 27,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 28,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 29,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 30,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 31,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 32,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 33,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 34,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 35,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_chronicles",
+    "chapter_number": 36,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezra",
+    "chapter_number": 1,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "ezra",
+    "chapter_number": 2,
+    "verse_count": 70,
+    "estimated_reading_seconds": 490,
+    "estimated_reading_minutes": 9
+  },
+  {
+    "book_key": "ezra",
+    "chapter_number": 3,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "ezra",
+    "chapter_number": 4,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezra",
+    "chapter_number": 5,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "ezra",
+    "chapter_number": 6,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezra",
+    "chapter_number": 7,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezra",
+    "chapter_number": 8,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "ezra",
+    "chapter_number": 9,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "ezra",
+    "chapter_number": 10,
+    "verse_count": 44,
+    "estimated_reading_seconds": 308,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "nehemiah",
+    "chapter_number": 1,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "nehemiah",
+    "chapter_number": 2,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "nehemiah",
+    "chapter_number": 3,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "nehemiah",
+    "chapter_number": 4,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "nehemiah",
+    "chapter_number": 5,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "nehemiah",
+    "chapter_number": 6,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "nehemiah",
+    "chapter_number": 7,
+    "verse_count": 73,
+    "estimated_reading_seconds": 511,
+    "estimated_reading_minutes": 9
+  },
+  {
+    "book_key": "nehemiah",
+    "chapter_number": 8,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "nehemiah",
+    "chapter_number": 9,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "nehemiah",
+    "chapter_number": 10,
+    "verse_count": 39,
+    "estimated_reading_seconds": 273,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "nehemiah",
+    "chapter_number": 11,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "nehemiah",
+    "chapter_number": 12,
+    "verse_count": 47,
+    "estimated_reading_seconds": 329,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "nehemiah",
+    "chapter_number": 13,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "esther",
+    "chapter_number": 1,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "esther",
+    "chapter_number": 2,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "esther",
+    "chapter_number": 3,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "esther",
+    "chapter_number": 4,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "esther",
+    "chapter_number": 5,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "esther",
+    "chapter_number": 6,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "esther",
+    "chapter_number": 7,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "esther",
+    "chapter_number": 8,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "esther",
+    "chapter_number": 9,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "esther",
+    "chapter_number": 10,
+    "verse_count": 3,
+    "estimated_reading_seconds": 21,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 1,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 2,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 3,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 4,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 5,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 6,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 7,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 8,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 9,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 10,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 11,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 12,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 13,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 14,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 15,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 16,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 17,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 18,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 19,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 20,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 21,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 22,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 23,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 24,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 25,
+    "verse_count": 6,
+    "estimated_reading_seconds": 42,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 26,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 27,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 28,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 29,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 30,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 31,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 32,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 33,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 34,
+    "verse_count": 37,
+    "estimated_reading_seconds": 259,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 35,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 36,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 37,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 38,
+    "verse_count": 41,
+    "estimated_reading_seconds": 287,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 39,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 40,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 41,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "job",
+    "chapter_number": 42,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 1,
+    "verse_count": 6,
+    "estimated_reading_seconds": 42,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 2,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 3,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 4,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 5,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 6,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 7,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 8,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 9,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 10,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 11,
+    "verse_count": 7,
+    "estimated_reading_seconds": 49,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 12,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 13,
+    "verse_count": 6,
+    "estimated_reading_seconds": 42,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 14,
+    "verse_count": 7,
+    "estimated_reading_seconds": 49,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 15,
+    "verse_count": 5,
+    "estimated_reading_seconds": 35,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 16,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 17,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 18,
+    "verse_count": 50,
+    "estimated_reading_seconds": 350,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 19,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 20,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 21,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 22,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 23,
+    "verse_count": 6,
+    "estimated_reading_seconds": 42,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 24,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 25,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 26,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 27,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 28,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 29,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 30,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 31,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 32,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 33,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 34,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 35,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 36,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 37,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 38,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 39,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 40,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 41,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 42,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 43,
+    "verse_count": 5,
+    "estimated_reading_seconds": 35,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 44,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 45,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 46,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 47,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 48,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 49,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 50,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 51,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 52,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 53,
+    "verse_count": 6,
+    "estimated_reading_seconds": 42,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 54,
+    "verse_count": 7,
+    "estimated_reading_seconds": 49,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 55,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 56,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 57,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 58,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 59,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 60,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 61,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 62,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 63,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 64,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 65,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 66,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 67,
+    "verse_count": 7,
+    "estimated_reading_seconds": 49,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 68,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 69,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 70,
+    "verse_count": 5,
+    "estimated_reading_seconds": 35,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 71,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 72,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 73,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 74,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 75,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 76,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 77,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 78,
+    "verse_count": 72,
+    "estimated_reading_seconds": 504,
+    "estimated_reading_minutes": 9
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 79,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 80,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 81,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 82,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 83,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 84,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 85,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 86,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 87,
+    "verse_count": 7,
+    "estimated_reading_seconds": 49,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 88,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 89,
+    "verse_count": 52,
+    "estimated_reading_seconds": 364,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 90,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 91,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 92,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 93,
+    "verse_count": 5,
+    "estimated_reading_seconds": 35,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 94,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 95,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 96,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 97,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 98,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 99,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 100,
+    "verse_count": 5,
+    "estimated_reading_seconds": 35,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 101,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 102,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 103,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 104,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 105,
+    "verse_count": 45,
+    "estimated_reading_seconds": 315,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 106,
+    "verse_count": 48,
+    "estimated_reading_seconds": 336,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 107,
+    "verse_count": 43,
+    "estimated_reading_seconds": 301,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 108,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 109,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 110,
+    "verse_count": 7,
+    "estimated_reading_seconds": 49,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 111,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 112,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 113,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 114,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 115,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 116,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 117,
+    "verse_count": 2,
+    "estimated_reading_seconds": 14,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 118,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 119,
+    "verse_count": 176,
+    "estimated_reading_seconds": 1232,
+    "estimated_reading_minutes": 21
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 120,
+    "verse_count": 7,
+    "estimated_reading_seconds": 49,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 121,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 122,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 123,
+    "verse_count": 4,
+    "estimated_reading_seconds": 28,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 124,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 125,
+    "verse_count": 5,
+    "estimated_reading_seconds": 35,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 126,
+    "verse_count": 6,
+    "estimated_reading_seconds": 42,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 127,
+    "verse_count": 5,
+    "estimated_reading_seconds": 35,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 128,
+    "verse_count": 6,
+    "estimated_reading_seconds": 42,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 129,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 130,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 131,
+    "verse_count": 3,
+    "estimated_reading_seconds": 21,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 132,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 133,
+    "verse_count": 3,
+    "estimated_reading_seconds": 21,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 134,
+    "verse_count": 3,
+    "estimated_reading_seconds": 21,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 135,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 136,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 137,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 138,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 139,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 140,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 141,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 142,
+    "verse_count": 7,
+    "estimated_reading_seconds": 49,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 143,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 144,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 145,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 146,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 147,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 148,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 149,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "psalms",
+    "chapter_number": 150,
+    "verse_count": 6,
+    "estimated_reading_seconds": 42,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 1,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 2,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 3,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 4,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 5,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 6,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 7,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 8,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 9,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 10,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 11,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 12,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 13,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 14,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 15,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 16,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 17,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 18,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 19,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 20,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 21,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 22,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 23,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 24,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 25,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 26,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 27,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 28,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 29,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 30,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "proverbs",
+    "chapter_number": 31,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ecclesiastes",
+    "chapter_number": 1,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ecclesiastes",
+    "chapter_number": 2,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ecclesiastes",
+    "chapter_number": 3,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ecclesiastes",
+    "chapter_number": 4,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "ecclesiastes",
+    "chapter_number": 5,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ecclesiastes",
+    "chapter_number": 6,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "ecclesiastes",
+    "chapter_number": 7,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ecclesiastes",
+    "chapter_number": 8,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "ecclesiastes",
+    "chapter_number": 9,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ecclesiastes",
+    "chapter_number": 10,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ecclesiastes",
+    "chapter_number": 11,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "ecclesiastes",
+    "chapter_number": 12,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "song_of_songs",
+    "chapter_number": 1,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "song_of_songs",
+    "chapter_number": 2,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "song_of_songs",
+    "chapter_number": 3,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "song_of_songs",
+    "chapter_number": 4,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "song_of_songs",
+    "chapter_number": 5,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "song_of_songs",
+    "chapter_number": 6,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "song_of_songs",
+    "chapter_number": 7,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "song_of_songs",
+    "chapter_number": 8,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 1,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 2,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 3,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 4,
+    "verse_count": 6,
+    "estimated_reading_seconds": 42,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 5,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 6,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 7,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 8,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 9,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 10,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 11,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 12,
+    "verse_count": 6,
+    "estimated_reading_seconds": 42,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 13,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 14,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 15,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 16,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 17,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 18,
+    "verse_count": 7,
+    "estimated_reading_seconds": 49,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 19,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 20,
+    "verse_count": 6,
+    "estimated_reading_seconds": 42,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 21,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 22,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 23,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 24,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 25,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 26,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 27,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 28,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 29,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 30,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 31,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 32,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 33,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 34,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 35,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 36,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 37,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 38,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 39,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 40,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 41,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 42,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 43,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 44,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 45,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 46,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 47,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 48,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 49,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 50,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 51,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 52,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 53,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 54,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 55,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 56,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 57,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 58,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 59,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 60,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 61,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 62,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 63,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 64,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 65,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "isaiah",
+    "chapter_number": 66,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 1,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 2,
+    "verse_count": 37,
+    "estimated_reading_seconds": 259,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 3,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 4,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 5,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 6,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 7,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 8,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 9,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 10,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 11,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 12,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 13,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 14,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 15,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 16,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 17,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 18,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 19,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 20,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 21,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 22,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 23,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 24,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 25,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 26,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 27,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 28,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 29,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 30,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 31,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 32,
+    "verse_count": 44,
+    "estimated_reading_seconds": 308,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 33,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 34,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 35,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 36,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 37,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 38,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 39,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 40,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 41,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 42,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 43,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 44,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 45,
+    "verse_count": 5,
+    "estimated_reading_seconds": 35,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 46,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 47,
+    "verse_count": 7,
+    "estimated_reading_seconds": 49,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 48,
+    "verse_count": 47,
+    "estimated_reading_seconds": 329,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 49,
+    "verse_count": 39,
+    "estimated_reading_seconds": 273,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 50,
+    "verse_count": 46,
+    "estimated_reading_seconds": 322,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 51,
+    "verse_count": 64,
+    "estimated_reading_seconds": 448,
+    "estimated_reading_minutes": 8
+  },
+  {
+    "book_key": "jeremiah",
+    "chapter_number": 52,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "lamentations",
+    "chapter_number": 1,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "lamentations",
+    "chapter_number": 2,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "lamentations",
+    "chapter_number": 3,
+    "verse_count": 66,
+    "estimated_reading_seconds": 462,
+    "estimated_reading_minutes": 8
+  },
+  {
+    "book_key": "lamentations",
+    "chapter_number": 4,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "lamentations",
+    "chapter_number": 5,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 1,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 2,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 3,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 4,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 5,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 6,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 7,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 8,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 9,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 10,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 11,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 12,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 13,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 14,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 15,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 16,
+    "verse_count": 63,
+    "estimated_reading_seconds": 441,
+    "estimated_reading_minutes": 8
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 17,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 18,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 19,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 20,
+    "verse_count": 49,
+    "estimated_reading_seconds": 343,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 21,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 22,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 23,
+    "verse_count": 49,
+    "estimated_reading_seconds": 343,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 24,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 25,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 26,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 27,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 28,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 29,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 30,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 31,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 32,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 33,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 34,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 35,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 36,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 37,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 38,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 39,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 40,
+    "verse_count": 49,
+    "estimated_reading_seconds": 343,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 41,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 42,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 43,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 44,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 45,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 46,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 47,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ezekiel",
+    "chapter_number": 48,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "daniel",
+    "chapter_number": 1,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "daniel",
+    "chapter_number": 2,
+    "verse_count": 49,
+    "estimated_reading_seconds": 343,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "daniel",
+    "chapter_number": 3,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "daniel",
+    "chapter_number": 4,
+    "verse_count": 37,
+    "estimated_reading_seconds": 259,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "daniel",
+    "chapter_number": 5,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "daniel",
+    "chapter_number": 6,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "daniel",
+    "chapter_number": 7,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "daniel",
+    "chapter_number": 8,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "daniel",
+    "chapter_number": 9,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "daniel",
+    "chapter_number": 10,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "daniel",
+    "chapter_number": 11,
+    "verse_count": 45,
+    "estimated_reading_seconds": 315,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "daniel",
+    "chapter_number": 12,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "hosea",
+    "chapter_number": 1,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "hosea",
+    "chapter_number": 2,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "hosea",
+    "chapter_number": 3,
+    "verse_count": 5,
+    "estimated_reading_seconds": 35,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "hosea",
+    "chapter_number": 4,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "hosea",
+    "chapter_number": 5,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "hosea",
+    "chapter_number": 6,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "hosea",
+    "chapter_number": 7,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "hosea",
+    "chapter_number": 8,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "hosea",
+    "chapter_number": 9,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "hosea",
+    "chapter_number": 10,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "hosea",
+    "chapter_number": 11,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "hosea",
+    "chapter_number": 12,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "hosea",
+    "chapter_number": 13,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "hosea",
+    "chapter_number": 14,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "joel",
+    "chapter_number": 1,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "joel",
+    "chapter_number": 2,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "joel",
+    "chapter_number": 3,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "amos",
+    "chapter_number": 1,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "amos",
+    "chapter_number": 2,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "amos",
+    "chapter_number": 3,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "amos",
+    "chapter_number": 4,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "amos",
+    "chapter_number": 5,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "amos",
+    "chapter_number": 6,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "amos",
+    "chapter_number": 7,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "amos",
+    "chapter_number": 8,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "amos",
+    "chapter_number": 9,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "obadiah",
+    "chapter_number": 1,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "jonah",
+    "chapter_number": 1,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "jonah",
+    "chapter_number": 2,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "jonah",
+    "chapter_number": 3,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "jonah",
+    "chapter_number": 4,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "micah",
+    "chapter_number": 1,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "micah",
+    "chapter_number": 2,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "micah",
+    "chapter_number": 3,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "micah",
+    "chapter_number": 4,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "micah",
+    "chapter_number": 5,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "micah",
+    "chapter_number": 6,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "micah",
+    "chapter_number": 7,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "nahum",
+    "chapter_number": 1,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "nahum",
+    "chapter_number": 2,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "nahum",
+    "chapter_number": 3,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "habakkuk",
+    "chapter_number": 1,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "habakkuk",
+    "chapter_number": 2,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "habakkuk",
+    "chapter_number": 3,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "zephaniah",
+    "chapter_number": 1,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "zephaniah",
+    "chapter_number": 2,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "zephaniah",
+    "chapter_number": 3,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "haggai",
+    "chapter_number": 1,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "haggai",
+    "chapter_number": 2,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "zechariah",
+    "chapter_number": 1,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "zechariah",
+    "chapter_number": 2,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "zechariah",
+    "chapter_number": 3,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "zechariah",
+    "chapter_number": 4,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "zechariah",
+    "chapter_number": 5,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "zechariah",
+    "chapter_number": 6,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "zechariah",
+    "chapter_number": 7,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "zechariah",
+    "chapter_number": 8,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "zechariah",
+    "chapter_number": 9,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "zechariah",
+    "chapter_number": 10,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "zechariah",
+    "chapter_number": 11,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "zechariah",
+    "chapter_number": 12,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "zechariah",
+    "chapter_number": 13,
+    "verse_count": 9,
+    "estimated_reading_seconds": 63,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "zechariah",
+    "chapter_number": 14,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "malachi",
+    "chapter_number": 1,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "malachi",
+    "chapter_number": 2,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "malachi",
+    "chapter_number": 3,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "malachi",
+    "chapter_number": 4,
+    "verse_count": 6,
+    "estimated_reading_seconds": 42,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 1,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 2,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 3,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 4,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 5,
+    "verse_count": 48,
+    "estimated_reading_seconds": 336,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 6,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 7,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 8,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 9,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 10,
+    "verse_count": 42,
+    "estimated_reading_seconds": 294,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 11,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 12,
+    "verse_count": 50,
+    "estimated_reading_seconds": 350,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 13,
+    "verse_count": 58,
+    "estimated_reading_seconds": 406,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 14,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 15,
+    "verse_count": 39,
+    "estimated_reading_seconds": 273,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 16,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 17,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 18,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 19,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 20,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 21,
+    "verse_count": 46,
+    "estimated_reading_seconds": 322,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 22,
+    "verse_count": 45,
+    "estimated_reading_seconds": 315,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 23,
+    "verse_count": 39,
+    "estimated_reading_seconds": 273,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 24,
+    "verse_count": 51,
+    "estimated_reading_seconds": 357,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 25,
+    "verse_count": 46,
+    "estimated_reading_seconds": 322,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 26,
+    "verse_count": 74,
+    "estimated_reading_seconds": 518,
+    "estimated_reading_minutes": 9
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 27,
+    "verse_count": 66,
+    "estimated_reading_seconds": 462,
+    "estimated_reading_minutes": 8
+  },
+  {
+    "book_key": "matthew",
+    "chapter_number": 28,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "mark",
+    "chapter_number": 1,
+    "verse_count": 45,
+    "estimated_reading_seconds": 315,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "mark",
+    "chapter_number": 2,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "mark",
+    "chapter_number": 3,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "mark",
+    "chapter_number": 4,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "mark",
+    "chapter_number": 5,
+    "verse_count": 43,
+    "estimated_reading_seconds": 301,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "mark",
+    "chapter_number": 6,
+    "verse_count": 56,
+    "estimated_reading_seconds": 392,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "mark",
+    "chapter_number": 7,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "mark",
+    "chapter_number": 8,
+    "verse_count": 37,
+    "estimated_reading_seconds": 259,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "mark",
+    "chapter_number": 9,
+    "verse_count": 50,
+    "estimated_reading_seconds": 350,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "mark",
+    "chapter_number": 10,
+    "verse_count": 52,
+    "estimated_reading_seconds": 364,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "mark",
+    "chapter_number": 11,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "mark",
+    "chapter_number": 12,
+    "verse_count": 44,
+    "estimated_reading_seconds": 308,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "mark",
+    "chapter_number": 13,
+    "verse_count": 37,
+    "estimated_reading_seconds": 259,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "mark",
+    "chapter_number": 14,
+    "verse_count": 72,
+    "estimated_reading_seconds": 504,
+    "estimated_reading_minutes": 9
+  },
+  {
+    "book_key": "mark",
+    "chapter_number": 15,
+    "verse_count": 47,
+    "estimated_reading_seconds": 329,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "mark",
+    "chapter_number": 16,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 1,
+    "verse_count": 80,
+    "estimated_reading_seconds": 560,
+    "estimated_reading_minutes": 10
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 2,
+    "verse_count": 52,
+    "estimated_reading_seconds": 364,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 3,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 4,
+    "verse_count": 44,
+    "estimated_reading_seconds": 308,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 5,
+    "verse_count": 39,
+    "estimated_reading_seconds": 273,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 6,
+    "verse_count": 49,
+    "estimated_reading_seconds": 343,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 7,
+    "verse_count": 50,
+    "estimated_reading_seconds": 350,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 8,
+    "verse_count": 56,
+    "estimated_reading_seconds": 392,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 9,
+    "verse_count": 62,
+    "estimated_reading_seconds": 434,
+    "estimated_reading_minutes": 8
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 10,
+    "verse_count": 42,
+    "estimated_reading_seconds": 294,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 11,
+    "verse_count": 54,
+    "estimated_reading_seconds": 378,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 12,
+    "verse_count": 59,
+    "estimated_reading_seconds": 413,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 13,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 14,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 15,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 16,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 17,
+    "verse_count": 37,
+    "estimated_reading_seconds": 259,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 18,
+    "verse_count": 43,
+    "estimated_reading_seconds": 301,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 19,
+    "verse_count": 48,
+    "estimated_reading_seconds": 336,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 20,
+    "verse_count": 47,
+    "estimated_reading_seconds": 329,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 21,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 22,
+    "verse_count": 71,
+    "estimated_reading_seconds": 497,
+    "estimated_reading_minutes": 9
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 23,
+    "verse_count": 56,
+    "estimated_reading_seconds": 392,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "luke",
+    "chapter_number": 24,
+    "verse_count": 53,
+    "estimated_reading_seconds": 371,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 1,
+    "verse_count": 51,
+    "estimated_reading_seconds": 357,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 2,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 3,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 4,
+    "verse_count": 54,
+    "estimated_reading_seconds": 378,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 5,
+    "verse_count": 47,
+    "estimated_reading_seconds": 329,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 6,
+    "verse_count": 71,
+    "estimated_reading_seconds": 497,
+    "estimated_reading_minutes": 9
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 7,
+    "verse_count": 53,
+    "estimated_reading_seconds": 371,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 8,
+    "verse_count": 59,
+    "estimated_reading_seconds": 413,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 9,
+    "verse_count": 41,
+    "estimated_reading_seconds": 287,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 10,
+    "verse_count": 42,
+    "estimated_reading_seconds": 294,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 11,
+    "verse_count": 57,
+    "estimated_reading_seconds": 399,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 12,
+    "verse_count": 50,
+    "estimated_reading_seconds": 350,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 13,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 14,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 15,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 16,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 17,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 18,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 19,
+    "verse_count": 42,
+    "estimated_reading_seconds": 294,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 20,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "john",
+    "chapter_number": 21,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 1,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 2,
+    "verse_count": 47,
+    "estimated_reading_seconds": 329,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 3,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 4,
+    "verse_count": 37,
+    "estimated_reading_seconds": 259,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 5,
+    "verse_count": 42,
+    "estimated_reading_seconds": 294,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 6,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 7,
+    "verse_count": 60,
+    "estimated_reading_seconds": 420,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 8,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 9,
+    "verse_count": 43,
+    "estimated_reading_seconds": 301,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 10,
+    "verse_count": 48,
+    "estimated_reading_seconds": 336,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 11,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 12,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 13,
+    "verse_count": 52,
+    "estimated_reading_seconds": 364,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 14,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 15,
+    "verse_count": 41,
+    "estimated_reading_seconds": 287,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 16,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 17,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 18,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 19,
+    "verse_count": 41,
+    "estimated_reading_seconds": 287,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 20,
+    "verse_count": 38,
+    "estimated_reading_seconds": 266,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 21,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 22,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 23,
+    "verse_count": 35,
+    "estimated_reading_seconds": 245,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 24,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 25,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 26,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 27,
+    "verse_count": 44,
+    "estimated_reading_seconds": 308,
+    "estimated_reading_minutes": 6
+  },
+  {
+    "book_key": "acts",
+    "chapter_number": 28,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "romans",
+    "chapter_number": 1,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "romans",
+    "chapter_number": 2,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "romans",
+    "chapter_number": 3,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "romans",
+    "chapter_number": 4,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "romans",
+    "chapter_number": 5,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "romans",
+    "chapter_number": 6,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "romans",
+    "chapter_number": 7,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "romans",
+    "chapter_number": 8,
+    "verse_count": 39,
+    "estimated_reading_seconds": 273,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "romans",
+    "chapter_number": 9,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "romans",
+    "chapter_number": 10,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "romans",
+    "chapter_number": 11,
+    "verse_count": 36,
+    "estimated_reading_seconds": 252,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "romans",
+    "chapter_number": 12,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "romans",
+    "chapter_number": 13,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "romans",
+    "chapter_number": 14,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "romans",
+    "chapter_number": 15,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "romans",
+    "chapter_number": 16,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_corinthians",
+    "chapter_number": 1,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_corinthians",
+    "chapter_number": 2,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_corinthians",
+    "chapter_number": 3,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_corinthians",
+    "chapter_number": 4,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_corinthians",
+    "chapter_number": 5,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_corinthians",
+    "chapter_number": 6,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_corinthians",
+    "chapter_number": 7,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "1_corinthians",
+    "chapter_number": 8,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_corinthians",
+    "chapter_number": 9,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_corinthians",
+    "chapter_number": 10,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_corinthians",
+    "chapter_number": 11,
+    "verse_count": 34,
+    "estimated_reading_seconds": 238,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_corinthians",
+    "chapter_number": 12,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_corinthians",
+    "chapter_number": 13,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_corinthians",
+    "chapter_number": 14,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "1_corinthians",
+    "chapter_number": 15,
+    "verse_count": 58,
+    "estimated_reading_seconds": 406,
+    "estimated_reading_minutes": 7
+  },
+  {
+    "book_key": "1_corinthians",
+    "chapter_number": 16,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_corinthians",
+    "chapter_number": 1,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_corinthians",
+    "chapter_number": 2,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_corinthians",
+    "chapter_number": 3,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_corinthians",
+    "chapter_number": 4,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_corinthians",
+    "chapter_number": 5,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_corinthians",
+    "chapter_number": 6,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_corinthians",
+    "chapter_number": 7,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_corinthians",
+    "chapter_number": 8,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_corinthians",
+    "chapter_number": 9,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_corinthians",
+    "chapter_number": 10,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_corinthians",
+    "chapter_number": 11,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_corinthians",
+    "chapter_number": 12,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_corinthians",
+    "chapter_number": 13,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "galatians",
+    "chapter_number": 1,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "galatians",
+    "chapter_number": 2,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "galatians",
+    "chapter_number": 3,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "galatians",
+    "chapter_number": 4,
+    "verse_count": 31,
+    "estimated_reading_seconds": 217,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "galatians",
+    "chapter_number": 5,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "galatians",
+    "chapter_number": 6,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ephesians",
+    "chapter_number": 1,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ephesians",
+    "chapter_number": 2,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ephesians",
+    "chapter_number": 3,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "ephesians",
+    "chapter_number": 4,
+    "verse_count": 32,
+    "estimated_reading_seconds": 224,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ephesians",
+    "chapter_number": 5,
+    "verse_count": 33,
+    "estimated_reading_seconds": 231,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "ephesians",
+    "chapter_number": 6,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "philippians",
+    "chapter_number": 1,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "philippians",
+    "chapter_number": 2,
+    "verse_count": 30,
+    "estimated_reading_seconds": 210,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "philippians",
+    "chapter_number": 3,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "philippians",
+    "chapter_number": 4,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "colossians",
+    "chapter_number": 1,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "colossians",
+    "chapter_number": 2,
+    "verse_count": 23,
+    "estimated_reading_seconds": 161,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "colossians",
+    "chapter_number": 3,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "colossians",
+    "chapter_number": 4,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_thessalonians",
+    "chapter_number": 1,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_thessalonians",
+    "chapter_number": 2,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_thessalonians",
+    "chapter_number": 3,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_thessalonians",
+    "chapter_number": 4,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_thessalonians",
+    "chapter_number": 5,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_thessalonians",
+    "chapter_number": 1,
+    "verse_count": 12,
+    "estimated_reading_seconds": 84,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_thessalonians",
+    "chapter_number": 2,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_thessalonians",
+    "chapter_number": 3,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_timothy",
+    "chapter_number": 1,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_timothy",
+    "chapter_number": 2,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_timothy",
+    "chapter_number": 3,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_timothy",
+    "chapter_number": 4,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_timothy",
+    "chapter_number": 5,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_timothy",
+    "chapter_number": 6,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_timothy",
+    "chapter_number": 1,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_timothy",
+    "chapter_number": 2,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "2_timothy",
+    "chapter_number": 3,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_timothy",
+    "chapter_number": 4,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "titus",
+    "chapter_number": 1,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "titus",
+    "chapter_number": 2,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "titus",
+    "chapter_number": 3,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "philemon",
+    "chapter_number": 1,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "hebrews",
+    "chapter_number": 1,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "hebrews",
+    "chapter_number": 2,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "hebrews",
+    "chapter_number": 3,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "hebrews",
+    "chapter_number": 4,
+    "verse_count": 16,
+    "estimated_reading_seconds": 112,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "hebrews",
+    "chapter_number": 5,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "hebrews",
+    "chapter_number": 6,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "hebrews",
+    "chapter_number": 7,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "hebrews",
+    "chapter_number": 8,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "hebrews",
+    "chapter_number": 9,
+    "verse_count": 28,
+    "estimated_reading_seconds": 196,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "hebrews",
+    "chapter_number": 10,
+    "verse_count": 39,
+    "estimated_reading_seconds": 273,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "hebrews",
+    "chapter_number": 11,
+    "verse_count": 40,
+    "estimated_reading_seconds": 280,
+    "estimated_reading_minutes": 5
+  },
+  {
+    "book_key": "hebrews",
+    "chapter_number": 12,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "hebrews",
+    "chapter_number": 13,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "james",
+    "chapter_number": 1,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "james",
+    "chapter_number": 2,
+    "verse_count": 26,
+    "estimated_reading_seconds": 182,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "james",
+    "chapter_number": 3,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "james",
+    "chapter_number": 4,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "james",
+    "chapter_number": 5,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_peter",
+    "chapter_number": 1,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_peter",
+    "chapter_number": 2,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_peter",
+    "chapter_number": 3,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_peter",
+    "chapter_number": 4,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_peter",
+    "chapter_number": 5,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "2_peter",
+    "chapter_number": 1,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_peter",
+    "chapter_number": 2,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_peter",
+    "chapter_number": 3,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_john",
+    "chapter_number": 1,
+    "verse_count": 10,
+    "estimated_reading_seconds": 70,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "1_john",
+    "chapter_number": 2,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "1_john",
+    "chapter_number": 3,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_john",
+    "chapter_number": 4,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "1_john",
+    "chapter_number": 5,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "2_john",
+    "chapter_number": 1,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "3_john",
+    "chapter_number": 1,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "jude",
+    "chapter_number": 1,
+    "verse_count": 25,
+    "estimated_reading_seconds": 175,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 1,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 2,
+    "verse_count": 29,
+    "estimated_reading_seconds": 203,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 3,
+    "verse_count": 22,
+    "estimated_reading_seconds": 154,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 4,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 5,
+    "verse_count": 14,
+    "estimated_reading_seconds": 98,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 6,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 7,
+    "verse_count": 17,
+    "estimated_reading_seconds": 119,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 8,
+    "verse_count": 13,
+    "estimated_reading_seconds": 91,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 9,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 10,
+    "verse_count": 11,
+    "estimated_reading_seconds": 77,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 11,
+    "verse_count": 19,
+    "estimated_reading_seconds": 133,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 12,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 13,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 14,
+    "verse_count": 20,
+    "estimated_reading_seconds": 140,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 15,
+    "verse_count": 8,
+    "estimated_reading_seconds": 56,
+    "estimated_reading_minutes": 1
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 16,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 17,
+    "verse_count": 18,
+    "estimated_reading_seconds": 126,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 18,
+    "verse_count": 24,
+    "estimated_reading_seconds": 168,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 19,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 20,
+    "verse_count": 15,
+    "estimated_reading_seconds": 105,
+    "estimated_reading_minutes": 2
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 21,
+    "verse_count": 27,
+    "estimated_reading_seconds": 189,
+    "estimated_reading_minutes": 4
+  },
+  {
+    "book_key": "revelation",
+    "chapter_number": 22,
+    "verse_count": 21,
+    "estimated_reading_seconds": 147,
+    "estimated_reading_minutes": 3
+  }
+]

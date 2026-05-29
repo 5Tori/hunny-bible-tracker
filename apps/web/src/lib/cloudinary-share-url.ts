@@ -6,12 +6,11 @@
  * Text overlay modifiers must live in the same step as `l_text`, not separate `/` segments.
  */
 
+import { getPublicRuntimeConfig } from '@/lib/public-runtime-config';
+
 function cloudinaryCloudName(): string | null {
-  return (
-    process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim() ||
-    process.env.CLOUDINARY_CLOUD_NAME?.trim() ||
-    null
-  );
+  const fromRuntime = getPublicRuntimeConfig().cloudinaryCloudName;
+  return fromRuntime || null;
 }
 
 function encodeCloudinaryText(value: string) {

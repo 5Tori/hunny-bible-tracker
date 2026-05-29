@@ -25,12 +25,15 @@ function isPlaceholderDatabaseUrl(url: string): boolean {
   return url.includes('REPLACE_');
 }
 
-async function getDatabaseUrl(): Promise<string> {
-  const envUrl = process.env.DATABASE_URL?.trim();
-  if (envUrl && !isPlaceholderDatabaseUrl(envUrl)) {
-    return envUrl;
+function normalizeDatabaseUrl(url: string): string {
+  const trimmed = url.trim();
+  if (trimmed.includes(':6543/') && !trimmed.includes('pgbouncer=true')) {
+    return `${trimmed}${trimmed.includes('?') ? '&' : '?'}pgbouncer=true`;
   }
+  return trimmed;
+}
 
+async function getDatabaseUrl(): Promise<string> {
   try {
     const { env } = await getCloudflareContext({ async: true });
     const hyperdrive = (env as { HYPERDRIVE?: HyperdriveBinding }).HYPERDRIVE;
@@ -42,19 +45,22 @@ async function getDatabaseUrl(): Promise<string> {
     // next dev / next build — not on the Workers runtime
   }
 
-  if (envUrl) {
+  const envUrl = process.env.DATABASE_URL?.trim();
+  if (envUrl && !isPlaceholderDatabaseUrl(envUrl)) {
     return envUrl;
   }
+
   throw new Error('DATABASE_URL is not set');
 }
 
 async function getClient() {
-  const url = await getDatabaseUrl();
+  const url = normalizeDatabaseUrl(await getDatabaseUrl());
   if (!sqlClient || cachedUrl !== url) {
     sqlClient = postgres(url, {
       max: 1,
       prepare: false,
       connect_timeout: 30,
+      ssl: 'require',
     });
     cachedUrl = url;
   }

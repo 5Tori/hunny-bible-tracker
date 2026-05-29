@@ -632,7 +632,7 @@ class _CatalogPlanCard extends StatelessWidget {
     final meta = [
       '${template.totalChapters} chapters',
       if (template.estimatedMinutes != null)
-        '~${template.estimatedMinutes} min',
+        '~${template.estimatedMinutes} min/ch',
     ].join(' · ');
     final tags = [
       template.planTypeLabel,

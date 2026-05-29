@@ -40,10 +40,10 @@ export function AdminGoogleLoginButton() {
 
   useEffect(() => {
     let cancelled = false;
-    const supabase = getSupabaseBrowserClient();
 
     (async () => {
       try {
+        const supabase = getSupabaseBrowserClient();
         const expectingReturn =
           typeof window !== 'undefined' && sessionStorage.getItem(OAUTH_RETURN_KEY) === '1';
 

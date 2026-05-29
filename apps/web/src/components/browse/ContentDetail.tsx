@@ -175,7 +175,7 @@ export function ContentDetail({ content }: { content: ContentWithRelations }) {
                 <li key={plan.id} className="text-sm text-neutral-700">
                   <span className="font-medium text-neutral-900">{plan.title}</span>
                   {plan.estimated_minutes ? (
-                    <span className="text-neutral-500"> · ~{plan.estimated_minutes} min</span>
+                    <span className="text-neutral-500"> · ~{plan.estimated_minutes} min/ch</span>
                   ) : null}
                 </li>
               ))}

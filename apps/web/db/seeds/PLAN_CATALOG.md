@@ -26,6 +26,15 @@ Supabase 시드 SQL: `supabase/migrations/20260528110000_seed_plan_*.sql`
 
 Admin에서 수동으로 만든 플랜(예: `the_story_of_jonah`)은 `template_key`가 다를 수 있습니다. 시드 실행 시 동일 key는 **삭제 후 재삽입**됩니다.
 
+## `estimated_minutes` 재산출
+
+Seed SQL의 `estimated_minutes`는 `bible_chapters.json`과 플랜 items 기준 평균(장당 분)입니다. items 변경 후:
+
+```bash
+pnpm run plan-estimates:update   # dry-run
+pnpm run plan-estimates:write    # 8개 seed SQL in-place 갱신
+```
+
 ## 적용 후 확인
 
 ```bash
