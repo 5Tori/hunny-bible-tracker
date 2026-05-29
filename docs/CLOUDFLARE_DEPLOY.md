@@ -52,6 +52,8 @@ For **build-time** public env, set in Cloudflare dashboard → Worker → Settin
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 - `NEXT_PUBLIC_SITE_URL` (`https://hunnybibletracker.com` in `wrangler.jsonc`)
+- `NEXT_PUBLIC_GA_MEASUREMENT_ID` (`G-8RSLHM5PHV` — public marketing analytics)
+- `NEXT_PUBLIC_GTM_ID` / `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION` (optional; see [`GOOGLE_ANALYTICS_AND_SEARCH.md`](GOOGLE_ANALYTICS_AND_SEARCH.md))
 - `SUPABASE_URL`
 - `ADMIN_EMAILS`
 

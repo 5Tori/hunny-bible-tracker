@@ -31,6 +31,7 @@
 | 공개 웹·API | https://hunnybibletracker.com |
 | Admin | https://hunnybibletracker.com/admin/login |
 | API 헬스 | `.../api/health` |
+| GA4 / Search Console | [`docs/GOOGLE_ANALYTICS_AND_SEARCH.md`](docs/GOOGLE_ANALYTICS_AND_SEARCH.md) |
 
 모바일 `HUNNY_API_BASE_URL`도 위 API 호스트(끝 `/` 유무 무관)를 사용합니다.
 

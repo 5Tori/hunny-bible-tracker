@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 
+import { PublicAnalytics } from "@/components/public/PublicAnalytics";
 import { WebsiteJsonLd } from "@/components/public/WebsiteJsonLd";
+import { getGoogleSiteVerification } from "@/lib/analytics-config";
 import { siteConfig } from "@/lib/site-config";
 
 export const metadata: Metadata = {
@@ -51,6 +53,9 @@ export const metadata: Metadata = {
     index: true,
     follow: true,
   },
+  ...(getGoogleSiteVerification()
+    ? { verification: { google: getGoogleSiteVerification()! } }
+    : {}),
 };
 
 export const viewport: Viewport = {
@@ -62,6 +67,7 @@ export const viewport: Viewport = {
 export default function PublicLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="public-site min-h-screen">
+      <PublicAnalytics />
       <WebsiteJsonLd />
       {children}
     </div>
