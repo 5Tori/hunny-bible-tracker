@@ -33,20 +33,35 @@ export function usePlanEditor(planId?: string) {
     const loadPlan = async () => {
       setLoading(true);
       setError(null);
-      const response = await adminFetch(`/api/v1/admin/plans/${planId}`);
-      const ok = await handleAdminResponse(response);
-      if (!ok) return;
+      try {
+        const response = await adminFetch(`/api/v1/admin/plans/${planId}`);
+        const ok = await handleAdminResponse(response);
+        if (!ok) {
+          setLoading(false);
+          return;
+        }
 
-      if (!response.ok) {
-        setError('Unable to load plan');
+        if (!response.ok) {
+          const body = await response.json().catch(() => ({}));
+          const detail =
+            typeof body.message === 'string'
+              ? body.message
+              : typeof body.error === 'string'
+                ? body.error
+                : null;
+          setError(detail ? `Unable to load plan: ${detail}` : 'Unable to load plan');
+          setLoading(false);
+          return;
+        }
+
+        const json = await response.json();
+        setPlan(mapPlanToForm(json.plan));
+        setTagsString((json.plan.tags as Array<{ name: string }>).map((tag) => tag.name).join(', '));
+      } catch (loadError) {
+        setError((loadError as Error).message || 'Unable to load plan');
+      } finally {
         setLoading(false);
-        return;
       }
-
-      const json = await response.json();
-      setPlan(mapPlanToForm(json.plan));
-      setTagsString((json.plan.tags as Array<{ name: string }>).map((tag) => tag.name).join(', '));
-      setLoading(false);
     };
 
     void loadPlan();

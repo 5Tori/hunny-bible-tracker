@@ -1,70 +1,86 @@
 # Hunny Bible Tracker
 
-Offline-first Bible reading tracker built with Flutter, Drift/SQLite, Supabase Auth, Next.js API routes, and Supabase Postgres.
+오프라인 우선 성경 읽기 트래커입니다. Flutter + Drift/SQLite(로컬), Supabase Auth, Next.js API, Supabase Postgres(서버)로 구성됩니다.
 
-The app does not store full Bible text. It stores book/chapter references, reading plans, chapter progress, reading activities, local settings, Today’s Message content metadata, Discover content metadata, and account-link metadata.
+앱은 성경 **전문**을 저장하지 않습니다. 책/장 참조, 읽기 플랜, 장 진행, 읽기 활동, 로컬 설정, 오늘의 말씀·Discover 콘텐츠 메타데이터, 계정 연동 메타데이터를 다룹니다.
 
-## Current Status
+## 현재 상태
 
-The current MVP focus is closed-test readiness for Home, Discover, Read, Plans, Settings, and the public web/API surface.
+클로즈드 테스트를 위해 **Home, Discover, Read, Plans, Settings**와 **공개 웹/API**를 마무리하는 단계입니다.
 
-- Flutter mobile app for iOS and Android.
-- Bottom tabs for `Home`, `Discover`, `Read`, and `Settings`; unfinished Saved/List surfaces are hidden for MVP.
-- Offline-first local database through Drift/SQLite. Home and Read must load quickly offline; Discover is online-only and shows an offline state when the API is unreachable.
-- Supabase Auth for Google sign-in.
-- Supabase Postgres is the server-side app database behind `apps/web` API routes.
-- Read supports section-based plan runs, chapter progress, completion, completed history, Start Again, and plan archive/restore.
-- Plans is a full-screen Plan Manager / Plan Library with `My Plans`, `Catalog`, `Archived`, and catalog CTA states.
-- Home supports Today’s Message cards, quick reflection, Read More article modal, related plan CTA, local save, heart/share counters, current reading progress, cached messages, and an offline fallback message.
-- Discover supports published content search, type filters, tag filters, media/detail sheets, YouTube video/Shorts playback, and related plan cards.
-- Settings supports account sign-in/out, manual backup, restore/bootstrap, sync status, Manage reading plans, and Help & feedback submission.
-- Admin dashboard supports plan templates, Today’s Message management, and general content CRUD.
-- `apps/web` serves the public website, support/legal pages, mobile API routes, and admin dashboard. The public website uses Tailwind v4 in the Next.js app.
+- **모바일**: Flutter iOS / Android
+- **탭**: `Home`, `Discover`, `Read`, `Settings` (MVP에서 Saved/List는 비표시)
+- **오프라인**: Drift/SQLite. Home·Read는 오프라인에서도 빠르게 표시. Discover는 온라인 전용이며 API 불가 시 오프라인 안내
+- **인증**: Supabase Auth + Google 로그인
+- **서버 DB**: Supabase Postgres (`apps/web` API 경유)
+- **배포**: 웹/API/Admin은 **Cloudflare Workers** (OpenNext). DB 연결은 **Hyperdrive**
+- **Read**: 섹션 기반 플랜, 장 진행, 완료·히스토리, 다시 시작, 아카이브/복원
+- **Plans**: 전체 화면 플랜 관리·카탈로그 (`내 플랜`, `카탈로그`, `보관함` 등)
+- **Home**: 오늘의 말씀, 반성, Read More, 관련 플랜 CTA, 저장(로컬), 하트/공유, 진행률, 캐시·오프라인 폴백
+- **Discover**: 콘텐츠 검색, 타입/태그 필터, 상세 시트, YouTube, 관련 플랜
+- **Settings**: 로그인/로그아웃, 수동 백업·복원, 동기화 상태, 플랜 관리, 문의·피드백
+- **Admin**: 플랜, 오늘의 말씀, 일반 콘텐츠 CRUD (미니멀 대시보드 UI)
+- **공개 웹**: [랜딩·지원·약관](https://hunnybibletracker.com/) (Tailwind v4)
 
-Remote reading-data backup and restore are implemented through `POST /api/v1/sync/push` and `GET /api/v1/sync/bootstrap`. Full automatic multi-device incremental merge is still deferred.
+원격 읽기 데이터 백업/복원은 `POST /api/v1/sync/push`, `GET /api/v1/sync/bootstrap`로 구현되어 있습니다. 기기 간 **자동 증분 병합**은 아직 보류입니다.
 
-## Monorepo Layout
+## 프로덕션 URL
+
+| 용도 | URL |
+| --- | --- |
+| 공개 웹·API | https://hunnybibletracker.com |
+| Admin | https://hunnybibletracker.com/admin/login |
+| API 헬스 | `.../api/health` |
+
+모바일 `HUNNY_API_BASE_URL`도 위 API 호스트(끝 `/` 유무 무관)를 사용합니다.
+
+## 모노레포 구조
 
 ```text
 apps/
-  mobile/   Flutter app
-  web/      Next.js web/API/admin app
+  mobile/   Flutter 앱
+  web/      Next.js (공개 페이지 · API · Admin)
 
 docs/
-  PROJECT_CONTEXT.md       이 프로젝트에 대한 전체 컨텍스트
-  ARCHITECTURE.md          Runtime structure and module map
-  DATA_MODEL.md            Local/server schema, plan lifecycle, content tables
-  AUTH_AND_API.md          Supabase Auth, API routes, deployment checklist
-  SUPABASE_SETUP.md        Supabase project, migrations, OAuth redirects
-  SYNC_STRATEGY.md         Backup/restore design and remaining sync work
-  PRODUCT_ROADMAP.md       Current UX model and next implementation priorities
-  ADMIN_DASHBOARD.md       Admin routes and content-management notes
-  DEVELOPMENT.md           Local setup, run commands, builds, troubleshooting
-  ref/HUNNY_RELEASE_LOG.md Release records and Play Console notes
-  to-do/                   Active cleanup and post-MVP task lists
+  PROJECT_CONTEXT.md       프로젝트 전체 컨텍스트
+  ARCHITECTURE.md          런타임 구조·모듈 맵
+  DATA_MODEL.md            로컬/서버 스키마, 플랜·콘텐츠
+  AUTH_AND_API.md          Supabase Auth, API, 배포 체크리스트
+  SUPABASE_SETUP.md        Supabase·OAuth·환경 변수
+  CLOUDFLARE_DEPLOY.md     Workers·Hyperdrive 배포
+  MOBILE_TESTING.md        Android/iOS 테스트·빌드 가이드
+  SYNC_STRATEGY.md         백업/복원 설계
+  PRODUCT_ROADMAP.md       제품 방향·우선순위
+  ADMIN_DASHBOARD.md       Admin 화면·콘텐츠 관리
+  DEVELOPMENT.md           로컬 실행·빌드·트러블슈팅
+  ref/HUNNY_RELEASE_LOG.md 릴리스·Play Console 기록
+  to-do/                   클로즈드 테스트·후속 작업
 ```
 
-## Start Here
+## 처음 읽을 문서
 
-For a new agent or developer:
+새로 합류한 개발자·에이전트용 순서:
 
-1. Read this README.
-2. Read `docs/ARCHITECTURE.md` for the system map.
-3. Read `docs/DATA_MODEL.md` before changing Read, Plans, Today’s Message, feedback, or sync logic.
-4. Read `docs/AUTH_AND_API.md` and `docs/SUPABASE_SETUP.md` before changing Supabase Auth, Google sign-in, or API routes.
-5. Read `docs/SYNC_STRATEGY.md` before changing backup/restore behavior.
-6. Use `docs/DEVELOPMENT.md` for local run/build commands.
-7. Use `docs/to-do/MVP_CLOSE_TESTING_TODO.md` for current cleanup priorities.
+1. 이 README
+2. `docs/ARCHITECTURE.md` — 시스템 맵
+3. `docs/DATA_MODEL.md` — Read·Plans·오늘의 말씀·동기화 변경 전
+4. `docs/AUTH_AND_API.md`, `docs/SUPABASE_SETUP.md` — Auth·API 변경 전
+5. `docs/CLOUDFLARE_DEPLOY.md` — 웹 배포·Workers 설정
+6. `docs/MOBILE_TESTING.md` — 모바일 프로덕션 API 테스트·빌드
+7. `docs/SYNC_STRATEGY.md` — 백업/복원 변경 전
+8. `docs/to-do/MVP_CLOSE_TESTING_TODO.md` — 클로즈드 테스트 체크리스트
 
-## Quick Setup
+## 빠른 시작
+
+### 모바일
 
 ```bash
 cd apps/mobile
 flutter pub get
-flutter pub run build_runner build
+flutter pub run build_runner build --delete-conflicting-outputs
 ```
 
-Create local dart-define files:
+환경 파일 생성 (gitignore):
 
 ```bash
 cd apps/mobile
@@ -72,12 +88,20 @@ cp .env.example.json .env.ios.json
 cp .env.example.json .env.android.json
 ```
 
-Fill both files with Supabase values. Use:
+두 파일에 Supabase·Google OAuth 값을 채웁니다. **프로덕션 API** 예시:
 
-- iOS simulator API URL: `http://127.0.0.1:3000`
-- Android emulator API URL: `http://10.0.2.2:3000`
+```json
+"HUNNY_API_BASE_URL": "https://hunnybibletracker.com"
+```
 
-Run mobile:
+로컬 `next dev`만 쓸 때:
+
+| 플랫폼 | `HUNNY_API_BASE_URL` |
+| --- | --- |
+| iOS 시뮬레이터 | `http://127.0.0.1:3000` |
+| Android 에뮬레이터 | `http://10.0.2.2:3000` |
+
+실행:
 
 ```bash
 cd apps/mobile
@@ -85,44 +109,66 @@ cd apps/mobile
 ./scripts/run_android.sh
 ```
 
-Run web/API/admin:
+자세한 스모크 테스트·릴리스 빌드: **`docs/MOBILE_TESTING.md`**
+
+### 웹 / API / Admin (로컬)
 
 ```bash
+pnpm install
+cp apps/web/.env.example apps/web/.env.local
+# .env.local에 DATABASE_URL, Supabase, Cloudinary 등 입력 (docs/SUPABASE_SETUP.md)
 pnpm web:dev
 ```
 
-## Common Checks
+로컬 Admin: http://127.0.0.1:3000/admin/login
+
+Workers 런타임 미리보기:
+
+```bash
+cd apps/web
+cp .dev.vars.example .dev.vars   # 값 채우기
+pnpm preview
+```
+
+프로덕션 배포:
+
+```bash
+cd apps/web
+pnpm run deploy
+```
+
+상세: **`docs/CLOUDFLARE_DEPLOY.md`**
+
+## 자주 쓰는 검증 명령
+
+**모바일**
 
 ```bash
 cd apps/mobile
 flutter analyze
 flutter test
-flutter build apk --debug
-flutter build ios --simulator --debug
+flutter build apk --debug --dart-define-from-file=.env.android.json
+flutter build ios --simulator --debug --dart-define-from-file=.env.ios.json
 ```
+
+**웹**
 
 ```bash
 pnpm web:build
 pnpm --dir apps/web typecheck
 ```
 
-## Release Builds
+## 릴리스 빌드
 
-The app version comes from the root mobile app file:
-
-```text
-apps/mobile/pubspec.yaml
-```
-
-Use `version: <versionName>+<versionCode>`:
+버전은 `apps/mobile/pubspec.yaml`의 `version: <이름>+<코드>` 입니다.
 
 ```yaml
 version: 0.3.0+7
 ```
 
-For Google Play, every upload must increase the number after `+` (`versionCode`). If Play Console says the version already exists, confirm you edited `apps/mobile/pubspec.yaml`, not a plugin/example `pubspec.yaml` under `ios/.symlinks` or another generated folder.
+Google Play 업로드마다 `+` 뒤 **versionCode**를 반드시 올립니다. `ios/.symlinks` 등 다른 `pubspec.yaml`이 아닌 **루트 mobile `pubspec.yaml`**을 수정했는지 확인하세요.
 
-Android release app bundle:
+**Android (App Bundle)**
 
 ```bash
 cd apps/mobile
@@ -131,13 +177,9 @@ flutter pub get
 flutter build appbundle --release --dart-define-from-file=.env.android.json
 ```
 
-Output:
+산출물: `apps/mobile/build/app/outputs/bundle/release/app-release.aab`
 
-```text
-apps/mobile/build/app/outputs/bundle/release/app-release.aab
-```
-
-iOS release archive:
+**iOS (IPA)**
 
 ```bash
 cd apps/mobile
@@ -146,41 +188,46 @@ flutter pub get
 flutter build ipa --release --dart-define-from-file=.env.ios.json
 ```
 
-Output:
+산출물: `apps/mobile/build/ios/ipa/*.ipa`
+
+릴리스 전 `.env.android.json` / `.env.ios.json`의 `HUNNY_API_BASE_URL`이 **배포된 Workers URL**인지 확인하세요.
+
+## 데이터 흐름
+
+모바일은 읽기 데이터를 **로컬에 먼저** 씁니다. 로그인 사용자는 인증 API로 백업·복원할 수 있습니다.
 
 ```text
-apps/mobile/build/ios/ipa/*.ipa
+사용자 동작
+  → Flutter UI
+  → Drift/SQLite 트랜잭션
+  → sync_status (pending / local_only)
+  → (선택) 인증된 sync push
+  → Next.js API (Cloudflare Workers)
+  → Supabase Postgres (Hyperdrive)
 ```
 
-Before release builds, make sure `.env.android.json` and `.env.ios.json` point `HUNNY_API_BASE_URL` to the deployed API, not a local emulator URL.
+모바일은 **Supabase Postgres에 직접 연결하지 않습니다.** 서버 접근은 `apps/web` API만 사용합니다.
 
-## Current Data Boundary
+## 주요 구현 위치
 
-The mobile app writes reading data locally first. Signed-in users can push a backup to Supabase and restore/bootstrap it later through authenticated API routes.
+| 영역 | 경로 |
+| --- | --- |
+| 로컬 DB 스키마 | `apps/mobile/lib/core/database/app_database.dart` |
+| Drift 생성 파일 | `apps/mobile/lib/core/database/app_database.g.dart` |
+| 읽기·동기화 페이로드 | `apps/mobile/lib/features/read/data/read_repository.dart` |
+| API 클라이언트(타임아웃) | `apps/mobile/lib/core/api/hunny_api_client.dart` |
+| 플랜 화면 | `apps/mobile/lib/features/plans/plans_screen.dart` |
+| Home·오늘의 말씀 | `apps/mobile/lib/features/home/` |
+| Discover | `apps/mobile/lib/features/find/discover_screen.dart` |
+| 모바일 env 예시 | `apps/mobile/.env.example.json` |
+| 서버 스키마 참고 | `apps/web/db/schema.sql` |
+| Supabase 마이그레이션 | `supabase/migrations/` |
+| API 라우트 | `apps/web/src/app/api` |
+| Admin | `apps/web/src/app/admin` |
+| Workers 설정 | `apps/web/wrangler.jsonc` |
+| Postgres 클라이언트 | `apps/web/src/lib/db/postgres.ts` |
 
-```text
-User action
-  -> Flutter UI
-  -> Drift/SQLite transaction
-  -> sync_status pending/local_only
-  -> optional authenticated sync push
-  -> Next.js API
-  -> Supabase Postgres
-```
+## 연락처
 
-The mobile app must not connect directly to Supabase Postgres. Server access goes through `apps/web` API routes.
-
-## Important Implementation Notes
-
-- Local DB schema source: `apps/mobile/lib/core/database/app_database.dart`
-- Generated Drift file: `apps/mobile/lib/core/database/app_database.g.dart`
-- Read repository and sync payload logic: `apps/mobile/lib/features/read/data/read_repository.dart`
-- Shared mobile API timeout/reachability client: `apps/mobile/lib/core/api/hunny_api_client.dart`
-- Plan Manager screen: `apps/mobile/lib/features/plans/plans_screen.dart`
-- Today’s Message client/UI: `apps/mobile/lib/features/home/`
-- Discover content finder UI: `apps/mobile/lib/features/find/discover_screen.dart`
-- Mobile splash and fallback imagery: `apps/mobile/assets/image/`
-- Server schema file: `apps/web/db/schema.sql`
-- API routes: `apps/web/src/app/api`
-- Admin pages: `apps/web/src/app/admin`
-- Supabase define example: `apps/mobile/.env.example.json`
+- 이메일: hunnybibletracker@gmail.com
+- 지원 페이지: https://hunnybibletracker.com/support

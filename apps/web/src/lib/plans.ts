@@ -251,14 +251,15 @@ async function getPlanRelations(planId: string) {
     order by order_index asc, created_at asc
   `) as Array<Omit<PlanSection, 'items'>>;
 
-  const sectionIds = sections.map((section) => section.id);
-  const items = sectionIds.length
-    ? ((await sql`
-        select * from plan_template_items
-        where section_id = any(${sectionIds})
-        order by section_id asc, order_index asc, created_at asc
-      `) as PlanItem[])
-    : [];
+  // Subquery avoids `where section_id = any($uuid[])` — flaky on some pooler/Workers paths.
+  const items = (await sql`
+    select * from plan_template_items
+    where section_id in (
+      select id from plan_template_sections
+      where plan_template_id = ${planId}
+    )
+    order by section_id asc, order_index asc, created_at asc
+  `) as PlanItem[];
 
   const tags = (await sql`
     select t.* from plan_tags t

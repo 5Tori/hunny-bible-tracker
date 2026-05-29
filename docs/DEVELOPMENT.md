@@ -20,6 +20,8 @@ flutter pub run build_runner build
 
 Use `flutter pub run build_runner build` for Drift generation. If generated files conflict, clean up intentionally; do not hand-edit `app_database.g.dart`.
 
+For a full **production API** smoke-test and release build guide, see [`docs/MOBILE_TESTING.md`](MOBILE_TESTING.md).
+
 ## Define Files
 
 The Flutter app uses `--dart-define-from-file`.

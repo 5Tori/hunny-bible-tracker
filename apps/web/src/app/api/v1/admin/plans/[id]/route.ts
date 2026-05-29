@@ -24,7 +24,9 @@ export async function GET(req: Request, context: { params: Promise<{ id: string 
     if (error instanceof AdminAuthError) {
       return NextResponse.json({ error: error.code, message: error.message }, { status: error.status });
     }
-    return NextResponse.json({ error: 'server_error' }, { status: 500 });
+    console.error('Admin plan GET error:', error);
+    const message = error instanceof Error ? error.message : 'server_error';
+    return NextResponse.json({ error: 'server_error', message }, { status: 500 });
   }
 }
 
