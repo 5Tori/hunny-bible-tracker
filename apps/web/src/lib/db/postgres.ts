@@ -18,7 +18,7 @@ type HyperdriveBinding = {
   connectionString: string;
 };
 
-let cachedUrl: string | null = null;
+let cachedConfigKey: string | null = null;
 let sqlClient: ReturnType<typeof postgres> | null = null;
 
 function isPlaceholderDatabaseUrl(url: string): boolean {
@@ -33,13 +33,18 @@ function normalizeDatabaseUrl(url: string): string {
   return trimmed;
 }
 
-async function getDatabaseUrl(): Promise<string> {
+type DatabaseConfig = {
+  url: string;
+  viaHyperdrive: boolean;
+};
+
+async function getDatabaseConfig(): Promise<DatabaseConfig> {
   try {
     const { env } = await getCloudflareContext({ async: true });
     const hyperdrive = (env as { HYPERDRIVE?: HyperdriveBinding }).HYPERDRIVE;
     const hyperdriveUrl = hyperdrive?.connectionString?.trim();
     if (hyperdriveUrl && !isPlaceholderDatabaseUrl(hyperdriveUrl)) {
-      return hyperdriveUrl;
+      return { url: hyperdriveUrl, viaHyperdrive: true };
     }
   } catch {
     // next dev / next build — not on the Workers runtime
@@ -47,22 +52,37 @@ async function getDatabaseUrl(): Promise<string> {
 
   const envUrl = process.env.DATABASE_URL?.trim();
   if (envUrl && !isPlaceholderDatabaseUrl(envUrl)) {
-    return envUrl;
+    return { url: envUrl, viaHyperdrive: false };
   }
 
   throw new Error('DATABASE_URL is not set');
 }
 
 async function getClient() {
-  const url = normalizeDatabaseUrl(await getDatabaseUrl());
-  if (!sqlClient || cachedUrl !== url) {
-    sqlClient = postgres(url, {
-      max: 1,
-      prepare: false,
-      connect_timeout: 30,
-      ssl: 'require',
-    });
-    cachedUrl = url;
+  const config = await getDatabaseConfig();
+  const url = normalizeDatabaseUrl(config.url);
+  const configKey = `${config.viaHyperdrive ? 'hyperdrive' : 'direct'}:${url}`;
+
+  if (!sqlClient || cachedConfigKey !== configKey) {
+    // Hyperdrive: use the binding connection string as-is (no client-side ssl).
+    // Direct/local pooler: ssl required for Supabase.
+    sqlClient = postgres(
+      url,
+      config.viaHyperdrive
+        ? {
+            max: 5,
+            fetch_types: false,
+            prepare: false,
+            connect_timeout: 15,
+          }
+        : {
+            max: 1,
+            prepare: false,
+            connect_timeout: 15,
+            ssl: 'require',
+          },
+    );
+    cachedConfigKey = configKey;
   }
   return sqlClient;
 }
