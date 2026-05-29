@@ -121,11 +121,11 @@ Search Console이 보여 주는 메타 태그 예:
 
 ---
 
-## GitHub Actions 배포
+## 배포와 연동
 
-`.github/workflows/deploy-web-cloudflare.yml` 빌드에도 `NEXT_PUBLIC_GA_MEASUREMENT_ID`가 필요합니다 (또는 wrangler `vars`와 동일하게 맞춤).
+태그·메타 태그는 **`pnpm run deploy`** 할 때 빌드에 박힙니다 (`wrangler.jsonc` + deploy 스크립트 env). GitHub Actions는 쓰지 않습니다.
 
-Search Console verification 토큰은 **비밀이 아니지만** 저장소에 넣기 싫으면 Cloudflare 대시보드 Worker **Variables**에만 넣고 `wrangler.jsonc`에서는 빈 문자열로 둬도 됩니다. **반드시 빌드 시점에** `NEXT_PUBLIC_*`가 보여야 하므로, CI에서는 workflow `env`로 넘기거나 deploy 전 빌드 env를 맞추세요.
+Search Console verification 토큰은 `wrangler.jsonc`의 `NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION`에 넣고 배포하세요.
 
 ---
 

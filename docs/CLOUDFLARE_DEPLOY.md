@@ -71,40 +71,30 @@ In **Authentication** → **URL configuration**:
 
 If the Workers URL is missing from Redirect URLs, Google sign-in from the live site can still succeed but Supabase will send you to **Site URL** (e.g. `http://localhost:3000/#access_token=...`).
 
-## 4. Deploy
+## 4. Deploy (로컬 — 공식 경로)
 
-### 로컬에서 배포 (수동)
+Vercel 시절의 Git 연동 배포는 쓰지 않습니다. **Cloudflare Workers**는 로컬에서 Wrangler로 올립니다.
 
 ```bash
 cd apps/web
-pnpm install
+pnpm install   # 처음 한 번, 루트에서 해도 됨
+pnpm exec wrangler login   # 최초 1회
 pnpm run deploy
 ```
 
-`pnpm deploy`는 **동작하지 않습니다** (pnpm 내장 명령). 반드시 `pnpm run deploy`를 사용하세요.
+`pnpm deploy`는 **동작하지 않습니다** (pnpm 내장 명령). 반드시 **`pnpm run deploy`** 를 사용하세요.
 
-### GitHub Actions 자동 배포 (선택)
+스크립트가 빌드 시 `NEXT_PUBLIC_SITE_URL`, `NEXT_PUBLIC_GTM_ID` 등을 주입하고, `wrangler.jsonc`의 `vars`·`secrets`와 함께 Worker에 배포합니다.
 
-`main`에 `apps/web/**`가 push되면 [`.github/workflows/deploy-web-cloudflare.yml`](../.github/workflows/deploy-web-cloudflare.yml)이 실행됩니다.
+**GitHub Actions 워크플로는 사용하지 않습니다** (push마다 Secrets 없이 실패하던 중복 경로). GA4/GTM/Search Console도 GitHub 설정과 무관합니다.
 
-**GA4 / GTM / Search Console은 GitHub 설정과 무관합니다.** 실패하는 워크플로는 Cloudflare 배포 전용입니다.
+### 나중에 push 시 자동 배포를 원할 때 (선택)
 
-#### GitHub에 꼭 넣어야 하는 Secrets (2개)
+1. `.github/workflows/`에 Wrangler deploy 워크플로 추가  
+2. GitHub **Secrets**: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`  
+3. 또는 Cloudflare 대시보드 **Workers & Pages** → 프로젝트 → **Settings** → **Builds** 에서 GitHub 직접 연결 (Wrangler/OpenNext 빌드 명령을 맞출 것)
 
-Repository → **Settings** → **Secrets and variables** → **Actions** → **New repository secret**
-
-| Secret 이름 | 값 얻는 방법 |
-| --- | --- |
-| `CLOUDFLARE_API_TOKEN` | [Cloudflare](https://dash.cloudflare.com/profile/api-tokens) → **Create Token** → **Edit Cloudflare Workers** 템플릿 → Account: 본인 계정 → Zone: All zones (또는 해당 zone) → **Continue to summary** → Create → 토큰 복사 (한 번만 표시) |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare 대시보드 → **Workers & Pages** → 오른쪽 **Account ID** (32자 hex) |
-
-Secrets를 넣기 전에는 워크플로가 **의도적으로 실패**합니다 (빈 토큰으로 Wrangler 배포 방지).
-
-설정 후 **Actions** 탭 → **Deploy web to Cloudflare Workers** → **Run workflow**로 수동 재실행하거나, 아무 커밋을 push해 확인하세요.
-
-#### CI를 쓰지 않을 때
-
-로컬에서만 `pnpm run deploy` 한다면 Actions 실패 알림이 거슬릴 수 있습니다. 그때는 워크플로 파일을 삭제하거나, `on.push`를 제거하고 `workflow_dispatch`만 남겨 두세요.
+개인 프로젝트에서 로컬 배포만 해도 충분하면 위 CI는 생략해도 됩니다.
 
 After adding a custom domain in Cloudflare → **Domains**, set `NEXT_PUBLIC_SITE_URL` to `https://hunnybibletracker.com` and redeploy so metadata, sitemap, and share URLs use the canonical host.
 
@@ -126,7 +116,6 @@ Production/staging mobile builds:
 
 ## Troubleshooting
 
-- **GitHub Actions 빨간 X**: Actions 로그에서 `CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` missing 여부 확인. 토큰 권한에 **Account.Workers Scripts** · **Account.Workers KV** · **User.User Details** Read 포함 권장.
 - **DB errors on Workers**: Hyperdrive id missing/wrong in `wrangler.jsonc`, or pooler URL incorrect.
 - **Admin OAuth redirect**: Supabase **Site URL** and **Redirect URLs** must include `https://hunnybibletracker.com/admin/login` when using the custom domain.
 - **SEO**: `sitemap.xml`, `robots.txt`, OG tags, and JSON-LD use `NEXT_PUBLIC_SITE_URL`. Middleware consolidates `www` and the production workers.dev host onto the apex.
