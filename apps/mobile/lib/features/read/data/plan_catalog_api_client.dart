@@ -3,6 +3,15 @@ import 'package:dio/dio.dart';
 import '../../../core/api/hunny_api_client.dart';
 import '../../../core/api/hunny_api_config.dart';
 
+class PlanCatalogFetchFailure implements Exception {
+  PlanCatalogFetchFailure(this.message);
+
+  final String message;
+
+  @override
+  String toString() => message;
+}
+
 class PlanCatalogApiClient {
   PlanCatalogApiClient({
     HunnyApiConfig? config,
@@ -13,37 +22,120 @@ class PlanCatalogApiClient {
               config: config ?? HunnyApiConfig.fromEnvironment(),
             );
 
+  static const catalogConnectTimeout = Duration(seconds: 8);
+  static const catalogReceiveTimeout = Duration(seconds: 20);
+
   final HunnyApiConfig _config;
   final HunnyApiReachability _reachability;
 
   bool get isConfigured => _config.isConfigured;
 
-  Future<List<RemotePlanTemplate>> fetchPublishedPlans(
-      {String sort = 'featured'}) async {
-    if (!_config.isConfigured) return const [];
-    if (!await _reachability.canReachApi()) return const [];
+  Future<List<RemotePlanTemplate>> fetchPublishedPlans({
+    String sort = 'featured',
+    String? detail,
+    bool forceReachability = false,
+  }) async {
+    if (!_config.isConfigured) {
+      throw PlanCatalogFetchFailure(
+        'HUNNY_API_BASE_URL is not set for this build.',
+      );
+    }
+    if (!await _reachability.canReachApi(force: forceReachability)) {
+      throw PlanCatalogFetchFailure(
+        'Cannot reach the Hunny API. Check your connection and try again.',
+      );
+    }
 
     late final Response<dynamic> response;
     try {
-      final dio = HunnyApiClient.create(_config);
+      final dio = HunnyApiClient.create(
+        _config,
+        connectTimeout: catalogConnectTimeout,
+        receiveTimeout: catalogReceiveTimeout,
+      );
       response = await dio.get<dynamic>(
         '/api/v1/plans',
-        queryParameters: {'sort': sort},
+        queryParameters: {
+          'sort': sort,
+          if (detail != null) 'detail': detail,
+        },
       );
       _reachability.markSuccess();
     } catch (error) {
       _reachability.markFailure(error);
-      rethrow;
+      if (error is PlanCatalogFetchFailure) rethrow;
+      throw PlanCatalogFetchFailure(
+        'Could not load plans from the server. Please try again.',
+      );
     }
+
+    return _parsePlansResponse(response);
+  }
+
+  Future<RemotePlanTemplate> fetchPublishedPlanByIdentifier(
+    String identifier, {
+    bool forceReachability = false,
+  }) async {
+    if (!_config.isConfigured) {
+      throw PlanCatalogFetchFailure(
+        'HUNNY_API_BASE_URL is not set for this build.',
+      );
+    }
+    if (!await _reachability.canReachApi(force: forceReachability)) {
+      throw PlanCatalogFetchFailure(
+        'Cannot reach the Hunny API. Check your connection and try again.',
+      );
+    }
+
+    late final Response<dynamic> response;
+    try {
+      final dio = HunnyApiClient.create(
+        _config,
+        connectTimeout: catalogConnectTimeout,
+        receiveTimeout: catalogReceiveTimeout,
+      );
+      response = await dio.get<dynamic>(
+        '/api/v1/plans/$identifier',
+      );
+      _reachability.markSuccess();
+    } catch (error) {
+      _reachability.markFailure(error);
+      if (error is PlanCatalogFetchFailure) rethrow;
+      throw PlanCatalogFetchFailure(
+        'Could not load this plan from the server. Please try again.',
+      );
+    }
+
+    final code = response.statusCode ?? 0;
+    final data = response.data;
+    if (code == 404) {
+      throw PlanCatalogFetchFailure('This plan is no longer available.');
+    }
+    if (code < 200 || code >= 300 || data is! Map<String, dynamic>) {
+      throw PlanCatalogFetchFailure(
+        'Could not load this plan (HTTP $code).',
+      );
+    }
+
+    final plan = data['plan'];
+    if (plan is! Map<String, dynamic>) {
+      throw const FormatException('Missing plan in /api/v1/plans/[id] response');
+    }
+    return RemotePlanTemplate.fromJson(plan);
+  }
+
+  List<RemotePlanTemplate> _parsePlansResponse(Response<dynamic> response) {
     final code = response.statusCode ?? 0;
     final data = response.data;
     if (code < 200 || code >= 300 || data is! Map<String, dynamic>) {
-      throw StateError('GET /api/v1/plans failed with status $code');
+      throw PlanCatalogFetchFailure(
+        'Could not load plans from the server (HTTP $code).',
+      );
     }
 
     final plans = data['plans'];
     if (plans is! List) {
-      throw const FormatException('Missing plans in /api/v1/plans response');
+      throw PlanCatalogFetchFailure('The server response did not include plans.');
     }
 
     return plans

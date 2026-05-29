@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
+import '../read/data/plan_catalog_api_client.dart';
 import '../read/data/read_repository.dart';
 import '../read/domain/read_models.dart';
 
@@ -49,20 +50,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     _loadPlans();
   }
 
-  Future<void> _loadPlans() async {
+  Future<void> _loadPlans({bool forceRefresh = false}) async {
     setState(() {
       _loadingPlans = true;
       _planError = null;
     });
     try {
-      await widget.readRepository.refreshPlanTemplatesFromRemote(
-        allowFailure: true,
+      final plans = await widget.readRepository.fetchOnboardingPlanChoices(
+        forceRefresh: forceRefresh,
       );
-      final plans = await widget.readRepository.getPlanTemplatesForCatalog();
       if (!mounted) return;
       setState(() {
         _plans = plans;
+        _selectedPlan ??= plans.isNotEmpty ? plans.first : null;
         _loadingPlans = false;
+      });
+    } on PlanCatalogFetchFailure catch (error) {
+      if (!mounted) return;
+      setState(() {
+        _loadingPlans = false;
+        _planError = error.message;
       });
     } catch (_) {
       if (!mounted) return;
@@ -87,6 +94,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         _startingPlan = false;
         _step = _OnboardingStep.done;
       });
+    } on PlanCatalogFetchFailure catch (error) {
+      if (!mounted) return;
+      setState(() => _startingPlan = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
+      );
     } catch (_) {
       if (!mounted) return;
       setState(() => _startingPlan = false);
@@ -166,7 +179,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           loading: _loadingPlans,
           error: _planError,
           starting: _startingPlan,
-          onRetry: _loadPlans,
+          onRetry: () => _loadPlans(forceRefresh: true),
           onShowAllChanged: (value) => setState(() {
             _showAll = value;
             _selectedPlan = null;

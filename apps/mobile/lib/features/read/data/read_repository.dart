@@ -51,15 +51,85 @@ class ReadRepository {
 
   Future<void> refreshPlanTemplatesFromRemote({
     bool allowFailure = false,
+    bool forceReachability = false,
   }) async {
     if (!_planCatalogApiClient.isConfigured) return;
 
     try {
-      final plans = await _planCatalogApiClient.fetchPublishedPlans();
+      final plans = await _planCatalogApiClient.fetchPublishedPlans(
+        forceReachability: forceReachability,
+      );
+      if (plans.isEmpty) return;
       await _replacePlanTemplateCache(plans);
     } catch (_) {
       if (!allowFailure) rethrow;
     }
+  }
+
+  /// Loads onboarding/catalog choices from the server (summary payload).
+  /// Falls back to the local cache only when the network request fails.
+  Future<List<ReadingPlanTemplateView>> fetchOnboardingPlanChoices({
+    bool forceRefresh = false,
+  }) async {
+    try {
+      final remotePlans = await _planCatalogApiClient.fetchPublishedPlans(
+        detail: 'summary',
+        forceReachability: forceRefresh,
+      );
+      if (remotePlans.isEmpty) {
+        throw PlanCatalogFetchFailure('No published plans are available yet.');
+      }
+      await _upsertRemotePlanSummaries(remotePlans);
+      return _mapRemotePlansToCatalogViews(remotePlans);
+    } on PlanCatalogFetchFailure {
+      final cached = await getPlanTemplatesForCatalog();
+      if (cached.isNotEmpty) return cached;
+      rethrow;
+    }
+  }
+
+  Future<List<ReadingPlanTemplateView>> _mapRemotePlansToCatalogViews(
+    List<RemotePlanTemplate> plans,
+  ) async {
+    final added = await db.select(db.userReadingPlans).get();
+    final inProgressTemplateIds = added
+        .where(
+          (plan) =>
+              plan.archivedAt == null &&
+              (plan.status == 'active' || plan.status == 'completion_ready'),
+        )
+        .map((plan) => plan.templateId)
+        .toSet();
+    final localUserId = await _activeLocalUserId();
+    final completionEvents = await (db.select(db.planCompletionEvents)
+          ..where((tbl) => tbl.localUserId.equals(localUserId)))
+        .get();
+    final completionCountByTemplateId = <String, int>{};
+    for (final event in completionEvents) {
+      completionCountByTemplateId[event.templateId] =
+          (completionCountByTemplateId[event.templateId] ?? 0) + 1;
+    }
+
+    return plans
+        .where((plan) => plan.isPublished && plan.browseVisible)
+        .map(
+          (plan) => ReadingPlanTemplateView(
+            id: plan.id,
+            templateKey: plan.templateKey,
+            title: plan.title,
+            description: plan.description,
+            shortDescription: plan.shortDescription,
+            planType: plan.planType,
+            testamentScope: plan.testamentScope,
+            difficulty: plan.difficulty,
+            estimatedMinutes: plan.estimatedMinutes,
+            totalChapters: plan.totalChapters,
+            coverImageUrl: plan.coverImageUrl,
+            isInProgress: inProgressTemplateIds.contains(plan.id),
+            completionCount: completionCountByTemplateId[plan.id] ?? 0,
+          ),
+        )
+        .toList();
   }
 
   Future<ReadingPlanView?> getCurrentPlan() async {
@@ -415,6 +485,8 @@ class ReadRepository {
   }
 
   Future<String> addPlanFromTemplate(String templateIdentifier) async {
+    await _ensureTemplateReadyForStart(templateIdentifier);
+
     final template = await (db.select(db.planTemplates)
           ..where(
             (tbl) =>
@@ -1393,6 +1465,8 @@ class ReadRepository {
   Future<void> _replacePlanTemplateCache(
     List<RemotePlanTemplate> plans,
   ) async {
+    if (plans.isEmpty) return;
+
     await db.transaction(() async {
       await db.delete(db.planTemplateTags).go();
       await db.delete(db.planTags).go();
@@ -1472,6 +1546,165 @@ class ReadRepository {
                 mode: InsertMode.insertOrIgnore,
               );
         }
+      }
+    });
+  }
+
+  Future<void> _upsertRemotePlanSummaries(List<RemotePlanTemplate> plans) async {
+    if (plans.isEmpty) return;
+
+    await db.transaction(() async {
+      for (final plan in plans) {
+        await db.into(db.planTemplates).insertOnConflictUpdate(
+              PlanTemplatesCompanion.insert(
+                id: plan.id,
+                templateKey: plan.templateKey,
+                title: plan.title,
+                subtitle: Value(plan.subtitle),
+                description: Value(plan.description),
+                shortDescription: Value(plan.shortDescription),
+                coverImageUrl: Value(plan.coverImageUrl),
+                planType: Value(plan.planType),
+                testamentScope: Value(plan.testamentScope),
+                difficulty: Value(plan.difficulty),
+                estimatedMinutes: Value(plan.estimatedMinutes),
+                estimatedDays: Value(plan.estimatedDays),
+                totalChapters: Value(plan.totalChapters),
+                primaryBookKey: Value(plan.primaryBookKey),
+                primaryCharacter: Value(plan.primaryCharacter),
+                isBuiltin: Value(plan.isBuiltin),
+                isPublished: Value(plan.isPublished),
+                featuredRank: Value(plan.featuredRank),
+                browseVisible: Value(plan.browseVisible),
+                createdAt: plan.createdAt,
+                updatedAt: plan.updatedAt,
+              ),
+            );
+      }
+    });
+  }
+
+  Future<void> _ensureTemplateReadyForStart(String templateIdentifier) async {
+    final existing = await (db.select(db.planTemplates)
+          ..where(
+            (tbl) =>
+                tbl.templateKey.equals(templateIdentifier) |
+                tbl.id.equals(templateIdentifier),
+          )
+          ..limit(1))
+        .getSingleOrNull();
+    if (existing != null) {
+      final sections = await (db.select(db.planTemplateSections)
+            ..where((tbl) => tbl.planTemplateId.equals(existing.id)))
+          .get();
+      if (sections.isNotEmpty) {
+        final sectionIds = sections.map((section) => section.id).toList();
+        final items = await (db.select(db.planTemplateItems)
+              ..where((tbl) => tbl.sectionId.isIn(sectionIds)))
+            .get();
+        if (items.isNotEmpty) return;
+      }
+    }
+
+    final remote = await _planCatalogApiClient.fetchPublishedPlanByIdentifier(
+      templateIdentifier,
+      forceReachability: true,
+    );
+    await _upsertRemotePlanTemplate(remote);
+  }
+
+  Future<void> _upsertRemotePlanTemplate(RemotePlanTemplate plan) async {
+    await db.transaction(() async {
+      await (db.delete(db.planTemplateTags)
+            ..where((tbl) => tbl.planTemplateId.equals(plan.id)))
+          .go();
+
+      final existingSections = await (db.select(db.planTemplateSections)
+            ..where((tbl) => tbl.planTemplateId.equals(plan.id)))
+          .get();
+      final sectionIds = existingSections.map((section) => section.id).toList();
+      if (sectionIds.isNotEmpty) {
+        await (db.delete(db.planTemplateItems)
+              ..where((tbl) => tbl.sectionId.isIn(sectionIds)))
+            .go();
+      }
+
+      await (db.delete(db.planTemplateSections)
+            ..where((tbl) => tbl.planTemplateId.equals(plan.id)))
+          .go();
+      await (db.delete(db.planTemplates)..where((tbl) => tbl.id.equals(plan.id)))
+          .go();
+
+      await db.into(db.planTemplates).insert(
+            PlanTemplatesCompanion.insert(
+              id: plan.id,
+              templateKey: plan.templateKey,
+              title: plan.title,
+              subtitle: Value(plan.subtitle),
+              description: Value(plan.description),
+              shortDescription: Value(plan.shortDescription),
+              coverImageUrl: Value(plan.coverImageUrl),
+              planType: Value(plan.planType),
+              testamentScope: Value(plan.testamentScope),
+              difficulty: Value(plan.difficulty),
+              estimatedMinutes: Value(plan.estimatedMinutes),
+              estimatedDays: Value(plan.estimatedDays),
+              totalChapters: Value(plan.totalChapters),
+              primaryBookKey: Value(plan.primaryBookKey),
+              primaryCharacter: Value(plan.primaryCharacter),
+              isBuiltin: Value(plan.isBuiltin),
+              isPublished: Value(plan.isPublished),
+              featuredRank: Value(plan.featuredRank),
+              browseVisible: Value(plan.browseVisible),
+              createdAt: plan.createdAt,
+              updatedAt: plan.updatedAt,
+            ),
+          );
+
+      for (final section in plan.sections) {
+        await db.into(db.planTemplateSections).insert(
+              PlanTemplateSectionsCompanion.insert(
+                id: section.id,
+                planTemplateId: plan.id,
+                sectionKey: section.sectionKey,
+                title: section.title,
+                description: Value(section.description),
+                orderIndex: section.orderIndex,
+                createdAt: section.createdAt,
+                updatedAt: section.updatedAt,
+              ),
+            );
+
+        for (final item in section.items) {
+          await db.into(db.planTemplateItems).insert(
+                PlanTemplateItemsCompanion.insert(
+                  id: item.id,
+                  sectionId: section.id,
+                  orderIndex: item.orderIndex,
+                  bookKey: item.bookKey,
+                  startChapter: item.startChapter,
+                  endChapter: item.endChapter,
+                ),
+              );
+        }
+      }
+
+      for (final tag in plan.tags) {
+        await db.into(db.planTags).insertOnConflictUpdate(
+              PlanTagsCompanion.insert(
+                id: tag.id,
+                key: tag.key,
+                name: tag.name,
+                type: tag.type,
+              ),
+            );
+        await db.into(db.planTemplateTags).insert(
+              PlanTemplateTagsCompanion.insert(
+                planTemplateId: plan.id,
+                tagId: tag.id,
+              ),
+              mode: InsertMode.insertOrIgnore,
+            );
       }
     });
   }
