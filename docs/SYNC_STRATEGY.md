@@ -13,7 +13,7 @@ Sync/backup remains on **Next.js API** (Worker → Supabase Admin REST). Mobile 
 
 ## Push scope (포함)
 
-Plan lifecycle metadata · completed progress · reading activities · completion events · backup-relevant settings
+Plan lifecycle metadata · completed progress · reading activities · completion events · backup-relevant settings (`lastActivePlanId`, `dailyReadingGoalMinutes`)
 
 ## Push scope (미포함)
 

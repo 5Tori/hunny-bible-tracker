@@ -257,8 +257,19 @@ function validateBackupCompletionEvents(
 
 function validateBackupSettings(settings: JsonRecord, planIds: Set<string>) {
   const lastActivePlanId = settings.lastActivePlanId;
-  if (lastActivePlanId == null) return;
-  assertKnownPlanId(lastActivePlanId, planIds, 'invalid_lastActivePlanId');
+  if (lastActivePlanId != null) {
+    assertKnownPlanId(lastActivePlanId, planIds, 'invalid_lastActivePlanId');
+  }
+
+  const dailyReadingGoalMinutes = settings.dailyReadingGoalMinutes;
+  if (dailyReadingGoalMinutes == null) return;
+  if (
+    typeof dailyReadingGoalMinutes !== 'number' ||
+    !Number.isInteger(dailyReadingGoalMinutes) ||
+    dailyReadingGoalMinutes <= 0
+  ) {
+    throw new SyncInputError('invalid_dailyReadingGoalMinutes');
+  }
 }
 
 function countBackupSnapshot(snapshot: ReadingBackupSnapshotV1) {

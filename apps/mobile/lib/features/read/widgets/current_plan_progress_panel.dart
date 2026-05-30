@@ -39,6 +39,9 @@ class CurrentPlanProgressPanel extends StatelessWidget {
       totalMinutes: totalMinutes,
       remainingMinutes: remainingMinutes,
     );
+    final dailyLabel = overview?.daily.progressLabel;
+    final dailyProgress = overview?.daily.progress ?? 0.0;
+    final showDailyGoal = overview?.daily.hasGoal ?? false;
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -127,6 +130,30 @@ class CurrentPlanProgressPanel extends StatelessWidget {
                     color: AppTheme.mutedInk,
                     fontWeight: FontWeight.w700,
                   ),
+            ),
+          ],
+          if (showDailyGoal && dailyLabel != null) ...[
+            const SizedBox(height: 12),
+            Text(
+              dailyLabel,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.mutedInk,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(999),
+              child: LinearProgressIndicator(
+                minHeight: 6,
+                value: dailyProgress,
+                backgroundColor: AppTheme.softSurface,
+                valueColor: AlwaysStoppedAnimation(
+                  overview!.daily.goalMet
+                      ? AppTheme.accentYellowDark
+                      : AppTheme.ink,
+                ),
+              ),
             ),
           ],
           if (showContinueReading && onContinueReading != null) ...[

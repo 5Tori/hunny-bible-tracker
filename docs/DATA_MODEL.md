@@ -41,7 +41,7 @@ user_reading_plans                     ← user's plan run (local)
 | `chapter_progress_entries` | Current check state per chapter |
 | `reading_activities` | Activity history (uncheck해도 activity 삭제 안 함) |
 | `plan_completion_events` | Completion history (`unique(user_plan_id)`) |
-| `app_settings` | Key/value flags (sync time, today message heart/save, etc.) |
+| `app_settings` | Key/value flags — sync time, today message heart/save, **`daily_reading_goal_minutes`**, etc. |
 
 \* template sections/items도 local cache
 
@@ -88,6 +88,7 @@ RPC output shapes mirror existing mobile DTOs / API JSON. Base tables are not gr
 
 - Mobile writes local first; backup is secondary authenticated path via Next.js API
 - `reading_activities` → streak / reading calendar (habit layer)
+- **Daily reading goal** — local `app_settings.daily_reading_goal_minutes`; today progress = sum of `bible_chapters` estimates for today's `reading_activities` (`action = complete`). Backed up as `settings.dailyReadingGoalMinutes` in sync payload v1.
 - Mobile public catalog/content may use Supabase RPC; sensitive tables stay API-only
 
 ## 관련 문서

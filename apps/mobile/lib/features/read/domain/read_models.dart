@@ -289,13 +289,44 @@ class AccountActivityStats {
   final int readingDaysTotal;
 }
 
+/// Today’s estimated reading time vs optional daily goal (local `app_settings`).
+class DailyReadingStats {
+  const DailyReadingStats({
+    required this.goalMinutes,
+    required this.todayMinutes,
+    required this.chaptersToday,
+  });
+
+  final int goalMinutes;
+  final int todayMinutes;
+  final int chaptersToday;
+
+  bool get hasGoal => goalMinutes > 0;
+
+  bool get goalMet => hasGoal && todayMinutes >= goalMinutes;
+
+  double get progress =>
+      hasGoal ? (todayMinutes / goalMinutes).clamp(0.0, 1.0) : 0.0;
+
+  /// English label for Home / Read summary (null when goal is off).
+  String? get progressLabel {
+    if (!hasGoal) return null;
+    if (goalMet) {
+      return '$todayMinutes / $goalMinutes min today · Goal met';
+    }
+    return '$todayMinutes / $goalMinutes min today';
+  }
+}
+
 /// Bundles plan-scoped and account-scoped stats for Home / Read summary UIs.
 class ReadingOverview {
   const ReadingOverview({
     required this.plan,
     required this.account,
+    required this.daily,
   });
 
   final PlanProgressStats plan;
   final AccountActivityStats account;
+  final DailyReadingStats daily;
 }

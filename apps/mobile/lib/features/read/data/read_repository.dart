@@ -32,6 +32,17 @@ class ReadRepository {
   static const kAppSettingOnboardingReadingLevel = 'onboarding_reading_level';
   static const kAppSettingBibleComVersionId = 'bible_com_version_id';
   static const kAppSettingBibleComVersionAbbr = 'bible_com_version_abbr';
+  static const kAppSettingDailyReadingGoalMinutes = 'daily_reading_goal_minutes';
+
+  /// Suggested default when the user first picks a goal in Settings (PR B).
+  static const int kDefaultDailyReadingGoalMinutes = 10;
+
+  static const List<int> dailyReadingGoalPresets = [0, 5, 10, 15, 20];
+
+  static String dailyReadingGoalSettingLabel(int minutes) {
+    if (minutes <= 0) return 'Off';
+    return '$minutes min / day';
+  }
 
   BibleComVersion? _cachedBibleComVersion;
   BibleChapterMetadata? _chapterMetadata;
@@ -1139,7 +1150,58 @@ class ReadRepository {
   Future<ReadingOverview> getReadingOverview(String planId) async {
     final plan = await getPlanProgressStats(planId);
     final account = await getAccountActivityStats();
-    return ReadingOverview(plan: plan, account: account);
+    final daily = await getDailyReadingStats();
+    return ReadingOverview(plan: plan, account: account, daily: daily);
+  }
+
+  Future<int> getDailyReadingGoalMinutes() async {
+    final raw = await getAppSetting(kAppSettingDailyReadingGoalMinutes);
+    if (raw == null || raw.trim().isEmpty) return 0;
+    final parsed = int.tryParse(raw.trim());
+    if (parsed == null || parsed <= 0) return 0;
+    return parsed;
+  }
+
+  Future<void> setDailyReadingGoalMinutes(int? minutes) async {
+    if (minutes == null || minutes <= 0) {
+      await (db.delete(db.appSettings)
+            ..where((tbl) => tbl.key.equals(kAppSettingDailyReadingGoalMinutes)))
+          .go();
+      return;
+    }
+    await _setSetting(kAppSettingDailyReadingGoalMinutes, minutes.toString());
+  }
+
+  Future<DailyReadingStats> getDailyReadingStats({DateTime? date}) async {
+    final day = date ?? DateTime.now();
+    final activityDate = DateFormat('yyyy-MM-dd').format(day);
+    final localUserId = await _activeLocalUserId();
+    final goalMinutes = await getDailyReadingGoalMinutes();
+
+    final activities = await (db.select(db.readingActivities)
+          ..where(
+            (tbl) =>
+                tbl.localUserId.equals(localUserId) &
+                tbl.action.equals('complete') &
+                tbl.activityDate.equals(activityDate),
+          ))
+        .get();
+
+    final metadata = await _getChapterMetadata();
+    var todayMinutes = 0;
+    for (final activity in activities) {
+      todayMinutes +=
+          metadata
+              .getChapter(activity.bookKey, activity.chapterNumber)
+              ?.estimatedReadingMinutes ??
+          0;
+    }
+
+    return DailyReadingStats(
+      goalMinutes: goalMinutes,
+      todayMinutes: todayMinutes,
+      chaptersToday: activities.length,
+    );
   }
 
   Future<LocalUserProfile?> getLocalUserProfile() async {
@@ -1273,6 +1335,7 @@ class ReadRepository {
       }
     }
     final lastActivePlanId = await getAppSetting('last_active_plan_id');
+    final dailyReadingGoalMinutes = await getDailyReadingGoalMinutes();
 
     return {
       'v': 1,
@@ -1293,6 +1356,8 @@ class ReadRepository {
       'settings': {
         if (lastActivePlanId != null && planIds.contains(lastActivePlanId))
           'lastActivePlanId': lastActivePlanId,
+        if (dailyReadingGoalMinutes > 0)
+          'dailyReadingGoalMinutes': dailyReadingGoalMinutes,
       },
     };
   }
@@ -1545,6 +1610,18 @@ class ReadRepository {
           lastActivePlanId != null && restoredPlanIds.contains(lastActivePlanId)
               ? lastActivePlanId
               : restoredPlanIds.first,
+        );
+      }
+      final settings = result.payload?['settings'];
+      if (settings is Map && settings.containsKey('dailyReadingGoalMinutes')) {
+        final goalRaw = settings['dailyReadingGoalMinutes'];
+        final goalMinutes = goalRaw is int
+            ? goalRaw
+            : goalRaw is num
+                ? goalRaw.toInt()
+                : int.tryParse(goalRaw?.toString() ?? '');
+        await setDailyReadingGoalMinutes(
+          goalMinutes != null && goalMinutes > 0 ? goalMinutes : null,
         );
       }
     });

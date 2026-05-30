@@ -12,7 +12,7 @@ Post-MVP 방향 정리: **content-led Bible reading + habit tracking**.
 2. ~~iOS closed-test QA~~ ✓
 3. Play/TestFlight 빌드 (`versionCode` bump)
 4. Real plan/content seed (Admin 또는 seed SQL)
-5. Habit layer 준비 (daily goal, stats — `bible_chapters` estimates shipped)
+5. Habit layer 준비 (stats — daily goal + today minutes shipped; calendar next)
 
 ## 완료 (재오픈 금지)
 
@@ -29,15 +29,14 @@ Post-MVP 방향 정리: **content-led Bible reading + habit tracking**.
 2. ~~Closed testing QA (Android + iOS)~~ ✓ → release artifact
 3. ~~`bible_chapters` + estimated reading time (mobile UI)~~ ✓
 4. ~~Admin/seed `estimated_minutes` reconcile~~ ✓
-5. Daily reading goal
-6. Today read minutes
-7. Reading stats / streak / calendar
-8. Plan Detail
-9. Story Card / Content Detail
-10. Home featured content
-11. Saved (List tab)
-12. Push notifications
-13. Visual explainers · video/animation
+5. ~~Daily reading goal + today read minutes~~ ✓
+6. Reading stats / streak / calendar
+7. Plan Detail
+8. Story Card / Content Detail
+9. Home featured content
+10. Saved (List tab)
+11. Push notifications
+12. Visual explainers · video/animation
 
 ## Not Now
 

@@ -1,4 +1,5 @@
 -- Security hardening: lock down internal functions, optimize profiles RLS, add FK index.
+-- Applied on remote as migration version 20260530041935.
 
 revoke all on function public.handle_new_user() from public;
 revoke all on function public.handle_new_user() from anon, authenticated;

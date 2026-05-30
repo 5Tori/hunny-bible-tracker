@@ -43,6 +43,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   AuthSession? _session;
   DateTime? _lastSyncedAt;
   BibleComVersion _bibleVersion = BibleComVersion.defaultVersion;
+  int _dailyReadingGoalMinutes = 0;
 
   /// Reload account + sync status (e.g. when the Settings tab is opened).
   Future<void> reload() => _load();
@@ -89,6 +90,8 @@ class SettingsScreenState extends State<SettingsScreen> {
       hasPendingChanges = false;
     }
     final bibleVersion = await widget.readRepository.getBibleComVersion();
+    final dailyReadingGoalMinutes =
+        await widget.readRepository.getDailyReadingGoalMinutes();
     if (!mounted) return;
     setState(() {
       _session = session;
@@ -97,6 +100,7 @@ class SettingsScreenState extends State<SettingsScreen> {
       _apiReachable = apiReachable;
       _hasPendingChanges = hasPendingChanges;
       _bibleVersion = bibleVersion;
+      _dailyReadingGoalMinutes = dailyReadingGoalMinutes;
       _loading = false;
     });
   }
@@ -161,6 +165,79 @@ class SettingsScreenState extends State<SettingsScreen> {
     }
     await widget.readRepository.setBibleComVersion(selected);
     setState(() => _bibleVersion = selected);
+    widget.onPreferencesChanged?.call();
+  }
+
+  Future<void> _showDailyReadingGoalSheet() async {
+    final selected = await showModalBottomSheet<int>(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (sheetContext) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: Container(
+                    width: 36,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: AppTheme.border,
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'Daily reading goal',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(sheetContext)
+                      .textTheme
+                      .titleMedium
+                      ?.copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Set a gentle target for how long you\'d like to read each day.',
+                  textAlign: TextAlign.center,
+                  style: Theme.of(sheetContext).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.mutedInk,
+                      ),
+                ),
+                const SizedBox(height: 16),
+                for (final minutes in ReadRepository.dailyReadingGoalPresets) ...[
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    title: Text(
+                      ReadRepository.dailyReadingGoalSettingLabel(minutes),
+                    ),
+                    trailing: _dailyReadingGoalMinutes == minutes
+                        ? const Icon(Icons.check, color: AppTheme.ink)
+                        : null,
+                    onTap: () => Navigator.of(sheetContext).pop(minutes),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    if (!mounted || selected == null) return;
+    if (selected == _dailyReadingGoalMinutes) return;
+
+    await widget.readRepository.setDailyReadingGoalMinutes(
+      selected <= 0 ? null : selected,
+    );
+    if (!mounted) return;
+    setState(() => _dailyReadingGoalMinutes = selected);
     widget.onPreferencesChanged?.call();
   }
 
@@ -511,6 +588,14 @@ class SettingsScreenState extends State<SettingsScreen> {
             title: 'Bible version',
             trailing: _bibleVersion.label,
             onTap: _showBibleVersionSheet,
+          ),
+          _SettingsRow(
+            icon: Icons.timelapse_outlined,
+            title: 'Daily reading goal',
+            trailing: ReadRepository.dailyReadingGoalSettingLabel(
+              _dailyReadingGoalMinutes,
+            ),
+            onTap: _showDailyReadingGoalSheet,
           ),
           _SettingsRow(
             icon: Icons.translate,
