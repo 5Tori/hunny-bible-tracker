@@ -22,8 +22,8 @@ class PlanCatalogApiClient {
               config: config ?? HunnyApiConfig.fromEnvironment(),
             );
 
-  static const catalogConnectTimeout = Duration(seconds: 8);
-  static const catalogReceiveTimeout = Duration(seconds: 20);
+  static const catalogConnectTimeout = HunnyApiClient.requestConnectTimeout;
+  static const catalogReceiveTimeout = HunnyApiClient.requestReceiveTimeout;
 
   final HunnyApiConfig _config;
   final HunnyApiReachability _reachability;

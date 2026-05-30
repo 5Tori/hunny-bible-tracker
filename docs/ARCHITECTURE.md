@@ -8,7 +8,8 @@
 Flutter mobile
   → Drift / SQLite (local-first)
   → Supabase Auth
-  → Next.js API (optional, authenticated)
+  → Supabase RPC (approved public read-only catalog/content)
+  → Next.js API (fallback, heart/share, sync, admin)
 
 Next.js web/API/admin
   → Supabase JWT verify
@@ -16,7 +17,9 @@ Next.js web/API/admin
   → Cloudinary (admin media)
 ```
 
-모바일은 **offline-first**. Home·Read는 local state 먼저 렌더. API는 short timeout + reachability cache. **Mobile은 Postgres에 직접 연결하지 않음.**
+모바일은 **offline-first**. Home·Read는 local state 먼저 렌더. API/RPC는 short timeout + reachability cache.
+
+**Guardrail:** Mobile must not access sensitive user/admin tables directly. Mobile may use approved Supabase RPC for public read-only catalog/content. Reading progress remains local-first.
 
 ## Apps
 
@@ -31,7 +34,8 @@ Next.js web/API/admin
 | --- | --- |
 | `lib/core/database/app_database.dart` | Drift schema |
 | `lib/core/auth/` | Supabase Auth |
-| `lib/core/api/` | API client, timeout, reachability |
+| `lib/core/supabase/` | RPC read layer, `HUNNY_REMOTE_READ_MODE` |
+| `lib/core/api/` | API client, timeout, reachability (heart/share, sync fallback) |
 | `lib/features/root/root_shell.dart` | Tab shell: Home, Discover, Read, Settings |
 | `lib/features/home/` | Today's Message, progress |
 | `lib/features/find/` | Discover |
@@ -57,11 +61,11 @@ Next.js web/API/admin
 
 **Reading progress:** tap chapter → Drift transaction → `chapter_progress_entries` + `reading_activities` → UI refresh. 100% → `completion_ready` → confirm → `plan_completion_events`.
 
-**Plan catalog:** Admin publish → Supabase → `GET /api/v1/plans` → mobile cache → Start Plan → local `user_plan_chapters` snapshot.
+**Today's Message:** Admin publish → Supabase RPC or `GET /api/v1/today-message` → Home (cache → fallback). Lookup: latest where `publish_date <= date`.
 
-**Today's Message:** Admin publish → `GET /api/v1/today-message` → Home (cache → fallback). Lookup: latest where `publish_date <= date`.
+**Discover:** Admin content → Supabase RPC or `GET /api/v1/content` → online-only list/detail sheet.
 
-**Discover:** Admin content → `GET /api/v1/content` → online-only list/detail sheet.
+**Plan catalog:** Admin publish → Supabase RPC or `GET /api/v1/plans` → mobile cache → Start Plan → local `user_plan_chapters` snapshot.
 
 **Auth & backup:** Google → Supabase Auth → `POST /api/v1/auth/sync` → optional `sync/push` · restore via `sync/bootstrap` → `user_plan_chapters` local regenerate.
 

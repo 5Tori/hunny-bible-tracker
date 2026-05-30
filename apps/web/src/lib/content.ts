@@ -501,6 +501,115 @@ async function getAdminContentListRelations(contents: ContentBase[]) {
   return relationsByContentId;
 }
 
+async function getPublishedContentListRelations(contents: ContentBase[]) {
+  const relationsByContentId = new Map<
+    string,
+    Awaited<ReturnType<typeof getContentRelations>>
+  >();
+  if (contents.length === 0) {
+    return relationsByContentId;
+  }
+
+  for (const content of contents) {
+    relationsByContentId.set(content.id, {
+      author: null,
+      assets: [],
+      sections: [],
+      tags: [],
+      relatedPlans: [],
+    });
+  }
+
+  const contentIds = contents.map((content) => content.id);
+  const authorIds = [
+    ...new Set(contents.map((content) => content.author_id).filter(Boolean)),
+  ] as string[];
+
+  const authors =
+    authorIds.length === 0
+      ? []
+      : ((await sql`
+          select * from content_authors
+          where id = any(${authorIds})
+        `) as ContentAuthor[]);
+
+  const authorById = new Map(authors.map((author) => [author.id, author]));
+  for (const content of contents) {
+    const bucket = relationsByContentId.get(content.id);
+    if (!bucket) continue;
+    bucket.author = content.author_id ? authorById.get(content.author_id) ?? null : null;
+  }
+
+  const tagRows = (await sql`
+    select t.*, ctl.content_id
+    from content_tags t
+    join content_tag_links ctl on ctl.tag_id = t.id
+    where ctl.content_id = any(${contentIds})
+    order by ctl.content_id asc, t.type asc, t.sort_order asc, t.name asc
+  `) as Array<ContentTag & { content_id: string }>;
+
+  for (const row of tagRows) {
+    const bucket = relationsByContentId.get(row.content_id);
+    if (!bucket) continue;
+    const { content_id: _contentId, ...tag } = row;
+    bucket.tags.push(tag);
+  }
+
+  const assetRows = (await sql`
+    select * from content_assets
+    where content_id = any(${contentIds})
+    order by content_id asc, asset_role asc, order_index asc, created_at asc
+  `) as Array<ContentAsset & { content_id: string }>;
+
+  for (const asset of assetRows) {
+    const bucket = relationsByContentId.get(asset.content_id);
+    if (!bucket) continue;
+    bucket.assets.push(asset);
+  }
+
+  const sectionRows = (await sql`
+    select * from content_sections
+    where content_id = any(${contentIds})
+    order by content_id asc, order_index asc, created_at asc
+  `) as Array<ContentSection & { content_id: string }>;
+
+  for (const section of sectionRows) {
+    const bucket = relationsByContentId.get(section.content_id);
+    if (!bucket) continue;
+    bucket.sections.push(section);
+  }
+
+  const relatedPlanRows = (await sql`
+    select
+      cpl.content_id,
+      cpl.relationship_type,
+      cpl.display_order,
+      cpl.cta_label,
+      pt.id,
+      pt.template_key,
+      pt.title,
+      pt.subtitle,
+      pt.cover_image_url,
+      pt.total_chapters,
+      pt.estimated_minutes
+    from content_plan_links cpl
+    join plan_templates pt on pt.id = cpl.plan_template_id
+    where cpl.content_id = any(${contentIds})
+      and pt.is_published = true
+      and pt.is_archived = false
+    order by cpl.content_id asc, cpl.display_order asc, pt.featured_rank asc nulls last, pt.updated_at desc
+  `) as Array<ContentRelatedPlan & { content_id: string }>;
+
+  for (const row of relatedPlanRows) {
+    const bucket = relationsByContentId.get(row.content_id);
+    if (!bucket) continue;
+    const { content_id: _contentId, ...plan } = row;
+    bucket.relatedPlans.push(plan);
+  }
+
+  return relationsByContentId;
+}
+
 async function resolveAuthorId(
   input: ReturnType<typeof normalizeInput>,
 ) {
@@ -740,12 +849,21 @@ export async function getPublishedContentsWithRelations(options?: {
   limit?: number;
 }) {
   const contents = await getPublishedContents(options);
-  return await Promise.all(
-    contents.map(async (content) => {
-      const relations = await getContentRelations(content);
-      return hydrateContent(content, relations);
-    }),
-  );
+  if (contents.length === 0) {
+    return [];
+  }
+
+  const relationsByContentId = await getPublishedContentListRelations(contents);
+  return contents.map((content) => {
+    const relations = relationsByContentId.get(content.id) ?? {
+      author: null,
+      assets: [],
+      sections: [],
+      tags: [],
+      relatedPlans: [],
+    };
+    return hydrateContent(content, relations);
+  });
 }
 
 export async function getPublishedContentByIdentifier(identifier: string, language?: string | null) {

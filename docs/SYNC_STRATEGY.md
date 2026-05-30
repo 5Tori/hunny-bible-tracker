@@ -9,6 +9,8 @@ User action → SQLite transaction → UI update
   → (signed-in) POST /api/v1/sync/push → user_reading_backups
 ```
 
+Sync/backup remains on **Next.js API** (not Supabase RPC) in Phase 7 evaluation window.
+
 ## Push scope (포함)
 
 Plan lifecycle metadata · completed progress · reading activities · completion events · backup-relevant settings
@@ -41,7 +43,7 @@ Sign-in: Supabase UUID → `local_users.auth_user_id` → `POST /api/v1/auth/syn
 
 | Data | Rule |
 | --- | --- |
-| Plan templates | Server catalog → `GET /api/v1/plans` → local cache |
+| Plan templates | Server catalog → Supabase RPC or `GET /api/v1/plans` → local cache |
 | User plan runs | Backup에 lifecycle + `templateKey` only |
 | `chapter_progress_entries` | Mutable; uncheck도 sync 대상 |
 | `reading_activities` | Append-friendly; uncheck 시 삭제 금지 |

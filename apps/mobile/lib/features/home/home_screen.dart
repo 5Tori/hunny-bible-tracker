@@ -12,8 +12,10 @@ import 'package:share_plus/share_plus.dart';
 import '../../core/api/hunny_api_client.dart';
 import '../../core/theme/app_theme.dart';
 import '../content/data/content_api_client.dart';
+import '../content/data/content_read_client.dart';
 import '../find/discover_screen.dart';
 import 'data/today_message_api_client.dart';
+import 'data/today_message_read_client.dart';
 import '../read/data/read_repository.dart';
 import '../read/domain/read_models.dart';
 import '../read/widgets/current_plan_progress_panel.dart';
@@ -23,15 +25,16 @@ class HomeScreen extends StatefulWidget {
     super.key,
     required this.readRepository,
     required this.onReadTap,
-    TodayMessageApiClient? todayMessageApiClient,
-    ContentApiClient? contentApiClient,
-  })  : todayMessageApiClient = todayMessageApiClient ?? TodayMessageApiClient(),
-        contentApiClient = contentApiClient ?? ContentApiClient();
+    TodayMessageReadClient? todayMessageReadClient,
+    ContentReadClient? contentReadClient,
+  })  : todayMessageReadClient =
+            todayMessageReadClient ?? TodayMessageReadClient(),
+        contentReadClient = contentReadClient ?? ContentReadClient();
 
   final ReadRepository readRepository;
   final VoidCallback onReadTap;
-  final TodayMessageApiClient todayMessageApiClient;
-  final ContentApiClient contentApiClient;
+  final TodayMessageReadClient todayMessageReadClient;
+  final ContentReadClient contentReadClient;
 
   @override
   State<HomeScreen> createState() => HomeScreenState();
@@ -120,7 +123,7 @@ class HomeScreenState extends State<HomeScreen> {
     required String language,
   }) async {
     try {
-      return await widget.todayMessageApiClient.fetchTodayMessage(
+      return await widget.todayMessageReadClient.fetchTodayMessage(
         date: date,
         language: language,
       );
@@ -215,7 +218,7 @@ class HomeScreenState extends State<HomeScreen> {
 
     try {
       final engagement =
-          await widget.todayMessageApiClient.heartTodayMessage(message.id);
+          await widget.todayMessageReadClient.heartTodayMessage(message.id);
       await widget.readRepository.setAppSetting(
         _heartedSettingKey(message.id),
         '1',
@@ -284,7 +287,7 @@ class HomeScreenState extends State<HomeScreen> {
       if (!mounted) return;
       setState(() => _todayMessage = optimisticallySharedMessage);
       final engagement =
-          await widget.todayMessageApiClient.shareTodayMessage(message.id);
+          await widget.todayMessageReadClient.shareTodayMessage(message.id);
       if (!mounted) return;
       final updatedMessage = _todayMessage?.copyWith(
         heartCount: engagement.heartCount,
@@ -554,7 +557,7 @@ class HomeScreenState extends State<HomeScreen> {
       builder: (context) {
         return _TodayMessageMoreSheet(
           message: message,
-          contentApiClient: widget.contentApiClient,
+          contentReadClient: widget.contentReadClient,
           onOpenLinkedContent: (linked) async {
             final navigator = Navigator.of(context);
             navigator.pop();
@@ -562,7 +565,7 @@ class HomeScreenState extends State<HomeScreen> {
 
             RemoteContent? content;
             try {
-              content = await widget.contentApiClient.fetchContentByIdentifier(
+              content = await widget.contentReadClient.fetchContentByIdentifier(
                 linked.slug,
                 language: message.language,
               );
@@ -1013,12 +1016,12 @@ class _MessageActionButton extends StatelessWidget {
 class _TodayMessageMoreSheet extends StatelessWidget {
   const _TodayMessageMoreSheet({
     required this.message,
-    required this.contentApiClient,
+    required this.contentReadClient,
     required this.onOpenLinkedContent,
   });
 
   final TodayMessage message;
-  final ContentApiClient contentApiClient;
+  final ContentReadClient contentReadClient;
   final Future<void> Function(TodayMessageLinkedContentSummary linked)
       onOpenLinkedContent;
 
@@ -1121,7 +1124,7 @@ class _TodayMessageMoreSheet extends StatelessWidget {
                             SizedBox(
                               width: double.infinity,
                               child: FilledButton(
-                                onPressed: contentApiClient.isConfigured
+                                onPressed: contentReadClient.isConfigured
                                     ? () => onOpenLinkedContent(linkedContent)
                                     : null,
                                 style: FilledButton.styleFrom(

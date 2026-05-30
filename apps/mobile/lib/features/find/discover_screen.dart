@@ -4,18 +4,19 @@ import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
 import '../../core/theme/app_theme.dart';
 import '../content/data/content_api_client.dart';
+import '../content/data/content_read_client.dart';
 import '../read/data/read_repository.dart';
 
 class DiscoverScreen extends StatefulWidget {
   DiscoverScreen({
     super.key,
     required this.readRepository,
-    ContentApiClient? contentApiClient,
+    ContentReadClient? contentReadClient,
     this.onPlanStarted,
-  }) : contentApiClient = contentApiClient ?? ContentApiClient();
+  }) : contentReadClient = contentReadClient ?? ContentReadClient();
 
   final ReadRepository readRepository;
-  final ContentApiClient contentApiClient;
+  final ContentReadClient contentReadClient;
   final VoidCallback? onPlanStarted;
 
   @override
@@ -45,7 +46,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
 
   Future<void> _loadContent() async {
-    if (!widget.contentApiClient.isConfigured) {
+    if (!widget.contentReadClient.isConfigured) {
       if (!mounted) return;
       setState(() {
         _contents = const [];
@@ -63,7 +64,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     });
 
     try {
-      if (!await widget.contentApiClient.canReachApi(force: true)) {
+      if (!await widget.contentReadClient.canReachRemote(force: true)) {
         if (!mounted) return;
         setState(() {
           _contents = const [];
@@ -72,7 +73,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
         });
         return;
       }
-      final contents = await widget.contentApiClient.fetchPublishedContent(
+      final contents = await widget.contentReadClient.fetchPublishedContent(
         sort: 'featured',
         language: 'en',
         limit: 50,
@@ -339,7 +340,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
                 actionLabel: 'Try again',
                 onAction: _loadContent,
               )
-            else if (!widget.contentApiClient.isConfigured)
+            else if (!widget.contentReadClient.isConfigured)
               const _StatePanel(
                 title: 'Discover unavailable.',
                 message: 'API base URL is missing.',

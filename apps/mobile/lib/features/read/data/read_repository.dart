@@ -12,16 +12,17 @@ import '../../../core/database/app_database.dart';
 import '../../../core/database/local_user_id.dart';
 import '../domain/read_models.dart';
 import 'plan_catalog_api_client.dart';
+import 'plan_catalog_read_client.dart';
 
 class ReadRepository {
   ReadRepository(
     this.db, {
-    PlanCatalogApiClient? planCatalogApiClient,
-  }) : _planCatalogApiClient = planCatalogApiClient ?? PlanCatalogApiClient();
+    PlanCatalogReadClient? planCatalogReadClient,
+  }) : _planCatalogReadClient = planCatalogReadClient ?? PlanCatalogReadClient();
 
   final AppDatabase db;
   final Uuid _uuid = const Uuid();
-  final PlanCatalogApiClient _planCatalogApiClient;
+  final PlanCatalogReadClient _planCatalogReadClient;
 
   /// Shown after Supabase creates a new account from Google sign-in.
   static const kAppSettingInitialBackupPromptDone =
@@ -53,10 +54,11 @@ class ReadRepository {
     bool allowFailure = false,
     bool forceReachability = false,
   }) async {
-    if (!_planCatalogApiClient.isConfigured) return;
+    if (!_planCatalogReadClient.isConfigured) return;
 
     try {
-      final plans = await _planCatalogApiClient.fetchPublishedPlans(
+      final plans = await _planCatalogReadClient.fetchPublishedPlans(
+        detail: 'summary',
         forceReachability: forceReachability,
       );
       if (plans.isEmpty) return;
@@ -72,7 +74,7 @@ class ReadRepository {
     bool forceRefresh = false,
   }) async {
     try {
-      final remotePlans = await _planCatalogApiClient.fetchPublishedPlans(
+      final remotePlans = await _planCatalogReadClient.fetchPublishedPlans(
         detail: 'summary',
         forceReachability: forceRefresh,
       );
@@ -1606,7 +1608,7 @@ class ReadRepository {
       }
     }
 
-    final remote = await _planCatalogApiClient.fetchPublishedPlanByIdentifier(
+    final remote = await _planCatalogReadClient.fetchPublishedPlanByIdentifier(
       templateIdentifier,
       forceReachability: true,
     );

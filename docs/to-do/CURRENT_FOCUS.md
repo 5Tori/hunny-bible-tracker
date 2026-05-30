@@ -11,6 +11,7 @@ Post-MVP 방향 정리: **content-led Bible reading + habit tracking**.
 1. Closed testing 안정화
 2. Real plan/content seed
 3. Habit layer 준비 (`bible_chapters`, estimated reading time, daily goal, stats)
+4. **Supabase-first hybrid** — mobile public read via RPC + API fallback (`HUNNY_REMOTE_READ_MODE`)
 
 ## 완료 (재오픈 금지)
 

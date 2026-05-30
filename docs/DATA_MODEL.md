@@ -60,7 +60,19 @@ user_reading_plans                     ← user's plan run (local)
 
 **`contents.content_type`:** `message`, `video`, `essay`, `cartoon`
 
-**Public APIs:** `GET /api/v1/plans`, `/content`, `/today-message`
+**Public reads:** `GET /api/v1/plans`, `/content`, `/today-message` — Web + mobile API fallback
+
+**Mobile Supabase RPC (anon/authenticated execute):**
+
+| Function | Returns | Notes |
+| --- | --- | --- |
+| `mobile_today_message_latest(p_language, p_date?)` | TM JSON (matches API `message`) | published only; includes `linked_content` |
+| `mobile_content_list(...)` | content array | no `body`/assets/sections in list payload |
+| `mobile_content_detail(p_identifier, p_language?)` | content object | full nested detail |
+| `mobile_plan_catalog(p_sort?)` | plan array | summary-only (`plan_templates` rows) |
+| `mobile_plan_detail(p_identifier)` | plan object | sections/items/tags nested |
+
+RPC output shapes mirror existing mobile DTOs / API JSON. Base tables are not granted to anon.
 
 ## Plans UI mapping
 
@@ -74,9 +86,9 @@ user_reading_plans                     ← user's plan run (local)
 
 ## Consistency notes
 
-- Mobile writes local first; backup is secondary authenticated path
+- Mobile writes local first; backup is secondary authenticated path via Next.js API
 - `reading_activities` → streak / reading calendar (habit layer)
-- Mobile **never** connects to Postgres directly
+- Mobile public catalog/content may use Supabase RPC; sensitive tables stay API-only
 
 ## 관련 문서
 

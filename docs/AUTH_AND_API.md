@@ -6,11 +6,12 @@ Supabase Auth, API routes, env, 배포 체크리스트.
 
 ```text
 Supabase Auth     → mobile identity (Google)
-Next.js API       → JWT verify, Postgres read/write
+Supabase RPC      → mobile public read-only catalog/content (optional, `HUNNY_REMOTE_READ_MODE=supabase_rpc`)
+Next.js API       → JWT verify, Postgres read/write, heart/share, sync, fallback reads
 Supabase Postgres → app data (profiles, catalog, backup)
 ```
 
-Mobile은 Postgres **직접 접근 불가**. API routes only.
+**Hybrid guardrail:** Mobile must not access sensitive user/admin tables directly. Mobile may use approved Supabase RPC for public read-only catalog/content. Reading progress remains local-first. Sync backup stays on Next.js API routes.
 
 ## Supabase project
 
@@ -47,6 +48,7 @@ Content seed (optional): `apps/web/db/seeds/content_test_seed.sql`
 SUPABASE_URL, SUPABASE_ANON_KEY
 GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID
 HUNNY_API_BASE_URL
+HUNNY_REMOTE_READ_MODE   # api | supabase_rpc (default: api)
 ```
 
 | Platform | ID |
@@ -69,9 +71,9 @@ Local API: iOS `http://127.0.0.1:3000` · Android emulator `http://10.0.2.2:3000
 | `GET /api/health` | — | Health |
 | `POST /api/v1/auth/sync` | Bearer | profiles upsert |
 | `GET /api/v1/me` | Bearer | Current user |
-| `GET /api/v1/plans` · `/plans/[id]` | — | Plan catalog |
-| `GET /api/v1/content` · `/content/[id]` | — | Content catalog |
-| `GET /api/v1/today-message` | — | Today's Message lookup |
+| `GET /api/v1/plans` · `/plans/[id]` | — | Plan catalog (mobile may use `mobile_plan_*` RPC instead) |
+| `GET /api/v1/content` · `/content/[id]` | — | Content catalog (mobile may use `mobile_content_*` RPC instead) |
+| `GET /api/v1/today-message` | — | Today's Message lookup (mobile may use `mobile_today_message_latest` RPC instead) |
 | `POST .../today-message/[id]/heart\|share` | — | Counters |
 | `POST /api/v1/feedback` | — | Feedback |
 | `POST /api/v1/sync/push` | Bearer | Backup upload |

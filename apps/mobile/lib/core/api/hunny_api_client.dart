@@ -6,8 +6,8 @@ import 'hunny_api_config.dart';
 class HunnyApiClient {
   HunnyApiClient._();
 
-  static const requestConnectTimeout = Duration(milliseconds: 1200);
-  static const requestReceiveTimeout = Duration(milliseconds: 2500);
+  static const requestConnectTimeout = Duration(seconds: 8);
+  static const requestReceiveTimeout = Duration(seconds: 20);
   static const probeConnectTimeout = Duration(milliseconds: 1500);
   static const probeReceiveTimeout = Duration(milliseconds: 2000);
 

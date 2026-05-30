@@ -4,7 +4,7 @@
 
 Flutter + Drift/SQLite(로컬), Supabase Auth, Next.js API/Admin, Supabase Postgres(서버), Cloudinary(관리자 미디어)로 구성됩니다.
 
-앱은 성경 **전문**을 저장하지 않습니다. 책/장 참조, 플랜, 진행, 읽기 활동, 설정, 오늘의 말씀·Discover 콘텐츠 메타데이터를 다룹니다. 모바일은 **로컬에 먼저** 쓰고, Supabase Postgres는 **API 경유**로만 접근합니다. 로그인 사용자는 백업/복원을 사용할 수 있으며, 기기 간 **자동 병합**은 보류입니다.
+앱은 성경 **전문**을 저장하지 않습니다. 책/장 참조, 플랜, 진행, 읽기 활동, 설정, 오늘의 말씀·Discover 콘텐츠 메타데이터를 다룹니다. 모바일은 **로컬에 먼저** 씁니다. 공개 카탈로그/콘텐츠 읽기는 **승인된 Supabase RPC** 또는 **Next.js API fallback**(`HUNNY_REMOTE_READ_MODE`)을 사용합니다. 민감한 사용자/관리자 테이블에는 직접 접근하지 않습니다. 로그인 사용자는 백업/복원 API를 사용할 수 있으며, 기기 간 **자동 병합**은 보류입니다.
 
 ## 현재 상태
 
@@ -16,7 +16,7 @@ Flutter + Drift/SQLite(로컬), Supabase Auth, Next.js API/Admin, Supabase Postg
 - **탭**: `Home`, `Discover`, `Read`, `Settings` (MVP에서 Saved/List는 비표시)
 - **오프라인**: Drift/SQLite. Home·Read는 오프라인에서도 빠르게 표시. Discover는 온라인 전용이며 API 불가 시 오프라인 안내
 - **인증**: Supabase Auth + Google 로그인
-- **서버 DB**: Supabase Postgres (`apps/web` API 경유)
+- **서버 DB**: Supabase Postgres — Web/Admin은 `apps/web` API, 모바일 public read는 Supabase RPC(선택) + API fallback
 - **배포**: 웹/API/Admin은 **Cloudflare Workers** (OpenNext). DB 연결은 **Hyperdrive**
 - **Read**: 섹션 기반 플랜, 장 진행, 완료·히스토리, 다시 시작, 아카이브/복원
 - **Plans**: 전체 화면 플랜 관리·카탈로그 (`내 플랜`, `카탈로그`, `보관함` 등)
