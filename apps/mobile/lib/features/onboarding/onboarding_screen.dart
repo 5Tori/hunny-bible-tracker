@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../core/bible/reading_time_format.dart';
 import '../../core/theme/app_theme.dart';
 import '../read/data/plan_catalog_api_client.dart';
 import '../read/data/read_repository.dart';
@@ -472,9 +473,11 @@ class _PlanChoiceCard extends StatelessWidget {
     final description = plan.shortDescription.trim().isNotEmpty
         ? plan.shortDescription.trim()
         : plan.description.trim();
-    final estimatedTime = plan.estimatedMinutes == null
-        ? 'Time varies'
-        : '~${plan.estimatedMinutes} min/ch';
+    final totalDuration = formatCatalogPlanTotalDuration(
+      minutesPerChapter: plan.estimatedMinutes,
+      totalChapters: plan.totalChapters,
+    );
+    final estimatedTime = totalDuration ?? 'Time varies';
     final difficulty = _titleCase(plan.difficulty ?? 'Flexible');
 
     return Material(

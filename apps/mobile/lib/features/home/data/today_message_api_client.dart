@@ -248,13 +248,34 @@ class TodayMessage {
 
   String get shareTitle => '$verseReference | Hunny Bible Tracker';
 
+  /// Short label for iOS share-sheet preview when sharing the image only.
+  String get sharePreviewTitle {
+    final quote = primaryText.trim();
+    final reference = verseReference.trim();
+    if (quote.isEmpty) return shareTitle;
+    if (reference.isEmpty || quote == reference) return quote;
+    const maxQuoteLength = 72;
+    final clippedQuote = quote.length <= maxQuoteLength
+        ? quote
+        : '${quote.substring(0, maxQuoteLength - 1).trimRight()}…';
+    return '$clippedQuote — $reference';
+  }
+
   String get shareText {
-    final parts = [
-      primaryText,
-      verseReference,
-      if (shareUrl != null) shareUrl!,
-    ];
-    return parts.where((part) => part.trim().isNotEmpty).join('\n\n');
+    final parts = <String>[];
+    final quote = primaryText.trim();
+    if (quote.isNotEmpty) {
+      parts.add(quote);
+    }
+    final reference = verseReference.trim();
+    if (reference.isNotEmpty && reference != quote) {
+      parts.add(reference);
+    }
+    final url = shareUrl?.trim();
+    if (url != null && url.isNotEmpty) {
+      parts.add(url);
+    }
+    return parts.join('\n\n');
   }
 
   TodayMessage copyWith({

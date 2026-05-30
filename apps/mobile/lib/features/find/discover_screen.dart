@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:youtube_player_iframe/youtube_player_iframe.dart';
 
+import '../../core/bible/reading_time_format.dart';
 import '../../core/theme/app_theme.dart';
 import '../content/data/content_api_client.dart';
 import '../content/data/content_read_client.dart';
@@ -915,9 +916,13 @@ class _RelatedPlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final totalDuration = formatCatalogPlanTotalDuration(
+      minutesPerChapter: plan.estimatedMinutes,
+      totalChapters: plan.totalChapters,
+    );
     final meta = [
       if (plan.totalChapters != null) '${plan.totalChapters} chapters',
-      if (plan.estimatedMinutes != null) '~${plan.estimatedMinutes} min/ch',
+      if (totalDuration != null) totalDuration,
     ].join(' · ');
 
     return Container(

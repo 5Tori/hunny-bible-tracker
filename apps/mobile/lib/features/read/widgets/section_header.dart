@@ -13,12 +13,14 @@ class SectionHeader extends StatefulWidget {
     super.key,
     required this.title,
     required this.description,
+    this.metaText,
     this.onlineReadUrl,
     this.onReadOnline,
   });
 
   final String title;
   final String description;
+  final String? metaText;
   final Uri? onlineReadUrl;
   final VoidCallback? onReadOnline;
 
@@ -138,6 +140,15 @@ class _SectionHeaderState extends State<SectionHeader> {
         if (_showReadOnline) ...[
           const SizedBox(width: 12),
           _SectionReadOnlineButton(onPressed: widget.onReadOnline!),
+        ] else if (widget.metaText != null) ...[
+          const SizedBox(width: 12),
+          Text(
+            widget.metaText!,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: AppTheme.mutedInk,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
         ],
       ],
     );

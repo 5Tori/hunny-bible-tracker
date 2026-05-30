@@ -114,6 +114,7 @@ Home 빠르게 → progress/fallback · Read chapter toggle · Discover offline 
 | API 500 / 10–30s timeout | `curl https://hunnybibletracker.com/api/health` — `db: false`면 Hyperdrive origin 비밀번호·Supabase Network restrictions 확인 |
 | Sync/heart timeout but RPC OK | sync·heart·share·profiles upsert는 Supabase Admin REST 경로 — `SUPABASE_SERVICE_ROLE_KEY` Worker secret 확인 |
 | `pnpm deploy` → Nothing to deploy | `pnpm run deploy` 또는 `pnpm web:deploy` 사용 (pnpm 10 내장 명령과 충돌) |
+| Plan catalog shows wrong `min/ch` | `pnpm run plan-estimates:sync-db` then `plan-estimates:sync-db:write`; or `supabase db push` for seed reconciliation migration |
 | Mobile “Sync server offline” | reachability probe는 `GET /api/v1/sync/bootstrap` (401=online). `/api/health`는 DB ping이라 느릴 수 있음 |
 | `env.IMAGES binding is not defined` | `next.config.mjs` `images.unoptimized: true` (Cloudinary 직접 사용). 또는 wrangler에 `images.binding: IMAGES` 추가 |
 | `waitUntil() tasks did not complete` | Worker background task timeout — DB 연결 hang·이미지 최적화 실패 시 발생. health·Hyperdrive 먼저 확인 |

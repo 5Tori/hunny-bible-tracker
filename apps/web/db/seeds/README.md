@@ -18,7 +18,8 @@
 supabase db push
 ```
 
-Plan 시드는 `20260528110000`–`20260528110007` 마이그레이션에 포함됩니다.
+Plan 시드는 `20260528110000`–`20260528110007` 마이그레이션에 포함됩니다.  
+`estimated_minutes` 정합성: `20260601120400_reconcile_plan_estimated_minutes.sql` — [`PLAN_CATALOG.md`](PLAN_CATALOG.md) 참고.
 
 Content 시드는 **아직 Supabase 마이그레이션 없음**. 로컬/스테이징 DB에 수동 적용:
 

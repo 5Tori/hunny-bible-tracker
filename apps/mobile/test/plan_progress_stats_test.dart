@@ -42,6 +42,8 @@ void main() {
 
       expect(stats.totalChapters, 14);
       expect(stats.averageMinutesPerChapter, closeTo(4, 0.01));
+      expect(stats.totalEstimatedMinutes, 58);
+      expect(stats.remainingEstimatedMinutes, 58);
 
       await database.close();
     });

@@ -1,3 +1,5 @@
+import '../../../core/bible/reading_time_format.dart';
+
 class BookProgress {
   const BookProgress({
     required this.sectionId,
@@ -8,6 +10,8 @@ class BookProgress {
     required this.displayName,
     required this.chapterCount,
     required this.completedCount,
+    this.estimatedTotalMinutes = 0,
+    this.remainingEstimatedMinutes = 0,
   });
 
   final String sectionId;
@@ -18,6 +22,8 @@ class BookProgress {
   final String displayName;
   final int chapterCount;
   final int completedCount;
+  final int estimatedTotalMinutes;
+  final int remainingEstimatedMinutes;
 
   double get progress => chapterCount == 0 ? 0 : completedCount / chapterCount;
 }
@@ -33,6 +39,8 @@ class PlanSectionProgress {
     required this.books,
     required this.completedCount,
     required this.totalCount,
+    this.estimatedTotalMinutes = 0,
+    this.remainingEstimatedMinutes = 0,
   });
 
   final String sectionId;
@@ -44,6 +52,8 @@ class PlanSectionProgress {
   final List<BookProgress> books;
   final int completedCount;
   final int totalCount;
+  final int estimatedTotalMinutes;
+  final int remainingEstimatedMinutes;
 
   double get progress => totalCount == 0 ? 0 : completedCount / totalCount;
 }
@@ -53,11 +63,15 @@ class ChapterProgressView {
     required this.chapterNumber,
     required this.isCompleted,
     required this.completedToday,
+    this.estimatedReadingMinutes,
   });
 
   final int chapterNumber;
   final bool isCompleted;
   final bool completedToday;
+
+  /// From `bible_chapters` (7 seconds per verse).
+  final int? estimatedReadingMinutes;
 }
 
 class ReadingPlanView {
@@ -137,15 +151,12 @@ class CompletedPlanSummary {
     return 'Completed · $completionCount';
   }
 
-  /// Short label for optional catalog-style meta row (e.g. "About 2 hours").
+  /// Short label for optional catalog-style meta row (e.g. "56 mins").
   String? get estimatedReadingLabel {
-    final minutes = estimatedMinutes;
-    if (minutes == null || minutes <= 0) return null;
-    if (minutes >= 60) {
-      final hours = (minutes / 60).round();
-      return hours == 1 ? 'About 1 hour' : 'About $hours hours';
-    }
-    return 'About $minutes min';
+    return formatCatalogPlanTotalDuration(
+      minutesPerChapter: estimatedMinutes,
+      totalChapters: totalChapters,
+    );
   }
 }
 
@@ -245,6 +256,8 @@ class PlanProgressStats {
     required this.readingDaysInPlan,
     required this.averageChaptersPerReadingDayInPlan,
     this.averageMinutesPerChapter = 0,
+    this.totalEstimatedMinutes = 0,
+    this.remainingEstimatedMinutes = 0,
   });
 
   final int completedChapters;
@@ -254,6 +267,12 @@ class PlanProgressStats {
 
   /// Average estimated reading minutes per chapter in this plan (0 if unknown).
   final double averageMinutesPerChapter;
+
+  /// Sum of `bible_chapters` estimates for all chapters in the plan.
+  final int totalEstimatedMinutes;
+
+  /// Sum for chapters not yet marked complete in this plan run.
+  final int remainingEstimatedMinutes;
 
   double get progress =>
       totalChapters == 0 ? 0 : completedChapters / totalChapters;

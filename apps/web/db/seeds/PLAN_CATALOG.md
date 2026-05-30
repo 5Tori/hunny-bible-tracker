@@ -31,12 +31,18 @@ Admin에서 수동으로 만든 플랜(예: `the_story_of_jonah`)은 `template_k
 
 ## `estimated_minutes` 재산출
 
-Seed SQL의 `estimated_minutes`는 `bible_chapters.json`과 플랜 items 기준 평균(장당 분)입니다. items 변경 후:
+Seed SQL의 `estimated_minutes`는 `bible_chapters.json`과 플랜 items 기준 **장당 평균 분**입니다 (7초/절, `ceil`).
 
-```bash
-pnpm run plan-estimates:update   # dry-run
-pnpm run plan-estimates:write    # 8개 seed SQL in-place 갱신
-```
+| 명령 | 용도 |
+| --- | --- |
+| `pnpm run plan-estimates:update` | 8개 seed SQL dry-run |
+| `pnpm run plan-estimates:write` | seed SQL in-place 갱신 |
+| `pnpm run plan-estimates:write-migration` | Supabase migration 생성 (`20260601120400_*`) |
+| `pnpm run plan-estimates:sync-db` | **연결된 DB** 전체 플랜 dry-run (items → bible_chapters) |
+| `pnpm run plan-estimates:sync-db:write` | 위 결과를 `plan_templates`에 UPDATE |
+
+Admin에서 플랜 저장 시에도 `calculatePlanEstimatedMinutes`가 자동 적용됩니다.  
+프로덕션/스테이징 drift 수정: `supabase db push` (migration) 또는 `plan-estimates:sync-db:write` (Admin 커스텀 플랜 포함).
 
 ## 적용 후 확인
 

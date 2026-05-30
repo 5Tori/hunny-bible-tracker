@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/bible/reading_time_format.dart';
 import '../../../core/theme/app_theme.dart';
 import '../domain/read_models.dart';
 
@@ -31,6 +32,13 @@ class CurrentPlanProgressPanel extends StatelessWidget {
         ? planStats!.averageMinutesPerChapter
         : _fallbackMinutesPerChapter;
     final minutesPerDay = chaptersPerDay * minutesPerChapter;
+
+    final remainingMinutes = planStats?.remainingEstimatedMinutes ?? 0;
+    final totalMinutes = planStats?.totalEstimatedMinutes ?? 0;
+    final planTimeLabel = formatPlanProgressDuration(
+      totalMinutes: totalMinutes,
+      remainingMinutes: remainingMinutes,
+    );
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -111,6 +119,16 @@ class CurrentPlanProgressPanel extends StatelessWidget {
               ),
             ],
           ),
+          if (planTimeLabel != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              planTimeLabel,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: AppTheme.mutedInk,
+                    fontWeight: FontWeight.w700,
+                  ),
+            ),
+          ],
           if (showContinueReading && onContinueReading != null) ...[
             const SizedBox(height: 16),
             SizedBox(

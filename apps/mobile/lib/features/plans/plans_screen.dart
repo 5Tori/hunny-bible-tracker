@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import '../../core/bible/reading_time_format.dart';
 import '../../core/theme/app_theme.dart';
 import '../read/data/read_repository.dart';
 import '../read/domain/read_models.dart';
@@ -629,10 +630,13 @@ class _CatalogPlanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final active = activeSummary;
+    final totalDuration = formatCatalogPlanTotalDuration(
+      minutesPerChapter: template.estimatedMinutes,
+      totalChapters: template.totalChapters,
+    );
     final meta = [
       '${template.totalChapters} chapters',
-      if (template.estimatedMinutes != null)
-        '~${template.estimatedMinutes} min/ch',
+      if (totalDuration != null) totalDuration,
     ].join(' · ');
     final tags = [
       template.planTypeLabel,

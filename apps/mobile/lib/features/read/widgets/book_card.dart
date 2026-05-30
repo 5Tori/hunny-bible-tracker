@@ -63,7 +63,6 @@ class BookCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Spacer(),
               Text(
                 '${book.completedCount}/${book.chapterCount}',
                 style: Theme.of(context).textTheme.bodySmall?.copyWith(

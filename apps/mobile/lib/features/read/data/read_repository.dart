@@ -619,6 +619,18 @@ class ReadRepository {
           ))
         .get();
 
+    final metadata = await _getChapterMetadata();
+    final completedChapterKeys = {
+      for (final row in progressRows) _chapterKey(row.bookKey, row.chapterNumber),
+    };
+
+    int estimateMinutesForChapter(UserPlanChapter chapter) {
+      return metadata
+              .getChapter(chapter.bookKey, chapter.chapterNumber)
+              ?.estimatedReadingMinutes ??
+          0;
+    }
+
     final sectionByChapter = <String, String>{};
     for (final chapter in planChapters) {
       sectionByChapter[_chapterKey(chapter.bookKey, chapter.chapterNumber)] =
@@ -655,10 +667,27 @@ class ReadRepository {
               .compareTo(firstOrderBySectionBook[b] ?? 0),
         );
       final sectionBooks = <BookProgress>[];
+      var sectionTotalMinutes = 0;
+      var sectionRemainingMinutes = 0;
       for (final sectionBook in sectionBookKeys) {
         final bookKey = sectionBook.split('|').last;
         final book = booksByKey[bookKey];
         if (book == null) continue;
+        var bookTotalMinutes = 0;
+        var bookRemainingMinutes = 0;
+        final bookChapters = (chaptersBySection[section.id] ?? [])
+            .where((chapter) => chapter.bookKey == bookKey);
+        for (final chapter in bookChapters) {
+          final minutes = estimateMinutesForChapter(chapter);
+          bookTotalMinutes += minutes;
+          sectionTotalMinutes += minutes;
+          if (!completedChapterKeys.contains(
+            _chapterKey(chapter.bookKey, chapter.chapterNumber),
+          )) {
+            bookRemainingMinutes += minutes;
+            sectionRemainingMinutes += minutes;
+          }
+        }
         sectionBooks.add(
           BookProgress(
             sectionId: section.id,
@@ -669,6 +698,8 @@ class ReadRepository {
             displayName: book.displayNameEn,
             chapterCount: chapterCountBySectionBook[sectionBook] ?? 0,
             completedCount: completedBySectionBook[sectionBook] ?? 0,
+            estimatedTotalMinutes: bookTotalMinutes,
+            remainingEstimatedMinutes: bookRemainingMinutes,
           ),
         );
       }
@@ -687,6 +718,8 @@ class ReadRepository {
         books: sectionBooks,
         completedCount: completedBySection[section.id] ?? 0,
         totalCount: totalBySection[section.id] ?? 0,
+        estimatedTotalMinutes: sectionTotalMinutes,
+        remainingEstimatedMinutes: sectionRemainingMinutes,
       );
     }).toList();
   }
@@ -724,12 +757,17 @@ class ReadRepository {
       completedMap[row.chapterNumber] = isToday;
     }
 
+    final metadata = await _getChapterMetadata();
+
     return planChapters.map((chapter) {
       final completedToday = completedMap[chapter.chapterNumber];
+      final estimate =
+          metadata.getChapter(chapter.bookKey, chapter.chapterNumber);
       return ChapterProgressView(
         chapterNumber: chapter.chapterNumber,
         isCompleted: completedToday != null,
         completedToday: completedToday ?? false,
+        estimatedReadingMinutes: estimate?.estimatedReadingMinutes,
       );
     }).toList();
   }
@@ -1046,13 +1084,23 @@ class ReadRepository {
 
     final metadata = await _getChapterMetadata();
     var minutesTotal = 0;
+    var minutesRemaining = 0;
     var minutesCount = 0;
+    final completedChapterKeys = {
+      for (final row in completed)
+        _chapterKey(row.bookKey, row.chapterNumber),
+    };
     for (final chapter in planChapters) {
       final estimate =
           metadata.getChapter(chapter.bookKey, chapter.chapterNumber);
       if (estimate == null) continue;
       minutesTotal += estimate.estimatedReadingMinutes;
       minutesCount += 1;
+      if (!completedChapterKeys.contains(
+        _chapterKey(chapter.bookKey, chapter.chapterNumber),
+      )) {
+        minutesRemaining += estimate.estimatedReadingMinutes;
+      }
     }
     final averageMinutesPerChapter = minutesCount > 0
         ? (minutesTotal / minutesCount).roundToDouble()
@@ -1064,6 +1112,8 @@ class ReadRepository {
       readingDaysInPlan: readingDatesInPlan.length,
       averageChaptersPerReadingDayInPlan: average,
       averageMinutesPerChapter: averageMinutesPerChapter,
+      totalEstimatedMinutes: minutesTotal,
+      remainingEstimatedMinutes: minutesRemaining,
     );
   }
 

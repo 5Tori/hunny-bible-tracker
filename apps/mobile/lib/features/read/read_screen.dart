@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/bible/bible_com.dart';
+import '../../core/bible/reading_time_format.dart';
 import '../../core/theme/app_theme.dart';
 import '../plans/plans_screen.dart';
 import 'data/read_repository.dart';
@@ -535,6 +536,15 @@ class _ReadScreenState extends State<ReadScreen> {
                 SectionHeader(
                   title: section.title,
                   description: section.description,
+                  metaText: section.remainingEstimatedMinutes > 0
+                      ? formatReadingDurationRemaining(
+                          section.remainingEstimatedMinutes,
+                        )
+                      : section.estimatedTotalMinutes > 0
+                          ? formatReadingDuration(
+                              section.estimatedTotalMinutes,
+                            )
+                          : null,
                   onlineReadUrl: _sectionOnlineReadUrl(section),
                   onReadOnline: () => _openSectionOnline(section),
                 ),

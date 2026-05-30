@@ -4,6 +4,8 @@ import 'dart:math' as math;
 import 'dart:ui' as ui;
 
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -298,11 +300,17 @@ class HomeScreenState extends State<HomeScreen> {
     try {
       final sharedImage = await _createTodayMessageShareImage(message);
       final files = sharedImage == null ? null : [sharedImage.file];
+      // iOS treats image + text as two separate share items ("Plain Text and 1
+      // Document"). Share the image only; verse copy is baked into the PNG and
+      // title drives the sheet preview. Android keeps image + caption + link.
+      final shareTextOnPlatform = _shouldShareTodayMessageTextWithImage(files)
+          ? message.shareText
+          : null;
       final result = await SharePlus.instance.share(
         ShareParams(
-          title: message.shareTitle,
+          title: message.sharePreviewTitle,
           subject: message.shareTitle,
-          text: message.shareText,
+          text: shareTextOnPlatform,
           files: files,
           fileNameOverrides:
               sharedImage == null ? null : [sharedImage.fileName],
@@ -337,6 +345,12 @@ class HomeScreenState extends State<HomeScreen> {
     } finally {
       if (mounted) setState(() => _todayMessageActionPending = false);
     }
+  }
+
+  bool _shouldShareTodayMessageTextWithImage(List<XFile>? files) {
+    if (files == null || files.isEmpty) return true;
+    if (kIsWeb) return true;
+    return defaultTargetPlatform != TargetPlatform.iOS;
   }
 
   Future<_SharedTodayMessageImage?> _createTodayMessageShareImage(
