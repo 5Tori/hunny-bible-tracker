@@ -33,7 +33,7 @@ Read flow QA · Discover enabled · Saved/List hidden · Home Today's Message ·
 **Automated**
 
 - [ ] `flutter analyze` · `flutter test` · `pnpm --dir apps/web typecheck`
-- [ ] `pubspec.yaml` `version` / `+versionCode` bump for next upload (current: `0.4.0+8`)
+- [x] `pubspec.yaml` `version` / `+versionCode` bump for next upload (current: `0.5.0+9`)
 
 **Production API / RPC**
 

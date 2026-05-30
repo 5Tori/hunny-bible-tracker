@@ -170,7 +170,7 @@ pnpm --dir apps/web typecheck
 버전은 `apps/mobile/pubspec.yaml`의 `version: <이름>+<코드>` 입니다.
 
 ```yaml
-version: 0.4.0+8
+version: 0.5.0+9
 ```
 
 Google Play 업로드마다 `+` 뒤 **versionCode**를 반드시 올립니다. `ios/.symlinks` 등 다른 `pubspec.yaml`이 아닌 **루트 mobile `pubspec.yaml`**을 수정했는지 확인하세요.

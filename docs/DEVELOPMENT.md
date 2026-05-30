@@ -119,7 +119,7 @@ Home 빠르게 → progress/fallback · Read chapter toggle · Discover offline 
 | `env.IMAGES binding is not defined` | `next.config.mjs` `images.unoptimized: true` (Cloudinary 직접 사용). 또는 wrangler에 `images.binding: IMAGES` 추가 |
 | `waitUntil() tasks did not complete` | Worker background task timeout — DB 연결 hang·이미지 최적화 실패 시 발생. health·Hyperdrive 먼저 확인 |
 
-현재 release target: `v0.4.0+8` — `docs/ref/HUNNY_RELEASE_LOG.md`
+현재 release target: `v0.5.0+9` — `docs/ref/HUNNY_RELEASE_LOG.md`
 
 Hot reload: `r` / `R` / `q`
 

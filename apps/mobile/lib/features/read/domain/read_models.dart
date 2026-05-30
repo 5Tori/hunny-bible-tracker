@@ -318,6 +318,79 @@ class DailyReadingStats {
   }
 }
 
+/// Per-day reading summary for habit / activity grids.
+class ReadingDaySummary {
+  const ReadingDaySummary({
+    required this.activityDate,
+    required this.chaptersCompleted,
+    required this.estimatedMinutes,
+    required this.goalMet,
+  });
+
+  final String activityDate;
+  final int chaptersCompleted;
+  final int estimatedMinutes;
+  final bool goalMet;
+
+  bool get hasReading => chaptersCompleted > 0;
+
+  factory ReadingDaySummary.empty(String activityDate) {
+    return ReadingDaySummary(
+      activityDate: activityDate,
+      chaptersCompleted: 0,
+      estimatedMinutes: 0,
+      goalMet: false,
+    );
+  }
+}
+
+/// One week column in a GitHub-style activity grid (Sunday → Saturday).
+class ReadingActivityWeekColumn {
+  const ReadingActivityWeekColumn({
+    required this.weekStartDate,
+    required this.days,
+  });
+
+  final DateTime weekStartDate;
+
+  /// Seven slots (Sun–Sat). `null` when the day is outside the visible range.
+  final List<ReadingDaySummary?> days;
+}
+
+/// Rolling ~12-month activity grid for horizontal scroll (oldest → newest).
+class ReadingActivityYear {
+  const ReadingActivityYear({
+    required this.weekColumns,
+    required this.rangeStart,
+    required this.rangeEnd,
+    required this.yearLabel,
+  });
+
+  final List<ReadingActivityWeekColumn> weekColumns;
+  final DateTime rangeStart;
+  final DateTime rangeEnd;
+  final int yearLabel;
+}
+
+/// Account-wide reading stats + activity grid (Settings habit section).
+class AccountReadingStats {
+  const AccountReadingStats({
+    required this.currentStreak,
+    required this.longestStreak,
+    required this.readingDaysTotal,
+    required this.readingDaysInRange,
+    required this.goalMetDaysInRange,
+    required this.activityYear,
+  });
+
+  final int currentStreak;
+  final int longestStreak;
+  final int readingDaysTotal;
+  final int readingDaysInRange;
+  final int goalMetDaysInRange;
+  final ReadingActivityYear activityYear;
+}
+
 /// Bundles plan-scoped and account-scoped stats for Home / Read summary UIs.
 class ReadingOverview {
   const ReadingOverview({

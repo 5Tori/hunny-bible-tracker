@@ -143,11 +143,13 @@ class _RootShellState extends State<RootShell> {
           onReadingDataRestored: () {
             setState(() => _readRefreshToken += 1);
             _homeKey.currentState?.refresh();
+            _settingsKey.currentState?.reload();
           },
           onNavigateToRead: _openReadTab,
           onPreferencesChanged: () {
             setState(() => _readRefreshToken += 1);
             _homeKey.currentState?.refresh();
+            _settingsKey.currentState?.reload();
           },
         ),
       _ => const SizedBox.shrink(),

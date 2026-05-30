@@ -12,6 +12,7 @@ import '../read/domain/read_models.dart';
 import 'data/feedback_api_client.dart';
 import 'widgets/auth_sheet.dart';
 import 'widgets/post_auth_backup_dialog.dart';
+import 'widgets/reading_activity_panel.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
@@ -44,6 +45,7 @@ class SettingsScreenState extends State<SettingsScreen> {
   DateTime? _lastSyncedAt;
   BibleComVersion _bibleVersion = BibleComVersion.defaultVersion;
   int _dailyReadingGoalMinutes = 0;
+  AccountReadingStats? _readingStats;
 
   /// Reload account + sync status (e.g. when the Settings tab is opened).
   Future<void> reload() => _load();
@@ -92,6 +94,12 @@ class SettingsScreenState extends State<SettingsScreen> {
     final bibleVersion = await widget.readRepository.getBibleComVersion();
     final dailyReadingGoalMinutes =
         await widget.readRepository.getDailyReadingGoalMinutes();
+    AccountReadingStats? readingStats;
+    try {
+      readingStats = await widget.readRepository.getAccountReadingStats();
+    } catch (_) {
+      readingStats = null;
+    }
     if (!mounted) return;
     setState(() {
       _session = session;
@@ -101,6 +109,7 @@ class SettingsScreenState extends State<SettingsScreen> {
       _hasPendingChanges = hasPendingChanges;
       _bibleVersion = bibleVersion;
       _dailyReadingGoalMinutes = dailyReadingGoalMinutes;
+      _readingStats = readingStats;
       _loading = false;
     });
   }
@@ -628,10 +637,48 @@ class SettingsScreenState extends State<SettingsScreen> {
               signedInEmail: signedIn ? session?.user.email : null,
             ),
           ),
+          const SizedBox(height: 28),
+
+          _SectionLabel(title: 'READING ACTIVITY'),
+          const SizedBox(height: 12),
+          if (_loading)
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(3),
+                border: Border.all(color: AppTheme.border),
+              ),
+              child: const Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          else if (_readingStats != null)
+            ReadingActivityPanel(stats: _readingStats!)
+          else
+            Container(
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(3),
+                border: Border.all(color: AppTheme.border),
+              ),
+              child: Text(
+                'Reading activity will appear here after you mark chapters as read.',
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: AppTheme.mutedInk,
+                      height: 1.35,
+                    ),
+              ),
+            ),
           const SizedBox(height: 24),
           Center(
             child: Text(
-              'v0.1.0 · Bible Tracker',
+              'v0.5.0 · Bible Tracker',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.mutedInk,
                   ),

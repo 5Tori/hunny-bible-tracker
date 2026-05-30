@@ -45,4 +45,6 @@ curl -s "https://hunnybibletracker.com/api/v1/today-message?date=$(date +%Y-%m-%
 
 Closed-test targets: **8 plans**, **≥1 Today's Message**, **≥4 content items** (Discover).
 
+**Remote (2026-05-30):** `content_test_seed.sql` + `today_message_test_seed.sql` applied — 8 plans, 4 contents, 3 content→plan links, 2 today messages (Mode A today, Mode B yesterday).
+
 Plan catalog details: [`PLAN_CATALOG.md`](PLAN_CATALOG.md)

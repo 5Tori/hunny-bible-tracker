@@ -59,7 +59,46 @@ Short English release notes for Google Play.
 - **Infra:** Hyperdrive password reset · `/api/health` `db: true` · web deploy `pnpm run deploy`
 - **Code (uncommitted at note time):** mobile sync/settings/home · web Supabase Admin REST for sync/engagement
 
-**Next:** iOS QA · `versionCode` bump · `app-release.aab` upload
+**Next:** `app-release.aab` / TestFlight upload · Play Console release notes
+
+---
+
+## v0.5.0+9 — Android / iOS Closed Testing
+
+- **Date:** 2026-05-30
+- **Platform:** Both
+- **Track:** Closed testing
+- **Release name:** `v0.5.0+9 - Closed testing`
+- **Build artifact:** `app-release.aab` / TestFlight `.ipa`
+- **Package / Bundle ID:** `com.hunnybibletracker.app`
+
+#### Summary
+
+네 번째 클로즈 테스트용 릴리즈. Supabase RPC 기반 읽기·동기화 안정화, 일일 읽기 목표와 Settings 습관 그리드, 예상 읽기 시간 표시, Discover/Today's Message 시드 데이터를 포함한다.
+
+#### Included
+
+- Supabase-first hybrid — mobile read via RPC (`HUNNY_REMOTE_READ_MODE=supabase_rpc`) + API sync/restore
+- Daily reading goal (Settings) + today read minutes on Home/Read progress
+- Settings reading activity — streak, longest streak, rolling-year horizontal grid (GitHub-style)
+- Estimated reading time (English `hr` / `min`) on plan progress and catalog totals
+- Home engagement — heart (one-way), save toggle, share (iOS image-only share sheet fix)
+- Remote DB — 8 plans, Discover content seed, Today's Message seed; plan `estimated_minutes` reconcile
+- iOS + Android closed-test QA parity (onboarding, Discover plan CTA, sync/restore)
+
+#### Notes
+
+- Google Play / TestFlight 클로즈 테스트용 빌드다.
+- 테스트 중점: Sync now / Restore, daily goal + activity grid, Read progress, Discover + Plans, Today's Message, share on iOS/Android.
+- Production API `/api/v1/plans` · `/api/v1/content` 500 이슈가 있으면 RPC 경로(`supabase_rpc`)로 Discover/Plans/Today는 정상 동작하는지 확인한다.
+
+#### Play Console Release Notes
+
+```text
+Closed testing update for Hunny Bible Tracker.
+
+Includes backup and restore improvements, daily reading goals, reading activity tracking, estimated reading time, Home engagement updates, and general stability fixes for reading plans and Discover content.
+```
 
 ---
 
@@ -185,7 +224,7 @@ Includes offline-first Bible reading progress tracking, reading plans, chapter c
 ### Release name
 
 ```text
-v0.3.0+7 - Android closed testing
+v0.5.0+9 - Closed testing
 ```
 
 ### Release notes
@@ -193,5 +232,5 @@ v0.3.0+7 - Android closed testing
 ```text
 Closed testing update for Hunny Bible Tracker.
 
-Includes offline startup improvements, Home and Read reliability updates, Discover offline messaging, refreshed app launch visuals, and public website updates.
+Includes backup and restore improvements, daily reading goals, reading activity tracking, estimated reading time, Home engagement updates, and general stability fixes for reading plans and Discover content.
 ```

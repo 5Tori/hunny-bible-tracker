@@ -1129,21 +1129,46 @@ class ReadRepository {
   }
 
   Future<AccountActivityStats> getAccountActivityStats() async {
-    final localUserId = await _activeLocalUserId();
-    final activities = await (db.select(db.readingActivities)
-          ..where(
-            (tbl) =>
-                tbl.localUserId.equals(localUserId) &
-                tbl.action.equals('complete'),
-          ))
-        .get();
-
-    final readingDates = activities.map((row) => row.activityDate).toSet();
+    final summaries = await _loadReadingDaySummariesByDate();
+    final readingDates = summaries.keys.toSet();
     final currentStreak = _calculateCurrentStreak(readingDates);
 
     return AccountActivityStats(
       currentStreak: currentStreak,
       readingDaysTotal: readingDates.length,
+    );
+  }
+
+  /// Streak, longest streak, and rolling-year activity grid for Settings.
+  Future<AccountReadingStats> getAccountReadingStats({DateTime? anchorDate}) async {
+    final anchor = _dateOnly(anchorDate ?? DateTime.now());
+    final summaries = await _loadReadingDaySummariesByDate();
+    final readingDates = summaries.keys.toSet();
+    final currentStreak = _calculateCurrentStreak(readingDates, anchor: anchor);
+    final longestStreak = _calculateLongestStreak(readingDates);
+    final activityYear = _buildReadingActivityYear(
+      dayMap: summaries,
+      anchorDate: anchor,
+    );
+
+    var readingDaysInRange = 0;
+    var goalMetDaysInRange = 0;
+    for (final summary in summaries.values) {
+      final day = _parseActivityDate(summary.activityDate);
+      if (day.isBefore(activityYear.rangeStart) || day.isAfter(anchor)) {
+        continue;
+      }
+      readingDaysInRange += 1;
+      if (summary.goalMet) goalMetDaysInRange += 1;
+    }
+
+    return AccountReadingStats(
+      currentStreak: currentStreak,
+      longestStreak: longestStreak,
+      readingDaysTotal: readingDates.length,
+      readingDaysInRange: readingDaysInRange,
+      goalMetDaysInRange: goalMetDaysInRange,
+      activityYear: activityYear,
     );
   }
 
@@ -2193,10 +2218,100 @@ class ReadRepository {
         );
   }
 
-  int _calculateCurrentStreak(Set<String> readingDates) {
+  Future<Map<String, ReadingDaySummary>> _loadReadingDaySummariesByDate() async {
+    final localUserId = await _activeLocalUserId();
+    final goalMinutes = await getDailyReadingGoalMinutes();
+    final activities = await (db.select(db.readingActivities)
+          ..where(
+            (tbl) =>
+                tbl.localUserId.equals(localUserId) &
+                tbl.action.equals('complete'),
+          ))
+        .get();
+    if (activities.isEmpty) return {};
+
+    final metadata = await _getChapterMetadata();
+    final grouped = <String, _DayActivityAggregate>{};
+    for (final activity in activities) {
+      final aggregate = grouped.putIfAbsent(
+        activity.activityDate,
+        () => _DayActivityAggregate(),
+      );
+      aggregate.chapters += 1;
+      aggregate.minutes +=
+          metadata
+              .getChapter(activity.bookKey, activity.chapterNumber)
+              ?.estimatedReadingMinutes ??
+          0;
+    }
+
+    return {
+      for (final entry in grouped.entries)
+        entry.key: ReadingDaySummary(
+          activityDate: entry.key,
+          chaptersCompleted: entry.value.chapters,
+          estimatedMinutes: entry.value.minutes,
+          goalMet: goalMinutes > 0 && entry.value.minutes >= goalMinutes,
+        ),
+    };
+  }
+
+  ReadingActivityYear _buildReadingActivityYear({
+    required Map<String, ReadingDaySummary> dayMap,
+    required DateTime anchorDate,
+  }) {
+    final end = _dateOnly(anchorDate);
+    final rangeStart = end.subtract(const Duration(days: 364));
+    final gridStart = _startOfWeekSunday(rangeStart);
+    final columns = <ReadingActivityWeekColumn>[];
+
+    var weekStart = gridStart;
+    while (!weekStart.isAfter(end)) {
+      final days = <ReadingDaySummary?>[];
+      for (var offset = 0; offset < 7; offset++) {
+        final day = weekStart.add(Duration(days: offset));
+        if (day.isAfter(end) || day.isBefore(rangeStart)) {
+          days.add(null);
+        } else {
+          final key = DateFormat('yyyy-MM-dd').format(day);
+          days.add(dayMap[key] ?? ReadingDaySummary.empty(key));
+        }
+      }
+      columns.add(
+        ReadingActivityWeekColumn(weekStartDate: weekStart, days: days),
+      );
+      weekStart = weekStart.add(const Duration(days: 7));
+    }
+
+    return ReadingActivityYear(
+      weekColumns: columns,
+      rangeStart: rangeStart,
+      rangeEnd: end,
+      yearLabel: end.year,
+    );
+  }
+
+  DateTime _dateOnly(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
+
+  DateTime _parseActivityDate(String activityDate) {
+    final parsed = DateTime.tryParse(activityDate);
+    if (parsed == null) return _dateOnly(DateTime.now());
+    return _dateOnly(parsed);
+  }
+
+  DateTime _startOfWeekSunday(DateTime date) {
+    final normalized = _dateOnly(date);
+    return normalized.subtract(Duration(days: normalized.weekday % 7));
+  }
+
+  int _calculateCurrentStreak(
+    Set<String> readingDates, {
+    DateTime? anchor,
+  }) {
     if (readingDates.isEmpty) return 0;
 
-    var cursor = DateTime.now();
+    var cursor = _dateOnly(anchor ?? DateTime.now());
     var streak = 0;
 
     while (true) {
@@ -2207,6 +2322,27 @@ class ReadRepository {
     }
 
     return streak;
+  }
+
+  int _calculateLongestStreak(Set<String> readingDates) {
+    if (readingDates.isEmpty) return 0;
+
+    final sorted = readingDates.map(_parseActivityDate).toList()
+      ..sort((a, b) => a.compareTo(b));
+
+    var longest = 1;
+    var current = 1;
+    for (var index = 1; index < sorted.length; index++) {
+      final gap = sorted[index].difference(sorted[index - 1]).inDays;
+      if (gap == 1) {
+        current += 1;
+        if (current > longest) longest = current;
+      } else if (gap > 1) {
+        current = 1;
+      }
+    }
+
+    return longest;
   }
 
   String _sectionBookKey(String sectionId, String bookKey) =>
@@ -2509,4 +2645,9 @@ class _CompletedPlanAggregate {
   DateTime? lastCompletedAt;
   final int totalChapters;
   final int? estimatedMinutes;
+}
+
+class _DayActivityAggregate {
+  int chapters = 0;
+  int minutes = 0;
 }
