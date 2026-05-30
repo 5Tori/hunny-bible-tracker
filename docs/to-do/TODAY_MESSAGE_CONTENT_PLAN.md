@@ -459,7 +459,7 @@ No dedicated OG image work.
 | M3 | `today_messages` | Drop `message` | Done |
 | M4 | `today_messages` | Keep `content_id`, `share_image_*`, `hint_*` | Unchanged |
 | M5 | `contents` | No column changes | N/A |
-| M6 | Data | Seed Mode A/B today messages | **Next PR** |
+| M6 | Data | Seed Mode A/B today messages | Done (`today_message_test_seed.sql`) |
 
 `apps/web/db/schema.sql` mirror and `docs/DATA_MODEL.md` updated in the same PR.
 
@@ -482,7 +482,7 @@ No dedicated OG image work.
 5. ~~**Public web Today Message redesign** (minimal)~~ ✓
 6. ~~**Mobile DTO + Home More flow**~~ ✓
 7. **Content detail / related plan CTA polish**
-8. **Seed data update** — Mode A + Mode B today messages
+8. ~~**Seed data update**~~ ✓
 9. **QA / closed testing smoke**
 
 ---
@@ -522,7 +522,7 @@ No dedicated OG image work.
 - [x] Admin editor: no article body or direct plan selector; linked content picker added
 - [x] Public web page compatible with new payload
 - [x] Mobile DTO + Home More flow
-- [ ] Seed data Mode A/B (next PR)
+- [x] Seed data Mode A/B
 
 ---
 
