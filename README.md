@@ -10,13 +10,13 @@ Flutter + Drift/SQLite(로컬), Supabase Auth, Next.js API/Admin, Supabase Postg
 
 **콘텐츠 중심 성경 읽기 습관 앱** — Discover에서 이야기·콘텐츠를 찾고, 관련 플랜을 읽으며, 진행과 습관을 추적합니다.
 
-클로즈드 테스트를 위해 **Home, Discover, Read, Plans, Settings**와 **공개 웹/API**를 마무리하는 단계입니다. **Android 에뮬레이터 QA는 2026-05-29 완료** — iOS·릴리스 빌드가 다음입니다.
+클로즈드 테스트를 위해 **Home, Discover, Read, Plans, Settings**와 **공개 웹/API**를 마무리하는 단계입니다. **Android·iOS 수동 QA는 2026-05-29~30 완료** — Play/TestFlight 릴리스 아티팩트가 다음입니다.
 
 - **모바일**: Flutter iOS / Android
 - **탭**: `Home`, `Discover`, `Read`, `Settings` (MVP에서 Saved/List는 비표시)
 - **오프라인**: Drift/SQLite. Home·Read는 오프라인에서도 빠르게 표시. Discover는 온라인 전용이며 API 불가 시 오프라인 안내
 - **인증**: Supabase Auth + Google 로그인
-- **서버 DB**: Supabase Postgres — Web/Admin은 `apps/web` API, 모바일 public read는 Supabase RPC(선택) + API fallback
+- **서버 DB**: Supabase Postgres — Web/Admin은 `apps/web` API + Hyperdrive; 모바일 public read는 **Supabase RPC** (`HUNNY_REMOTE_READ_MODE=supabase_rpc`) + API fallback
 - **배포**: 웹/API/Admin은 **Cloudflare Workers** (OpenNext). DB 연결은 **Hyperdrive**
 - **Read**: 섹션 기반 플랜, 장 진행, 완료·히스토리, 다시 시작, 아카이브/복원
 - **Plans**: 전체 화면 플랜 관리·카탈로그 (`내 플랜`, `카탈로그`, `보관함` 등)
@@ -95,7 +95,10 @@ cp .env.example.json .env.android.json
 두 파일에 Supabase·Google OAuth 값을 채웁니다. **프로덕션 API** 예시:
 
 ```json
-"HUNNY_API_BASE_URL": "https://hunnybibletracker.com"
+{
+  "HUNNY_API_BASE_URL": "https://hunnybibletracker.com",
+  "HUNNY_REMOTE_READ_MODE": "supabase_rpc"
+}
 ```
 
 로컬 `next dev`만 쓸 때:
@@ -167,7 +170,7 @@ pnpm --dir apps/web typecheck
 버전은 `apps/mobile/pubspec.yaml`의 `version: <이름>+<코드>` 입니다.
 
 ```yaml
-version: 0.3.0+7
+version: 0.4.0+8
 ```
 
 Google Play 업로드마다 `+` 뒤 **versionCode**를 반드시 올립니다. `ios/.symlinks` 등 다른 `pubspec.yaml`이 아닌 **루트 mobile `pubspec.yaml`**을 수정했는지 확인하세요.
@@ -201,16 +204,19 @@ flutter build ipa --release --dart-define-from-file=.env.ios.json
 모바일은 읽기 데이터를 **로컬에 먼저** 씁니다. 로그인 사용자는 인증 API로 백업·복원할 수 있습니다.
 
 ```text
-사용자 동작
-  → Flutter UI
-  → Drift/SQLite 트랜잭션
-  → sync_status (pending / local_only)
-  → (선택) 인증된 sync push
-  → Next.js API (Cloudflare Workers)
-  → Supabase Postgres (Hyperdrive)
+읽기 진행 (local-first)
+  → Drift/SQLite 트랜잭션 → UI 즉시 반영
+  → (로그인) POST /api/v1/sync/push → Supabase Admin REST → user_reading_backups
+
+공개 콘텐츠 read (online)
+  → Supabase RPC (mobile_* functions) — 기본 closed test
+  → 또는 Next.js API fallback (HUNNY_REMOTE_READ_MODE=api)
+
+쓰기 (heart/share/sync/auth)
+  → Next.js API (Cloudflare Workers) → Supabase Admin REST
 ```
 
-모바일은 **Supabase Postgres에 직접 연결하지 않습니다.** 서버 접근은 `apps/web` API만 사용합니다.
+모바일은 **민감한 사용자/관리자 테이블에 직접 쓰지 않습니다.** 승인된 Supabase RPC로 public read만, backup·engagement·auth는 API 경로를 사용합니다.
 
 ## 주요 구현 위치
 

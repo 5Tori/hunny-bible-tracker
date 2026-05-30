@@ -6,7 +6,7 @@
 
 | Layer | Source |
 | --- | --- |
-| Mobile (Drift v3) | `apps/mobile/lib/core/database/app_database.dart` |
+| Mobile (Drift v4) | `apps/mobile/lib/core/database/app_database.dart` |
 | Server | `supabase/migrations/` (baseline: `20260528000000_baseline.sql`) |
 | Reference mirror | `apps/web/db/schema.sql` |
 

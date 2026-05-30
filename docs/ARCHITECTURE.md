@@ -18,7 +18,7 @@ Next.js web/API/admin
   → Cloudinary (admin media)
 ```
 
-모바일은 **offline-first**. Home·Read는 local state 먼저 렌더. API/RPC는 short timeout + reachability cache.
+모바일은 **offline-first**. Home·Read는 local state 먼저 렌더. Public read는 Supabase RPC(기본 closed test) 또는 API fallback. Sync/heart/share는 API + short timeout + reachability cache.
 
 **Guardrail:** Mobile must not access sensitive user/admin tables directly. Mobile may use approved Supabase RPC for public read-only catalog/content. Reading progress remains local-first.
 

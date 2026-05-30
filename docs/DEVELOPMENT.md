@@ -13,6 +13,7 @@ cd apps/mobile
 flutter pub get
 flutter pub run build_runner build --delete-conflicting-outputs
 cp .env.example.json .env.ios.json .env.android.json  # 각각 복사 후 값 입력
+# closed test: HUNNY_REMOTE_READ_MODE=supabase_rpc (see .env.example.json)
 ```
 
 | Platform | Local `HUNNY_API_BASE_URL` |
@@ -117,9 +118,57 @@ Home 빠르게 → progress/fallback · Read chapter toggle · Discover offline 
 | `env.IMAGES binding is not defined` | `next.config.mjs` `images.unoptimized: true` (Cloudinary 직접 사용). 또는 wrangler에 `images.binding: IMAGES` 추가 |
 | `waitUntil() tasks did not complete` | Worker background task timeout — DB 연결 hang·이미지 최적화 실패 시 발생. health·Hyperdrive 먼저 확인 |
 
-현재 release target: `v0.3.0+7` — `docs/ref/HUNNY_RELEASE_LOG.md`
+현재 release target: `v0.4.0+8` — `docs/ref/HUNNY_RELEASE_LOG.md`
 
 Hot reload: `r` / `R` / `q`
+
+## API performance diagnostics
+
+리팩터링 전 API 경로는 Worker hop + N+1로 느렸고(특히 `GET /api/v1/plans` full relations ~8s), 모바일 closed test는 **`HUNNY_REMOTE_READ_MODE=supabase_rpc`** 로 public read를 Supabase RPC에 둡니다. API read 라우트는 web/fallback용으로 유지합니다.
+
+### Server timing logs
+
+| Env | Behavior |
+| --- | --- |
+| `NODE_ENV=development` | On by default (`pnpm web:dev`) |
+| `API_PERF_LOG=1` | Force on (Workers preview / production smoke) |
+| `API_PERF_LOG=0` | Force off |
+
+`apps/web/.env.local` 예: `API_PERF_LOG=1`
+
+Instrumented routes emit JSON lines (`type: api_perf`) with `total_ms`, `db_ms`, `db_query_count`, `response_bytes`. Implementation: `src/lib/perf/api-timing.ts`, `src/lib/perf/db-timing.ts`.
+
+| Route | Typical bottleneck (API mode) |
+| --- | --- |
+| `GET /api/v1/plans` (full) | ~25 SQL queries, ~35KB — avoid on mobile; use RPC or `?detail=summary` |
+| `GET /api/v1/content` | ~6 queries list N+1 |
+| `GET /api/v1/today-message` | 1–2 queries; acceptable but adds Worker hop vs RPC |
+| `GET /api/health` | DB ping — **not** mobile reachability probe |
+
+### Local benchmark
+
+```bash
+pnpm web:dev   # separate terminal
+pnpm --dir apps/web bench:api
+HUNNY_API_BASE_URL=https://hunnybibletracker.com pnpm --dir apps/web bench:api
+```
+
+Script: `apps/web/scripts/bench-api.mjs` — client wall time + response bytes. Compare with server `api_perf` logs.
+
+### Mobile client (debug builds)
+
+`HunnyApiClient` logs `[HunnyApi] METHOD path STATUS durationMs ...` in `kDebugMode` only.
+
+| Setting | Value | Used for |
+| --- | --- | --- |
+| `requestConnectTimeout` | 8000 ms | Normal API calls (sync, heart, share) |
+| `requestReceiveTimeout` | 20000 ms | Normal API calls |
+| `probeConnectTimeout` | 4000 ms | Reachability probe |
+| `probeReceiveTimeout` | 6000 ms | Reachability probe |
+| Reachability probe | `GET /api/v1/sync/bootstrap` | **401 without token = online** |
+| `_onlineTtl` / `_offlineCooldown` | 30 s / 20 s | Cached reachability |
+
+Public catalog reads in RPC mode use `[HunnySupabase]` logs, not `[HunnyApi] GET /api/v1/plans`.
 
 ## 관련 문서
 

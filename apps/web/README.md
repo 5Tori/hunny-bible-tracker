@@ -2,7 +2,12 @@
 
 `apps/web` is the Next.js app that serves the Hunny Bible Tracker public web pages, admin dashboard, and mobile-facing API.
 
-The mobile app must never connect directly to Supabase Postgres. It talks to this app for published catalog data, auth user sync, reading-progress sync, today's message, and feedback submission.
+The mobile app uses a **hybrid** server path:
+
+- **Public catalog/content reads:** Supabase RPC (`mobile_*` functions) when `HUNNY_REMOTE_READ_MODE=supabase_rpc`, with Next.js API fallback
+- **Auth, sync, heart/share, feedback:** this app's API routes (Worker → Supabase Admin REST for writes)
+
+It does not connect to Supabase Postgres directly for SQL writes or sensitive user tables.
 
 ## Stack
 
@@ -129,6 +134,17 @@ Only published, non-archived plans are returned. `identifier` can resolve a publ
 
 `GET /api/v1/plans` accepts a `sort` query parsed by `parsePublishedPlanSort` in `src/lib/plans.ts`.
 
+**Mobile note:** Closed-test builds use Supabase RPC (`mobile_plan_catalog`, `mobile_plan_detail`) via `HUNNY_REMOTE_READ_MODE=supabase_rpc`. These API routes remain for web rendering and mobile API fallback. Full-relation `GET /api/v1/plans` (no `detail=summary`) is slow (~25 queries) — avoid as mobile default.
+
+### Published Content
+
+```text
+GET /api/v1/content
+GET /api/v1/content/[identifier]
+```
+
+Mobile may use `mobile_content_list` / `mobile_content_detail` RPC instead (see `supabase/migrations/20260601120100_mobile_catalog_rpc.sql`).
+
 ### Reading Sync
 
 Both routes require `Authorization: Bearer <Supabase access token>`.
@@ -153,6 +169,8 @@ POST /api/v1/today-message/[id]/share
 The public lookup returns the latest published message for the requested language on or before the requested date. When `date` is omitted, the server uses today's UTC date. The response includes `share_url`, built from `NEXT_PUBLIC_SITE_URL` when present and otherwise from the request origin, using `/today-message/YYYY-MM-DD`.
 
 Heart/share endpoints increment counters and return the updated counts.
+
+Mobile may use `mobile_today_message_latest` RPC instead of `GET /api/v1/today-message` for Home fetch.
 
 ### Feedback
 

@@ -39,7 +39,7 @@ Catalog CTA: never started → Start Plan · active run → Continue · complete
 
 ## Now
 
-Closed testing stability · content/plan seed · QA
+Play/TestFlight release artifact · content/plan seed · habit layer prep
 
 ## Next
 
@@ -55,4 +55,4 @@ Full Bible reader · social · BibleProject-scale production · gamified levels 
 
 ## Guardrails
 
-첫 화면은 useful해야 함(marketing page 아님) · Read flow 빠르게 · Google Auth sign-up/sign-in 구분 없음 · template ≠ user progress · reading activity ≠ current progress state · mobile → API only · compact backup에 `user_plan_chapters` 미포함
+첫 화면은 useful해야 함(marketing page 아님) · Read flow 빠르게 · Google Auth sign-up/sign-in 구분 없음 · template ≠ user progress · reading activity ≠ current progress state · mobile public read → Supabase RPC (민감 데이터는 API only) · compact backup에 `user_plan_chapters` 미포함

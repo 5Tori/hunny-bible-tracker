@@ -9,9 +9,10 @@ Post-MVP 방향 정리: **content-led Bible reading + habit tracking**.
 ## Active Work
 
 1. ~~Android closed-test QA~~ ✓ (2026-05-29)
-2. **iOS closed-test QA** + Play/TestFlight 빌드 (`versionCode` bump)
-3. Real plan/content seed (Admin 또는 seed SQL)
-4. Habit layer 준비 (`bible_chapters`, estimated reading time, daily goal, stats)
+2. ~~iOS closed-test QA~~ ✓
+3. Play/TestFlight 빌드 (`versionCode` bump)
+4. Real plan/content seed (Admin 또는 seed SQL)
+5. Habit layer 준비 (`bible_chapters`, estimated reading time, daily goal, stats)
 
 ## 완료 (재오픈 금지)
 
@@ -25,7 +26,7 @@ Post-MVP 방향 정리: **content-led Bible reading + habit tracking**.
 ## Implementation sequence
 
 1. ~~Documentation cleanup~~ ✓
-2. ~~Closed testing QA (Android)~~ ✓ → iOS + release artifact
+2. ~~Closed testing QA (Android + iOS)~~ ✓ → release artifact
 3. `bible_chapters` + estimated reading time
 4. Daily reading goal
 5. Today read minutes
@@ -39,13 +40,9 @@ Post-MVP 방향 정리: **content-led Bible reading + habit tracking**.
 
 ## Not Now
 
-Full Bible reader · social · heavy animation production · auto multi-device merge · conflict UI
+Full Bible reader · social · heavy animation production · auto multi-device merge · conflict UI · sync Edge Function migration · retire mobile read API routes (keep RPC + API fallback until stable)
 
 ## Checklists
 
 - Release: `docs/to-do/MVP_CLOSE_TESTING_TODO.md`
 - Roadmap: `docs/PRODUCT_ROADMAP.md`
-
-## Uncommitted code (commit when ready)
-
-모바일 sync/settings/home + web auth/sync/engagement REST 전환 — `git status` 참고.

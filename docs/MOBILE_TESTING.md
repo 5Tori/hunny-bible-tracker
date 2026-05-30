@@ -16,7 +16,7 @@ cp .env.example.json .env.android.json .env.ios.json
 
 필수 keys: `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `GOOGLE_*_CLIENT_ID`, `HUNNY_API_BASE_URL`, `HUNNY_REMOTE_READ_MODE`
 
-`.env.android.json` production 예:
+`.env.android.json` / `.env.ios.json` production 예 (둘 다 동일 패턴):
 
 ```json
 {
@@ -63,6 +63,12 @@ curl -s -o /dev/null -w "%{http_code}\n" https://hunnybibletracker.com/api/v1/sy
 - Sync/restore E2E OK · heart/save/share OK · Supabase RPC read logs 정상
 - Hyperdrive password reset + production `db: true` 확인
 
+## iOS QA log (2026-05-30)
+
+- `supabase_rpc` onboarding/catalog · sync/restore · Discover Continue → Read tab
+- `./scripts/run_ios.sh` targets iOS simulator (not macOS)
+- Guest reachability: `GET /api/v1/sync/bootstrap` **401 = online** (not an error)
+
 ## Build commands
 
 ```bash
@@ -84,6 +90,7 @@ Play upload마다 `pubspec.yaml` `version`의 `+versionCode` 증가.
 | Long **sqlite3** / `MIN` macro warnings in Xcode build | Harmless pod noise (Drift/sqlite3); ignore if build succeeds |
 | Home/Discover empty | Admin publish · Supabase RPC migration applied |
 | Sync server offline | reachability uses `/api/v1/sync/bootstrap`; retry after network settles |
+| `GET /api/v1/sync/bootstrap` 401 in debug log | Expected when logged out — reachability probe treats 401 as online |
 | Google sign-in fail | env client IDs · Android SHA-1 · iOS bundle ID |
 | iOS signing | Xcode → Runner → Team |
 

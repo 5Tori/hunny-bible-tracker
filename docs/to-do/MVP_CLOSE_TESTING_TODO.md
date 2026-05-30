@@ -4,7 +4,7 @@
 
 ## Done / Do Not Re-open
 
-Read flow QA · Discover enabled · Saved/List hidden · Home Today's Message · content admin/API · Plans(full-screen, archive/restore) · feedback API · **sync push/bootstrap (Android E2E)** · offline Home/Read · Discover offline message · launch/icon assets · **Supabase RPC read layer** · **heart/share/save UX** · Documentation 정리
+Read flow QA · Discover enabled · Saved/List hidden · Home Today's Message · content admin/API · Plans(full-screen, archive/restore) · feedback API · **sync push/bootstrap (Android + iOS E2E)** · offline Home/Read · Discover offline message · launch/icon assets · **Supabase RPC read layer** · **heart/share/save UX** · **Discover plan CTA (Continue + Read navigation)** · Documentation 정리
 
 ### Android manual QA (2026-05-29) ✓
 
@@ -12,6 +12,12 @@ Read flow QA · Discover enabled · Saved/List hidden · Home Today's Message ·
 - Discover online/offline · Plans start/read · Settings sign-in · **Sync now · Restore**
 - `HUNNY_REMOTE_READ_MODE=supabase_rpc` + `HUNNY_API_BASE_URL=https://hunnybibletracker.com`
 - Production `/api/health` → `db: true`
+
+### iOS manual QA (2026-05-30) ✓
+
+- Onboarding plan load (`supabase_rpc`) · Home/Discover/Read/Settings parity with Android
+- Discover content detail: subscribed plan shows **Continue** → Read tab
+- Sync/restore · Drift schema v4 migration on fresh install
 
 ## Before Build
 
@@ -23,18 +29,18 @@ Read flow QA · Discover enabled · Saved/List hidden · Home Today's Message ·
 - [ ] `supabase/migrations/` through `20260601120300` applied on production
 - [ ] Discover content: seed 또는 Admin publish
 - [ ] Today's Message: seed 또는 Admin publish
-- [ ] iOS manual QA (Android parity)
 
 **Automated**
 
 - [ ] `flutter analyze` · `flutter test` · `pnpm --dir apps/web typecheck`
-- [ ] `pubspec.yaml` `version` / `+versionCode` bump for next upload
+- [ ] `pubspec.yaml` `version` / `+versionCode` bump for next upload (current: `0.4.0+8`)
 
-**Production API**
+**Production API / RPC**
 
 - [x] `GET /api/health` 200 (`db: true`)
-- [ ] `GET /api/v1/plans?sort=featured` (target: 8 plans)
-- [ ] `GET /api/v1/content?sort=featured&language=en`
+- [x] Mobile closed test: `HUNNY_REMOTE_READ_MODE=supabase_rpc` on iOS + Android
+- [ ] `GET /api/v1/plans?sort=featured` (API fallback smoke; target: published plans)
+- [ ] `GET /api/v1/content?sort=featured&language=en` (web/API fallback)
 - [ ] Supabase RPC smoke: `mobile_today_message_latest`, `mobile_plan_catalog`
 
 ## Content Required
@@ -45,13 +51,9 @@ Read flow QA · Discover enabled · Saved/List hidden · Home Today's Message ·
 - MVP plans: target **≥5** published plans
 - Start Plan → valid `user_plan_chapters` · plan CTA via linked content
 
-## Manual QA (iOS remaining)
-
-Fresh install Home · airplane mode Home/Read · Discover · Plans · Settings sync/restore · launch screen
-
 ## Known Deferred
 
-Plan Detail · Saved/List tab · Home featured · content deep link · habit layer · push · auto merge · conflict UI · automated test coverage
+Plan Detail · Saved/List tab · Home featured · content deep link · habit layer · push · auto merge · conflict UI · automated test coverage · retire mobile read API routes · sync Edge Function migration
 
 ## Release Notes
 

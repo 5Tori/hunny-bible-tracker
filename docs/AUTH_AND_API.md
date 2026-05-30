@@ -49,7 +49,7 @@ Content seed (optional): `apps/web/db/seeds/content_test_seed.sql`
 SUPABASE_URL, SUPABASE_ANON_KEY
 GOOGLE_WEB_CLIENT_ID, GOOGLE_IOS_CLIENT_ID, GOOGLE_ANDROID_CLIENT_ID
 HUNNY_API_BASE_URL
-HUNNY_REMOTE_READ_MODE   # api | supabase_rpc (default: api)
+HUNNY_REMOTE_READ_MODE   # api | supabase_rpc (closed test default: supabase_rpc)
 ```
 
 | Platform | ID |
