@@ -437,6 +437,70 @@ async function getContentRelations(content: ContentBase) {
   return { author, assets, sections, tags, relatedPlans };
 }
 
+type ContentListRelations = Pick<
+  Awaited<ReturnType<typeof getContentRelations>>,
+  'author' | 'relatedPlans'
+>;
+
+async function getAdminContentListRelations(contents: ContentBase[]) {
+  const relationsByContentId = new Map<string, ContentListRelations>();
+  if (contents.length === 0) {
+    return relationsByContentId;
+  }
+
+  for (const content of contents) {
+    relationsByContentId.set(content.id, { author: null, relatedPlans: [] });
+  }
+
+  const contentIds = contents.map((content) => content.id);
+  const authorIds = [
+    ...new Set(contents.map((content) => content.author_id).filter(Boolean)),
+  ] as string[];
+
+  const authors =
+    authorIds.length === 0
+      ? []
+      : ((await sql`
+          select * from content_authors
+          where id = any(${authorIds})
+        `) as ContentAuthor[]);
+
+  const authorById = new Map(authors.map((author) => [author.id, author]));
+  for (const content of contents) {
+    const bucket = relationsByContentId.get(content.id);
+    if (!bucket) continue;
+    bucket.author = content.author_id ? authorById.get(content.author_id) ?? null : null;
+  }
+
+  const relatedPlanRows = (await sql`
+    select
+      cpl.content_id,
+      cpl.relationship_type,
+      cpl.display_order,
+      cpl.cta_label,
+      pt.id,
+      pt.template_key,
+      pt.title,
+      pt.subtitle,
+      pt.cover_image_url,
+      pt.total_chapters,
+      pt.estimated_minutes
+    from content_plan_links cpl
+    join plan_templates pt on pt.id = cpl.plan_template_id
+    where cpl.content_id = any(${contentIds})
+    order by cpl.content_id asc, cpl.display_order asc, pt.featured_rank asc nulls last, pt.updated_at desc
+  `) as Array<ContentRelatedPlan & { content_id: string }>;
+
+  for (const row of relatedPlanRows) {
+    const bucket = relationsByContentId.get(row.content_id);
+    if (!bucket) continue;
+    const { content_id: _contentId, ...plan } = row;
+    bucket.relatedPlans.push(plan);
+  }
+
+  return relationsByContentId;
+}
+
 async function resolveAuthorId(
   input: ReturnType<typeof normalizeInput>,
 ) {
@@ -707,12 +771,21 @@ export async function getAdminContents() {
     select * from contents
     order by updated_at desc
   `) as ContentBase[];
-  return await Promise.all(
-    contents.map(async (content) => {
-      const relations = await getContentRelations(content);
-      return hydrateContent(content, relations);
-    }),
-  );
+
+  if (contents.length === 0) {
+    return [];
+  }
+
+  const relationsByContentId = await getAdminContentListRelations(contents);
+  return contents.map((content) => {
+    const relations = relationsByContentId.get(content.id) ?? { author: null, relatedPlans: [] };
+    return hydrateContent(content, {
+      ...relations,
+      assets: [],
+      sections: [],
+      tags: [],
+    });
+  });
 }
 
 export async function getAdminContentById(id: string) {

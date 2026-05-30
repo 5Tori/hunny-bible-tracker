@@ -148,11 +148,36 @@ async function loadLinkedContentSummary(
   if (!contentId) return null;
 
   const rows = (await sql`
-    select id, slug, content_type, title, summary, cover_image_url
-    from contents
-    where id = ${contentId}
-      and is_published = true
-      and is_archived = false
+    select
+      c.id,
+      c.slug,
+      c.content_type,
+      c.title,
+      c.summary,
+      c.cover_image_url,
+      coalesce(
+        json_agg(
+          json_build_object(
+            'id', pt.id,
+            'template_key', pt.template_key,
+            'title', pt.title,
+            'total_chapters', pt.total_chapters,
+            'estimated_minutes', pt.estimated_minutes,
+            'cta_label', cpl.cta_label
+          )
+          order by cpl.display_order asc, pt.featured_rank asc nulls last, pt.updated_at desc
+        ) filter (where pt.id is not null),
+        '[]'::json
+      ) as related_plans
+    from contents c
+    left join content_plan_links cpl on cpl.content_id = c.id
+    left join plan_templates pt on pt.id = cpl.plan_template_id
+      and pt.is_published = true
+      and pt.is_archived = false
+    where c.id = ${contentId}
+      and c.is_published = true
+      and c.is_archived = false
+    group by c.id, c.slug, c.content_type, c.title, c.summary, c.cover_image_url
     limit 1
   `) as Array<{
     id: string;
@@ -161,33 +186,18 @@ async function loadLinkedContentSummary(
     title: string;
     summary: string | null;
     cover_image_url: string | null;
+    related_plans: Array<{
+      id: string;
+      template_key: string;
+      title: string;
+      total_chapters: number | null;
+      estimated_minutes: number | null;
+      cta_label: string | null;
+    }>;
   }>;
 
   const content = rows[0];
   if (!content) return null;
-
-  const relatedPlans = (await sql`
-    select
-      cpl.cta_label,
-      pt.id,
-      pt.template_key,
-      pt.title,
-      pt.total_chapters,
-      pt.estimated_minutes
-    from content_plan_links cpl
-    join plan_templates pt on pt.id = cpl.plan_template_id
-    where cpl.content_id = ${contentId}
-      and pt.is_published = true
-      and pt.is_archived = false
-    order by cpl.display_order asc, pt.featured_rank asc nulls last, pt.updated_at desc
-  `) as Array<{
-    cta_label: string | null;
-    id: string;
-    template_key: string;
-    title: string;
-    total_chapters: number | null;
-    estimated_minutes: number | null;
-  }>;
 
   return {
     id: content.id,
@@ -196,7 +206,7 @@ async function loadLinkedContentSummary(
     title: content.title,
     summary: content.summary,
     cover_image_url: content.cover_image_url,
-    related_plans: relatedPlans.map((plan) => ({
+    related_plans: content.related_plans.map((plan) => ({
       id: plan.id,
       template_key: plan.template_key,
       title: plan.title,

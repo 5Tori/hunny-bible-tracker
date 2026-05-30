@@ -18,10 +18,13 @@ type HyperdriveBinding = {
   connectionString: string;
 };
 
-let cachedConfigKey: string | null = null;
 let localSqlClient: ReturnType<typeof postgres> | null = null;
+let localConfigKey: string | null = null;
 let hyperdriveSqlClient: ReturnType<typeof postgres> | null = null;
 let hyperdriveConfigKey: string | null = null;
+let hyperdriveClientCreatedAt = 0;
+
+const HYPERDRIVE_CLIENT_MAX_AGE_MS = 30_000;
 
 function isPlaceholderDatabaseUrl(url: string): boolean {
   return url.includes('REPLACE_');
@@ -40,9 +43,9 @@ type DatabaseConfig = {
   viaHyperdrive: boolean;
 };
 
-function getDatabaseConfig(): DatabaseConfig {
+async function resolveDatabaseConfig(): Promise<DatabaseConfig> {
   try {
-    const { env } = getCloudflareContext();
+    const { env } = await getCloudflareContext({ async: true });
     const hyperdrive = (env as { HYPERDRIVE?: HyperdriveBinding }).HYPERDRIVE;
     const hyperdriveUrl = hyperdrive?.connectionString?.trim();
     if (hyperdriveUrl && !isPlaceholderDatabaseUrl(hyperdriveUrl)) {
@@ -60,28 +63,23 @@ function getDatabaseConfig(): DatabaseConfig {
   throw new Error('DATABASE_URL is not set');
 }
 
-function createPostgresClient(config: DatabaseConfig, url: string) {
-  return postgres(
-    url,
-    config.viaHyperdrive
-      ? {
-          max: 1,
-          fetch_types: false,
-          prepare: false,
-          connect_timeout: 10,
-        }
-      : {
-          max: 1,
-          prepare: false,
-          connect_timeout: 15,
-          ssl: 'require',
-        },
-  );
+function createPostgresClient(url: string, viaHyperdrive: boolean) {
+  return postgres(normalizeDatabaseUrl(url), {
+    max: 1,
+    fetch_types: false,
+    prepare: false,
+    connect_timeout: 5,
+    idle_timeout: viaHyperdrive ? 10 : 20,
+    max_lifetime: viaHyperdrive ? 30 : 60 * 30,
+    ...(viaHyperdrive ? {} : { ssl: 'require' as const }),
+  });
 }
 
 function resetHyperdriveClient() {
+  hyperdriveSqlClient?.end({ timeout: 1 }).catch(() => {});
   hyperdriveSqlClient = null;
   hyperdriveConfigKey = null;
+  hyperdriveClientCreatedAt = 0;
 }
 
 function isConnectionError(error: unknown): boolean {
@@ -90,29 +88,44 @@ function isConnectionError(error: unknown): boolean {
     message.includes('CONNECTION_CLOSED') ||
     message.includes('Connection terminated') ||
     message.includes('connection timeout') ||
-    message.includes('ECONNRESET')
+    message.includes('CONNECT_TIMEOUT') ||
+    message.includes('ECONNRESET') ||
+    message.includes('ECONNREFUSED')
   );
 }
 
-function getClient() {
-  const config = getDatabaseConfig();
+function getLocalClient(config: DatabaseConfig) {
   const url = normalizeDatabaseUrl(config.url);
-
-  if (config.viaHyperdrive) {
-    const configKey = `hyperdrive:${url}`;
-    if (!hyperdriveSqlClient || hyperdriveConfigKey !== configKey) {
-      hyperdriveSqlClient = createPostgresClient(config, url);
-      hyperdriveConfigKey = configKey;
-    }
-    return hyperdriveSqlClient;
-  }
-
   const configKey = `direct:${url}`;
-  if (!localSqlClient || cachedConfigKey !== configKey) {
-    localSqlClient = createPostgresClient(config, url);
-    cachedConfigKey = configKey;
+  if (!localSqlClient || localConfigKey !== configKey) {
+    localSqlClient?.end({ timeout: 1 }).catch(() => {});
+    localSqlClient = createPostgresClient(url, false);
+    localConfigKey = configKey;
   }
   return localSqlClient;
+}
+
+async function getHyperdriveClient(config: DatabaseConfig) {
+  const url = normalizeDatabaseUrl(config.url);
+  const configKey = `hyperdrive:${url}`;
+  const clientAge = Date.now() - hyperdriveClientCreatedAt;
+  const clientExpired =
+    !hyperdriveSqlClient ||
+    hyperdriveConfigKey !== configKey ||
+    clientAge > HYPERDRIVE_CLIENT_MAX_AGE_MS;
+
+  if (clientExpired) {
+    resetHyperdriveClient();
+    hyperdriveSqlClient = createPostgresClient(url, true);
+    hyperdriveConfigKey = configKey;
+    hyperdriveClientCreatedAt = Date.now();
+  }
+
+  return hyperdriveSqlClient!;
+}
+
+async function getClient(config: DatabaseConfig) {
+  return config.viaHyperdrive ? getHyperdriveClient(config) : getLocalClient(config);
 }
 
 function makeTagged(executor: SqlExecutor): SqlExecutor {
@@ -123,23 +136,27 @@ async function runQuery<T>(
   strings: TemplateStringsArray,
   values: unknown[],
 ): Promise<T> {
+  const config = await resolveDatabaseConfig();
+
   for (let attempt = 0; attempt < 2; attempt++) {
     try {
-      const client = getClient();
+      const client = await getClient(config);
       return (await client(strings, ...(values as never[]))) as T;
     } catch (error) {
-      if (attempt === 0 && getDatabaseConfig().viaHyperdrive && isConnectionError(error)) {
+      if (attempt === 0 && config.viaHyperdrive && isConnectionError(error)) {
         resetHyperdriveClient();
         continue;
       }
       throw error;
     }
   }
+
   throw new Error('SQL query failed');
 }
 
 async function runTransaction(fn: (txn: SqlExecutor) => readonly unknown[]) {
-  const client = getClient();
+  const config = await resolveDatabaseConfig();
+  const client = await getClient(config);
   await client.begin(async (txn) => {
     const txnSql = makeTagged(txn as unknown as SqlExecutor);
     const batch = fn(txnSql);

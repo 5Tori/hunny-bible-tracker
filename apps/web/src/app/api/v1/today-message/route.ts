@@ -19,9 +19,8 @@ export async function GET(req: Request) {
     if (error instanceof TodayMessageValidationError) {
       return NextResponse.json({ error: 'validation_error', message: error.message }, { status: 400 });
     }
-    if (process.env.NODE_ENV !== 'production') {
-      console.error('Public today-message GET error:', error);
-    }
+    const message = error instanceof Error ? error.message : 'server_error';
+    console.error('Public today-message GET error:', message);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
 }

@@ -245,29 +245,112 @@ function hydratePlan(
   };
 }
 
-async function getPlanRelations(sqlExecutor: SqlLike, planId: string) {
+async function getPlanRelationsForPlans(
+  sqlExecutor: SqlLike,
+  planIds: string[],
+) {
+  if (planIds.length === 0) {
+    return {
+      sectionsByPlan: new Map<string, Array<Omit<PlanSection, 'items'>>>(),
+      itemsBySection: new Map<string, PlanItem[]>(),
+      tagsByPlan: new Map<string, PlanTag[]>(),
+    };
+  }
+
+  if (planIds.length === 1) {
+    const planId = planIds[0]!;
+    const sections = (await sqlExecutor`
+      select * from plan_template_sections
+      where plan_template_id = ${planId}
+      order by order_index asc, created_at asc
+    `) as Array<Omit<PlanSection, 'items'>>;
+
+    const items = (await sqlExecutor`
+      select * from plan_template_items
+      where section_id in (
+        select id from plan_template_sections
+        where plan_template_id = ${planId}
+      )
+      order by section_id asc, order_index asc, created_at asc
+    `) as PlanItem[];
+
+    const tagRows = (await sqlExecutor`
+      select t.*, ptt.plan_template_id
+      from plan_tags t
+      join plan_template_tags ptt on ptt.tag_id = t.id
+      where ptt.plan_template_id = ${planId}
+      order by t.name asc
+    `) as Array<PlanTag & { plan_template_id: string }>;
+
+    const sectionsByPlan = new Map([[planId, sections]]);
+    const itemsBySection = new Map<string, PlanItem[]>();
+    for (const item of items) {
+      const bucket = itemsBySection.get(item.section_id) ?? [];
+      bucket.push(item);
+      itemsBySection.set(item.section_id, bucket);
+    }
+    const tagsByPlan = new Map<string, PlanTag[]>([[planId, tagRows.map(({ plan_template_id: _id, ...tag }) => tag)]]);
+
+    return { sectionsByPlan, itemsBySection, tagsByPlan };
+  }
+
   const sections = (await sqlExecutor`
     select * from plan_template_sections
-    where plan_template_id = ${planId}
-    order by order_index asc, created_at asc
+    where plan_template_id = any(${planIds})
+    order by plan_template_id asc, order_index asc, created_at asc
   `) as Array<Omit<PlanSection, 'items'>>;
 
-  const items = (await sqlExecutor`
-    select * from plan_template_items
-    where section_id in (
-      select id from plan_template_sections
-      where plan_template_id = ${planId}
-    )
-    order by section_id asc, order_index asc, created_at asc
-  `) as PlanItem[];
+  const sectionIds = sections.map((section) => section.id);
+  const items =
+    sectionIds.length === 0
+      ? []
+      : ((await sqlExecutor`
+          select * from plan_template_items
+          where section_id = any(${sectionIds})
+          order by section_id asc, order_index asc, created_at asc
+        `) as PlanItem[]);
 
-  const tags = (await sqlExecutor`
-    select t.* from plan_tags t
+  const tagRows = (await sqlExecutor`
+    select t.*, ptt.plan_template_id
+    from plan_tags t
     join plan_template_tags ptt on ptt.tag_id = t.id
-    where ptt.plan_template_id = ${planId}
-    order by t.name asc
-  `) as PlanTag[];
+    where ptt.plan_template_id = any(${planIds})
+    order by ptt.plan_template_id asc, t.name asc
+  `) as Array<PlanTag & { plan_template_id: string }>;
 
+  const sectionsByPlan = new Map<string, Array<Omit<PlanSection, 'items'>>>();
+  for (const section of sections) {
+    const bucket = sectionsByPlan.get(section.plan_template_id) ?? [];
+    bucket.push(section);
+    sectionsByPlan.set(section.plan_template_id, bucket);
+  }
+
+  const itemsBySection = new Map<string, PlanItem[]>();
+  for (const item of items) {
+    const bucket = itemsBySection.get(item.section_id) ?? [];
+    bucket.push(item);
+    itemsBySection.set(item.section_id, bucket);
+  }
+
+  const tagsByPlan = new Map<string, PlanTag[]>();
+  for (const row of tagRows) {
+    const { plan_template_id, ...tag } = row;
+    const bucket = tagsByPlan.get(plan_template_id) ?? [];
+    bucket.push(tag);
+    tagsByPlan.set(plan_template_id, bucket);
+  }
+
+  return { sectionsByPlan, itemsBySection, tagsByPlan };
+}
+
+async function getPlanRelations(sqlExecutor: SqlLike, planId: string) {
+  const { sectionsByPlan, itemsBySection, tagsByPlan } = await getPlanRelationsForPlans(
+    sqlExecutor,
+    [planId],
+  );
+  const sections = sectionsByPlan.get(planId) ?? [];
+  const items = sections.flatMap((section) => itemsBySection.get(section.id) ?? []);
+  const tags = tagsByPlan.get(planId) ?? [];
   return { sections, items, tags };
 }
 
@@ -303,12 +386,17 @@ export async function getPublishedPlans(sort: PublishedPlanSortMode = 'featured'
 
 export async function getPublishedPlansWithRelations(sort: PublishedPlanSortMode = 'featured') {
   const plans = await getPublishedPlans(sort);
-  return await Promise.all(
-    plans.map(async (plan) => {
-      const { sections, items, tags } = await getPlanRelations(sql, plan.id);
-      return hydratePlan(plan, sections, items, tags);
-    }),
-  );
+  if (plans.length === 0) return [];
+
+  const planIds = plans.map((plan) => plan.id);
+  const { sectionsByPlan, itemsBySection, tagsByPlan } = await getPlanRelationsForPlans(sql, planIds);
+
+  return plans.map((plan) => {
+    const sections = sectionsByPlan.get(plan.id) ?? [];
+    const items = sections.flatMap((section) => itemsBySection.get(section.id) ?? []);
+    const tags = tagsByPlan.get(plan.id) ?? [];
+    return hydratePlan(plan, sections, items, tags);
+  });
 }
 
 export async function getPublishedPlanByIdentifier(identifier: string) {

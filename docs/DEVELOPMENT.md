@@ -101,6 +101,9 @@ Home 빠르게 → progress/fallback · Read chapter toggle · Discover offline 
 | Google Sign-In iOS | `Info.plist` GIDClientID, URL schemes, Supabase redirect |
 | Drift stale | `flutter pub run build_runner build` |
 | Stale mobile data | 앱 삭제/reinstall |
+| API 500 / 10–30s timeout | `curl https://hunnybibletracker.com/api/health` — `db: false`면 Hyperdrive·Supabase pooler 확인 (Dashboard → Hyperdrive origin URL·비밀번호, Network restrictions) |
+| `env.IMAGES binding is not defined` | `next.config.mjs` `images.unoptimized: true` (Cloudinary 직접 사용). 또는 wrangler에 `images.binding: IMAGES` 추가 |
+| `waitUntil() tasks did not complete` | Worker background task timeout — DB 연결 hang·이미지 최적화 실패 시 발생. health·Hyperdrive 먼저 확인 |
 
 현재 release target: `v0.3.0+7` — `docs/ref/HUNNY_RELEASE_LOG.md`
 

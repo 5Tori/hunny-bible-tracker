@@ -1,9 +1,30 @@
 import { NextResponse } from 'next/server';
 
+import { sql } from '@/lib/db/postgres';
+
 export async function GET() {
-  return NextResponse.json({
-    ok: true,
+  const base = {
     service: 'hunny-bible-tracker-web',
-    scope: 'placeholder',
-  });
+  };
+
+  try {
+    const rows = (await sql`select 1 as ok`) as Array<{ ok: number }>;
+    return NextResponse.json({
+      ok: true,
+      db: rows[0]?.ok === 1,
+      ...base,
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'db_unreachable';
+    console.error('Health check DB error:', message);
+    return NextResponse.json(
+      {
+        ok: false,
+        db: false,
+        error: 'db_unreachable',
+        ...base,
+      },
+      { status: 503 },
+    );
+  }
 }
