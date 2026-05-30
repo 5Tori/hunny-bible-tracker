@@ -184,3 +184,22 @@ const sql: SqlClient = Object.assign(
 
 export { sql };
 export type SqlLike = SqlExecutor;
+
+type PostgresClient = ReturnType<typeof postgres>;
+
+/** Hyperdrive-safe UUID list filters (avoid ANY/unnest single-element binding bugs). */
+export async function queryByUuidIds<T>(
+  ids: string[],
+  querySingle: (id: string) => Promise<T[]>,
+  queryMultiple: (pg: PostgresClient, ids: string[]) => Promise<T[]>,
+): Promise<T[]> {
+  if (ids.length === 0) {
+    return [];
+  }
+  if (ids.length === 1) {
+    return querySingle(ids[0]!);
+  }
+  const config = await resolveDatabaseConfig();
+  const pg = await getClient(config);
+  return queryMultiple(pg, ids);
+}

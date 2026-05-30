@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 
 import { calculatePlanEstimatedMinutes } from '@/lib/plan-estimates';
-import { sql, type SqlLike } from '@/lib/db/postgres';
+import { sql, queryByUuidIds, type SqlLike } from '@/lib/db/postgres';
 import { normalizeDifficulty, normalizePlanType, normalizeTestamentScope } from '@/lib/plan-taxonomy';
 
 export interface PlanTemplateBase {
@@ -257,29 +257,91 @@ async function getPlanRelationsForPlans(
     };
   }
 
-  const sections = (await sqlExecutor`
-    select * from plan_template_sections
-    where plan_template_id = any(${planIds})
-    order by plan_template_id asc, order_index asc, created_at asc
-  `) as Array<Omit<PlanSection, 'items'>>;
+  if (planIds.length === 1) {
+    const planId = planIds[0]!;
+    const sections = (await sqlExecutor`
+      select * from plan_template_sections
+      where plan_template_id = ${planId}
+      order by order_index asc, created_at asc
+    `) as Array<Omit<PlanSection, 'items'>>;
+
+    const items = (await sqlExecutor`
+      select * from plan_template_items
+      where section_id in (
+        select id from plan_template_sections
+        where plan_template_id = ${planId}
+      )
+      order by section_id asc, order_index asc, created_at asc
+    `) as PlanItem[];
+
+    const tagRows = (await sqlExecutor`
+      select t.*, ptt.plan_template_id
+      from plan_tags t
+      join plan_template_tags ptt on ptt.tag_id = t.id
+      where ptt.plan_template_id = ${planId}
+      order by t.name asc
+    `) as Array<PlanTag & { plan_template_id: string }>;
+
+    const sectionsByPlan = new Map([[planId, sections]]);
+    const itemsBySection = new Map<string, PlanItem[]>();
+    for (const item of items) {
+      const bucket = itemsBySection.get(item.section_id) ?? [];
+      bucket.push(item);
+      itemsBySection.set(item.section_id, bucket);
+    }
+    const tagsByPlan = new Map<string, PlanTag[]>([
+      [planId, tagRows.map(({ plan_template_id: _id, ...tag }) => tag)],
+    ]);
+
+    return { sectionsByPlan, itemsBySection, tagsByPlan };
+  }
+
+  const sections = await queryByUuidIds<Omit<PlanSection, 'items'>>(
+    planIds,
+    (id) => sqlExecutor`
+      select * from plan_template_sections
+      where plan_template_id = ${id}
+      order by order_index asc, created_at asc
+    `,
+    (pg, ids) => pg`
+      select * from plan_template_sections
+      where plan_template_id in ${pg(ids)}
+      order by plan_template_id asc, order_index asc, created_at asc
+    `,
+  );
 
   const sectionIds = sections.map((section) => section.id);
-  const items =
-    sectionIds.length === 0
-      ? []
-      : ((await sqlExecutor`
-          select * from plan_template_items
-          where section_id = any(${sectionIds})
-          order by section_id asc, order_index asc, created_at asc
-        `) as PlanItem[]);
+  const items = await queryByUuidIds<PlanItem>(
+    sectionIds,
+    (id) => sqlExecutor`
+      select * from plan_template_items
+      where section_id = ${id}
+      order by section_id asc, order_index asc, created_at asc
+    `,
+    (pg, ids) => pg`
+      select * from plan_template_items
+      where section_id in ${pg(ids)}
+      order by section_id asc, order_index asc, created_at asc
+    `,
+  );
 
-  const tagRows = (await sqlExecutor`
-    select t.*, ptt.plan_template_id
-    from plan_tags t
-    join plan_template_tags ptt on ptt.tag_id = t.id
-    where ptt.plan_template_id = any(${planIds})
-    order by ptt.plan_template_id asc, t.name asc
-  `) as Array<PlanTag & { plan_template_id: string }>;
+  const tagRows = await queryByUuidIds<PlanTag & { plan_template_id: string }>(
+    planIds,
+    (id) => sqlExecutor`
+      select t.*, ptt.plan_template_id
+      from plan_tags t
+      join plan_template_tags ptt on ptt.tag_id = t.id
+      where ptt.plan_template_id = ${id}
+      order by t.name asc
+    `,
+    (pg, ids) => pg`
+      select t.*, ptt.plan_template_id
+      from plan_tags t
+      join plan_template_tags ptt on ptt.tag_id = t.id
+      where ptt.plan_template_id in ${pg(ids)}
+      order by ptt.plan_template_id asc, t.name asc
+    `,
+  );
 
   const sectionsByPlan = new Map<string, Array<Omit<PlanSection, 'items'>>>();
   const itemsBySection = new Map<string, PlanItem[]>();

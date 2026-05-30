@@ -26,12 +26,16 @@ begin
 
   return coalesce(
     (
-      select jsonb_agg(row_payload order by sort_rank asc nulls last, published_at desc nulls last, updated_at desc)
+      select jsonb_agg(row_payload order by
+        case when p_sort = 'new' then published_at end desc nulls last,
+        case when p_sort <> 'new' then featured_rank end asc nulls last,
+        updated_at desc
+      )
       from (
         select
           c.published_at,
           c.updated_at,
-          case when p_sort = 'new' then c.published_at else c.featured_rank end as sort_rank,
+          c.featured_rank,
           jsonb_build_object(
             'id', c.id,
             'slug', c.slug,
@@ -258,15 +262,19 @@ as $$
 begin
   return coalesce(
     (
-      select jsonb_agg(to_jsonb(pt.*) order by sort_rank asc nulls last, updated_at desc)
+      select jsonb_agg(plan_json order by
+        case when p_sort = 'new' then created_at end desc nulls last,
+        case when p_sort = 'popular' then total_chapters end desc nulls last,
+        case when p_sort not in ('new', 'popular') then featured_rank end asc nulls last,
+        updated_at desc
+      )
       from (
         select
-          pt.*,
-          case
-            when p_sort = 'new' then pt.created_at
-            when p_sort = 'popular' then pt.total_chapters
-            else pt.featured_rank
-          end as sort_rank
+          to_jsonb(pt.*) as plan_json,
+          pt.created_at,
+          pt.total_chapters,
+          pt.featured_rank,
+          pt.updated_at
         from public.plan_templates pt
         where pt.is_published = true
           and pt.is_archived = false
@@ -276,7 +284,7 @@ begin
           case when p_sort = 'popular' then pt.total_chapters end desc nulls last,
           case when p_sort not in ('new', 'popular') then pt.featured_rank end asc nulls last,
           pt.updated_at desc
-      ) pt
+      ) plans
     ),
     '[]'::jsonb
   );
