@@ -525,6 +525,33 @@ class ReadRepository {
     return _createUserPlanFromTemplate(template);
   }
 
+  /// Active or completion-ready user plan for this catalog template, if any.
+  Future<String?> findActiveUserPlanIdForTemplate(
+    String templateIdentifier,
+  ) async {
+    final template = await (db.select(db.planTemplates)
+          ..where(
+            (tbl) =>
+                tbl.templateKey.equals(templateIdentifier) |
+                tbl.id.equals(templateIdentifier),
+          )
+          ..limit(1))
+        .getSingleOrNull();
+    if (template == null) return null;
+
+    final existing = await (db.select(db.userReadingPlans)
+          ..where(
+            (tbl) =>
+                tbl.templateId.equals(template.id) &
+                tbl.archivedAt.isNull() &
+                tbl.status.isIn(['active', 'completion_ready']),
+          )
+          ..orderBy([(tbl) => OrderingTerm.desc(tbl.updatedAt)])
+          ..limit(1))
+        .getSingleOrNull();
+    return existing?.id;
+  }
+
   Future<List<BookProgress>> getBooksWithProgress(String planId) async {
     final sections = await getSectionsWithProgress(planId);
     return sections.expand((section) => section.books).toList();

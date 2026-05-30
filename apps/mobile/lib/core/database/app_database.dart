@@ -279,19 +279,92 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase.forTesting(super.executor);
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         onCreate: (m) => m.createAll(),
         onUpgrade: (Migrator m, int from, int to) async {
-          if (from < 2) {
-            await m.addColumn(planTemplates, planTemplates.featuredRank);
-            await m.addColumn(planTemplates, planTemplates.browseVisible);
+          final db = m.database;
+          if (await _sqliteUserTableCount(db) == 0) {
+            await m.createAll();
+            return;
           }
-          if (from < 3) {
+
+          if (from < 2) {
+            await _ensurePlanTemplateCatalog(m, db);
+          }
+          if (from < 3 &&
+              !await _sqliteTableExists(db, 'bible_chapters')) {
             await m.createTable(bibleChapters);
+          }
+          if (from < 4) {
+            await _repairIncompleteSchema(m, db);
           }
         },
       );
+
+  Future<void> _ensurePlanTemplateCatalog(
+    Migrator m,
+    GeneratedDatabase db,
+  ) async {
+    if (await _sqliteTableExists(db, 'plan_templates')) {
+      if (!await _sqliteColumnExists(db, 'plan_templates', 'featured_rank')) {
+        await m.addColumn(planTemplates, planTemplates.featuredRank);
+      }
+      if (!await _sqliteColumnExists(db, 'plan_templates', 'browse_visible')) {
+        await m.addColumn(planTemplates, planTemplates.browseVisible);
+      }
+      return;
+    }
+
+    await m.createTable(planTemplates);
+    await m.createTable(planTemplateSections);
+    await m.createTable(planTemplateItems);
+    await m.createTable(planTags);
+    await m.createTable(planTemplateTags);
+  }
+
+  Future<void> _repairIncompleteSchema(
+    Migrator m,
+    GeneratedDatabase db,
+  ) async {
+    if (!await _sqliteTableExists(db, 'bible_chapters')) {
+      await m.createTable(bibleChapters);
+    }
+    await _ensurePlanTemplateCatalog(m, db);
+  }
+}
+
+Future<int> _sqliteUserTableCount(GeneratedDatabase db) async {
+  final row = await db.customSelect(
+    'SELECT COUNT(*) AS count FROM sqlite_master '
+    "WHERE type = 'table' AND name NOT LIKE 'sqlite_%' "
+    "AND name != 'drift_schema_versions'",
+  ).getSingle();
+  return row.read<int>('count');
+}
+
+Future<bool> _sqliteTableExists(GeneratedDatabase db, String tableName) async {
+  final row = await db.customSelect(
+    'SELECT 1 AS ok FROM sqlite_master WHERE type = ? AND name = ? LIMIT 1',
+    variables: [
+      Variable.withString('table'),
+      Variable.withString(tableName),
+    ],
+  ).getSingleOrNull();
+  return row != null;
+}
+
+Future<bool> _sqliteColumnExists(
+  GeneratedDatabase db,
+  String tableName,
+  String columnName,
+) async {
+  final row = await db.customSelect(
+    "SELECT 1 AS ok FROM pragma_table_info('$tableName') "
+    'WHERE name = ? LIMIT 1',
+    variables: [Variable.withString(columnName)],
+  ).getSingleOrNull();
+  return row != null;
 }

@@ -12,12 +12,12 @@ class DiscoverScreen extends StatefulWidget {
     super.key,
     required this.readRepository,
     ContentReadClient? contentReadClient,
-    this.onPlanStarted,
+    this.onOpenPlan,
   }) : contentReadClient = contentReadClient ?? ContentReadClient();
 
   final ReadRepository readRepository;
   final ContentReadClient contentReadClient;
-  final VoidCallback? onPlanStarted;
+  final void Function(String planId)? onOpenPlan;
 
   @override
   State<DiscoverScreen> createState() => _DiscoverScreenState();
@@ -171,7 +171,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
       context,
       content: content,
       readRepository: widget.readRepository,
-      onPlanStarted: widget.onPlanStarted,
+      onOpenPlan: widget.onOpenPlan,
     );
   }
 
@@ -546,12 +546,12 @@ class _ContentDetailSheet extends StatefulWidget {
   const _ContentDetailSheet({
     required this.content,
     required this.readRepository,
-    this.onPlanStarted,
+    this.onOpenPlan,
   });
 
   final RemoteContent content;
   final ReadRepository readRepository;
-  final VoidCallback? onPlanStarted;
+  final void Function(String planId)? onOpenPlan;
 
   @override
   State<_ContentDetailSheet> createState() => _ContentDetailSheetState();
@@ -560,8 +560,9 @@ class _ContentDetailSheet extends StatefulWidget {
 class _ContentDetailSheetState extends State<_ContentDetailSheet> {
   late final PageController _slideController;
   var _slideIndex = 0;
-  final Set<String> _subscribedPlanIds = {};
-  final Set<String> _startingPlanIds = {};
+  final Set<String> _subscribedTemplateKeys = {};
+  final Set<String> _startingTemplateKeys = {};
+  var _relatedPlanStateReady = false;
 
   RemoteContent get content => widget.content;
 
@@ -569,6 +570,23 @@ class _ContentDetailSheetState extends State<_ContentDetailSheet> {
   void initState() {
     super.initState();
     _slideController = PageController();
+    _loadRelatedPlanSubscriptionState();
+  }
+
+  Future<void> _loadRelatedPlanSubscriptionState() async {
+    final subscribed = <String>{};
+    for (final plan in content.relatedPlans) {
+      final activePlanId = await widget.readRepository
+          .findActiveUserPlanIdForTemplate(plan.templateKey);
+      if (activePlanId != null) {
+        subscribed.add(plan.templateKey);
+      }
+    }
+    if (!mounted) return;
+    setState(() {
+      _subscribedTemplateKeys.addAll(subscribed);
+      _relatedPlanStateReady = true;
+    });
   }
 
   @override
@@ -583,23 +601,44 @@ class _ContentDetailSheetState extends State<_ContentDetailSheet> {
     await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
-  Future<void> _startRelatedPlan(RemoteContentRelatedPlan plan) async {
-    if (_startingPlanIds.contains(plan.id)) return;
-    final alreadySubscribed = _subscribedPlanIds.contains(plan.id);
-    setState(() => _startingPlanIds.add(plan.id));
+  Future<void> _openRelatedPlan(RemoteContentRelatedPlan plan) async {
+    if (_startingTemplateKeys.contains(plan.templateKey)) return;
+    final alreadySubscribed =
+        _subscribedTemplateKeys.contains(plan.templateKey);
+    setState(() => _startingTemplateKeys.add(plan.templateKey));
     try {
-      try {
-        await widget.readRepository.addPlanFromTemplate(plan.templateKey);
-      } on ArgumentError {
-        await widget.readRepository.refreshPlanTemplatesFromRemote();
-        await widget.readRepository.addPlanFromTemplate(plan.templateKey);
-      }
+      final planId = await widget.readRepository.addPlanFromTemplate(
+        plan.templateKey,
+      );
       if (!mounted) return;
-      setState(() => _subscribedPlanIds.add(plan.id));
-      widget.onPlanStarted?.call();
+      setState(() => _subscribedTemplateKeys.add(plan.templateKey));
       if (!alreadySubscribed) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Plan subscribed')),
+        );
+      }
+      Navigator.of(context).pop();
+      widget.onOpenPlan?.call(planId);
+    } on ArgumentError {
+      if (!mounted) return;
+      try {
+        await widget.readRepository.refreshPlanTemplatesFromRemote();
+        final planId = await widget.readRepository.addPlanFromTemplate(
+          plan.templateKey,
+        );
+        if (!mounted) return;
+        setState(() => _subscribedTemplateKeys.add(plan.templateKey));
+        if (!alreadySubscribed) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Plan subscribed')),
+          );
+        }
+        Navigator.of(context).pop();
+        widget.onOpenPlan?.call(planId);
+      } catch (_) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not start this plan.')),
         );
       }
     } catch (_) {
@@ -609,7 +648,7 @@ class _ContentDetailSheetState extends State<_ContentDetailSheet> {
       );
     } finally {
       if (mounted) {
-        setState(() => _startingPlanIds.remove(plan.id));
+        setState(() => _startingTemplateKeys.remove(plan.templateKey));
       }
     }
   }
@@ -749,9 +788,11 @@ class _ContentDetailSheetState extends State<_ContentDetailSheet> {
               for (final plan in content.relatedPlans)
                 _RelatedPlanCard(
                   plan: plan,
-                  starting: _startingPlanIds.contains(plan.id),
-                  subscribed: _subscribedPlanIds.contains(plan.id),
-                  onStart: () => _startRelatedPlan(plan),
+                  ready: _relatedPlanStateReady,
+                  starting: _startingTemplateKeys.contains(plan.templateKey),
+                  subscribed:
+                      _subscribedTemplateKeys.contains(plan.templateKey),
+                  onStart: () => _openRelatedPlan(plan),
                 ),
             ],
           ],
@@ -860,12 +901,14 @@ class _AuthorInitial extends StatelessWidget {
 class _RelatedPlanCard extends StatelessWidget {
   const _RelatedPlanCard({
     required this.plan,
+    required this.ready,
     required this.starting,
     required this.subscribed,
     required this.onStart,
   });
 
   final RemoteContentRelatedPlan plan;
+  final bool ready;
   final bool starting;
   final bool subscribed;
   final VoidCallback onStart;
@@ -907,7 +950,7 @@ class _RelatedPlanCard extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: starting ? null : onStart,
+              onPressed: !ready || starting ? null : onStart,
               style: FilledButton.styleFrom(
                 backgroundColor: AppTheme.ink,
                 foregroundColor: Colors.white,
@@ -916,11 +959,13 @@ class _RelatedPlanCard extends StatelessWidget {
                 ),
               ),
               child: Text(
-                starting
-                    ? 'Starting...'
-                    : subscribed
-                        ? 'Continue'
-                        : 'Start this plan',
+                !ready
+                    ? 'Loading...'
+                    : starting
+                        ? 'Starting...'
+                        : subscribed
+                            ? 'Continue'
+                            : 'Start this plan',
               ),
             ),
           ),
@@ -1632,7 +1677,7 @@ Future<void> showContentDetailSheet(
   BuildContext context, {
   required RemoteContent content,
   required ReadRepository readRepository,
-  VoidCallback? onPlanStarted,
+  void Function(String planId)? onOpenPlan,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -1645,7 +1690,7 @@ Future<void> showContentDetailSheet(
     builder: (context) => _ContentDetailSheet(
       content: content,
       readRepository: readRepository,
-      onPlanStarted: onPlanStarted,
+      onOpenPlan: onOpenPlan,
     ),
   );
 }

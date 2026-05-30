@@ -79,6 +79,9 @@ Play upload마다 `pubspec.yaml` `version`의 `+versionCode` 증가.
 | Symptom | Fix |
 | --- | --- |
 | `HUNNY_API_BASE_URL is not set` | `--dart-define-from-file` 또는 `./scripts/run_*.sh` |
+| `./scripts/run_ios.sh` opens **macOS** app | Script now defaults to `-d ios`; or pass `-d <simulator id>` |
+| `no such table: plan_templates` on launch | Stale local DB — delete app/reinstall, or pull latest migration fix and hot restart (`R`) |
+| Long **sqlite3** / `MIN` macro warnings in Xcode build | Harmless pod noise (Drift/sqlite3); ignore if build succeeds |
 | Home/Discover empty | Admin publish · Supabase RPC migration applied |
 | Sync server offline | reachability uses `/api/v1/sync/bootstrap`; retry after network settles |
 | Google sign-in fail | env client IDs · Android SHA-1 · iOS bundle ID |

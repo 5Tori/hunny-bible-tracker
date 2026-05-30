@@ -615,7 +615,7 @@ class HomeScreenState extends State<HomeScreen> {
               context,
               content: content,
               readRepository: widget.readRepository,
-              onPlanStarted: widget.onReadTap,
+              onOpenPlan: (_) => widget.onReadTap(),
             );
             if (!mounted) return;
             await _load();

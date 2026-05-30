@@ -130,10 +130,7 @@ class _RootShellState extends State<RootShell> {
         ),
       1 => DiscoverScreen(
           readRepository: widget.readRepository,
-          onPlanStarted: () {
-            setState(() => _readRefreshToken += 1);
-            _homeKey.currentState?.refresh();
-          },
+          onOpenPlan: (_) => _openReadTab(refreshRead: true),
         ),
       2 => ReadScreen(
           key: ValueKey(_readRefreshToken),
