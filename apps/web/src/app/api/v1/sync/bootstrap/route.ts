@@ -2,9 +2,10 @@ import { NextResponse } from 'next/server';
 
 import { upsertSupabaseAuthUser } from '@/lib/auth/auth-user-sync';
 import { verifySupabaseBearerToken } from '@/lib/auth/verify-supabase-token';
+import { withApiTiming } from '@/lib/perf/api-timing';
 import { getReadingSyncBootstrap } from '@/lib/sync/reading-sync';
 
-export async function GET(req: Request) {
+export const GET = withApiTiming('GET /api/v1/sync/bootstrap', async (req: Request) => {
   const auth = req.headers.get('authorization');
   if (!auth?.toLowerCase().startsWith('bearer ')) {
     return NextResponse.json({ error: 'missing_bearer' }, { status: 401 });
@@ -34,4 +35,4 @@ export async function GET(req: Request) {
     console.error('reading sync bootstrap failed', error);
     return NextResponse.json({ error: 'sync_bootstrap_failed' }, { status: 500 });
   }
-}
+});

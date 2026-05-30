@@ -5,8 +5,9 @@ import {
   PublicTodayMessage,
   TodayMessageValidationError,
 } from '@/lib/today-messages';
+import { withApiTiming } from '@/lib/perf/api-timing';
 
-export async function GET(req: Request) {
+export const GET = withApiTiming('GET /api/v1/today-message', async (req: Request) => {
   try {
     const { searchParams } = new URL(req.url);
     const date = searchParams.get('date') ?? undefined;
@@ -23,7 +24,7 @@ export async function GET(req: Request) {
     console.error('Public today-message GET error:', message);
     return NextResponse.json({ error: 'server_error' }, { status: 500 });
   }
-}
+});
 
 function withShareUrl(req: Request, message: PublicTodayMessage): PublicTodayMessage {
   const origin =

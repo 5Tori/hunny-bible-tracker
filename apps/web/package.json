@@ -14,6 +14,7 @@
     "cf:deploy": "opennextjs-cloudflare deploy",
     "deploy": "pnpm run cf:build && pnpm run cf:deploy",
     "db:check": "node scripts/check-db.mjs",
+    "bench:api": "node scripts/bench-api.mjs",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "icons:sync": "bash scripts/sync-brand-icons.sh"
   },

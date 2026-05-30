@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server';
 
+import { withApiTiming } from '@/lib/perf/api-timing';
 import { sql } from '@/lib/db/postgres';
 
-export async function GET() {
+export const GET = withApiTiming('GET /api/health', async () => {
   const base = {
     service: 'hunny-bible-tracker-web',
   };
@@ -27,4 +28,4 @@ export async function GET() {
       { status: 503 },
     );
   }
-}
+});

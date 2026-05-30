@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import 'hunny_api_config.dart';
 
@@ -16,7 +17,7 @@ class HunnyApiClient {
     Duration connectTimeout = requestConnectTimeout,
     Duration receiveTimeout = requestReceiveTimeout,
   }) {
-    return Dio(
+    final dio = Dio(
       BaseOptions(
         baseUrl: config.baseUrl,
         connectTimeout: connectTimeout,
@@ -28,6 +29,56 @@ class HunnyApiClient {
         },
         validateStatus: (code) => code != null && code < 600,
       ),
+    );
+
+    if (kDebugMode) {
+      dio.interceptors.add(_RequestPerfInterceptor());
+    }
+
+    return dio;
+  }
+}
+
+class _RequestPerfInterceptor extends Interceptor {
+  static const _extraStartedAtKey = 'hunny_api_started_at';
+
+  @override
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
+    options.extra[_extraStartedAtKey] = DateTime.now();
+    handler.next(options);
+  }
+
+  @override
+  void onResponse(Response<dynamic> response, ResponseInterceptorHandler handler) {
+    _log(response.requestOptions, response.statusCode);
+    handler.next(response);
+  }
+
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    _log(err.requestOptions, err.response?.statusCode, error: err.type.name);
+    handler.next(err);
+  }
+
+  void _log(
+    RequestOptions options,
+    int? statusCode, {
+    String? error,
+  }) {
+    final startedAt = options.extra[_extraStartedAtKey];
+    final durationMs = startedAt is DateTime
+        ? DateTime.now().difference(startedAt).inMilliseconds
+        : null;
+    final path = options.uri.path;
+    final method = options.method;
+    final statusLabel = statusCode?.toString() ?? 'ERR';
+    final suffix = error == null ? '' : ' error=$error';
+
+    debugPrint(
+      '[HunnyApi] $method $path $statusLabel '
+      '${durationMs ?? '?'}ms '
+      'connect=${options.connectTimeout?.inMilliseconds}ms '
+      'receive=${options.receiveTimeout?.inMilliseconds}ms$suffix',
     );
   }
 }

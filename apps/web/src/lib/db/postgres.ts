@@ -1,6 +1,8 @@
 import { getCloudflareContext } from '@opennextjs/cloudflare';
 import postgres from 'postgres';
 
+import { recordDbQuery } from '@/lib/perf/db-timing';
+
 export type SqlExecutor = {
   <T = unknown>(
     strings: TemplateStringsArray,
@@ -139,10 +141,14 @@ async function runQuery<T>(
   const config = await resolveDatabaseConfig();
 
   for (let attempt = 0; attempt < 2; attempt++) {
+    const queryStarted = performance.now();
     try {
       const client = await getClient(config);
-      return (await client(strings, ...(values as never[]))) as T;
+      const result = (await client(strings, ...(values as never[]))) as T;
+      recordDbQuery(performance.now() - queryStarted, strings);
+      return result;
     } catch (error) {
+      recordDbQuery(performance.now() - queryStarted, strings);
       if (attempt === 0 && config.viaHyperdrive && isConnectionError(error)) {
         resetHyperdriveClient();
         continue;
