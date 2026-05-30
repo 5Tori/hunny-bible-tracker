@@ -3,6 +3,10 @@
 import { getSupabaseBrowserClient } from '@/lib/supabase/client';
 
 const ADMIN_TOKEN_KEY = 'hunny-admin-token';
+const TOKEN_REFRESH_INTERVAL_MS = 60_000;
+
+let lastTokenRefreshAt = 0;
+let tokenRefreshPromise: Promise<void> | null = null;
 
 export function getAdminToken(): string | null {
   if (typeof window === 'undefined') return null;
@@ -22,11 +26,30 @@ export function clearAdminToken() {
 /** Sync localStorage bearer from Supabase (refreshes access token when needed). */
 export async function refreshAdminTokenFromSupabase(): Promise<void> {
   if (typeof window === 'undefined') return;
-  const supabase = getSupabaseBrowserClient();
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  if (token) {
-    setAdminToken(token);
+
+  const now = Date.now();
+  if (now - lastTokenRefreshAt < TOKEN_REFRESH_INTERVAL_MS) {
+    return;
+  }
+  if (tokenRefreshPromise) {
+    await tokenRefreshPromise;
+    return;
+  }
+
+  tokenRefreshPromise = (async () => {
+    const supabase = getSupabaseBrowserClient();
+    const { data } = await supabase.auth.getSession();
+    const token = data.session?.access_token;
+    if (token) {
+      setAdminToken(token);
+    }
+    lastTokenRefreshAt = Date.now();
+  })();
+
+  try {
+    await tokenRefreshPromise;
+  } finally {
+    tokenRefreshPromise = null;
   }
 }
 

@@ -45,13 +45,20 @@ type DatabaseConfig = {
   viaHyperdrive: boolean;
 };
 
+let resolvedConfig: DatabaseConfig | null = null;
+
 async function resolveDatabaseConfig(): Promise<DatabaseConfig> {
+  if (resolvedConfig) {
+    return resolvedConfig;
+  }
+
   try {
     const { env } = await getCloudflareContext({ async: true });
     const hyperdrive = (env as { HYPERDRIVE?: HyperdriveBinding }).HYPERDRIVE;
     const hyperdriveUrl = hyperdrive?.connectionString?.trim();
     if (hyperdriveUrl && !isPlaceholderDatabaseUrl(hyperdriveUrl)) {
-      return { url: hyperdriveUrl, viaHyperdrive: true };
+      resolvedConfig = { url: hyperdriveUrl, viaHyperdrive: true };
+      return resolvedConfig;
     }
   } catch {
     // next dev / next build — not on the Workers runtime
@@ -59,7 +66,8 @@ async function resolveDatabaseConfig(): Promise<DatabaseConfig> {
 
   const envUrl = process.env.DATABASE_URL?.trim();
   if (envUrl && !isPlaceholderDatabaseUrl(envUrl)) {
-    return { url: envUrl, viaHyperdrive: false };
+    resolvedConfig = { url: envUrl, viaHyperdrive: false };
+    return resolvedConfig;
   }
 
   throw new Error('DATABASE_URL is not set');

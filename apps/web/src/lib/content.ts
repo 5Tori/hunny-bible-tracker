@@ -911,6 +911,107 @@ export async function getPublishedContents(options?: {
   `) as ContentBase[];
 }
 
+type WithAuthorRelation = { author: ContentAuthor | null };
+
+async function attachAuthorsToContentList<T extends WithAuthorRelation>(
+  contents: ContentBase[],
+  relationsByContentId: Map<string, T>,
+) {
+  const authorIds = [
+    ...new Set(contents.map((content) => content.author_id).filter(Boolean)),
+  ] as string[];
+
+  const authors = await queryByUuidIds<ContentAuthor>(
+    authorIds,
+    (id) => sql`select * from content_authors where id = ${id}`,
+    (pg, ids) => pg`select * from content_authors where id in ${pg(ids)}`,
+  );
+
+  const authorById = new Map(authors.map((author) => [author.id, author]));
+  for (const content of contents) {
+    const bucket = relationsByContentId.get(content.id);
+    if (!bucket) continue;
+    bucket.author = content.author_id ? authorById.get(content.author_id) ?? null : null;
+  }
+}
+
+/** Tags only — for public message list cards. */
+export async function getPublishedContentTagRelations(contents: ContentBase[]) {
+  const relationsByContentId = new Map<
+    string,
+    { author: ContentAuthor | null; tags: ContentTag[] }
+  >();
+  if (contents.length === 0) {
+    return relationsByContentId;
+  }
+
+  for (const content of contents) {
+    relationsByContentId.set(content.id, { author: null, tags: [] });
+  }
+
+  await attachAuthorsToContentList(contents, relationsByContentId);
+
+  const contentIds = contents.map((content) => content.id);
+  const tagRows = await queryByUuidIds<ContentTag & { content_id: string }>(
+    contentIds,
+    (id) => sql`
+      select t.*, ctl.content_id
+      from content_tags t
+      join content_tag_links ctl on ctl.tag_id = t.id
+      where ctl.content_id = ${id}
+      order by t.type asc, t.sort_order asc, t.name asc
+    `,
+    (pg, ids) => pg`
+      select t.*, ctl.content_id
+      from content_tags t
+      join content_tag_links ctl on ctl.tag_id = t.id
+      where ctl.content_id in ${pg(ids)}
+      order by ctl.content_id asc, t.type asc, t.sort_order asc, t.name asc
+    `,
+  );
+
+  for (const row of tagRows) {
+    const bucket = relationsByContentId.get(row.content_id);
+    if (!bucket) continue;
+    const { content_id: _contentId, ...tag } = row;
+    bucket.tags.push(tag);
+  }
+
+  return relationsByContentId;
+}
+
+/** Browse grids — author only; skips assets, sections, tags, and plan joins. */
+export async function getPublishedContentsForBrowse(options?: {
+  sort?: PublishedContentSortMode;
+  type?: string | null;
+  language?: string | null;
+  tag?: string | null;
+  limit?: number;
+}) {
+  const contents = await getPublishedContents(options);
+  if (contents.length === 0) {
+    return [];
+  }
+
+  const relationsByContentId = new Map<string, ContentListRelations>();
+  for (const content of contents) {
+    relationsByContentId.set(content.id, { author: null, relatedPlans: [] });
+  }
+
+  await attachAuthorsToContentList(contents, relationsByContentId);
+
+  return contents.map((content) => {
+    const relations = relationsByContentId.get(content.id) ?? { author: null, relatedPlans: [] };
+    return hydrateContent(content, {
+      author: relations.author,
+      assets: [],
+      sections: [],
+      tags: [],
+      relatedPlans: [],
+    });
+  });
+}
+
 export async function getPublishedContentsWithRelations(options?: {
   sort?: PublishedContentSortMode;
   type?: string | null;

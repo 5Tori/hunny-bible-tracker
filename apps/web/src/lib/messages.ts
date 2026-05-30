@@ -3,7 +3,7 @@ import {
   type ContentTag,
   type ContentWithRelations,
   getPublishedContentByIdentifier,
-  getPublishedContentListRelations,
+  getPublishedContentTagRelations,
   parseContentLimit,
 } from '@/lib/content';
 import { sql } from '@/lib/db/postgres';
@@ -136,22 +136,16 @@ export function mapContentToPublicMessage(content: ContentWithRelations): Public
 async function hydratePublishedMessages(contents: ContentBase[]) {
   if (contents.length === 0) return [];
 
-  const relationsByContentId = await getPublishedContentListRelations(contents);
+  const relationsByContentId = await getPublishedContentTagRelations(contents);
   return contents.map((content) => {
-    const relations = relationsByContentId.get(content.id) ?? {
-      author: null,
-      assets: [],
-      sections: [],
-      tags: [],
-      relatedPlans: [],
-    };
+    const relations = relationsByContentId.get(content.id) ?? { author: null, tags: [] };
     const withRelations: ContentWithRelations = {
       ...content,
       author: relations.author,
-      assets: relations.assets,
-      sections: relations.sections,
+      assets: [],
+      sections: [],
       tags: relations.tags,
-      related_plans: relations.relatedPlans,
+      related_plans: [],
     };
     return mapContentToPublicMessage(withRelations);
   });

@@ -7,7 +7,7 @@ import {
 } from "@/components/browse/DiscoverFilters";
 import { MarketingContainer } from "@/components/marketing/ui/MarketingContainer";
 import { MarketingSection } from "@/components/marketing/ui/MarketingSection";
-import { getPublishedContentsWithRelations } from "@/lib/content";
+import { getPublishedContentsForBrowse } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "Discover",
@@ -24,7 +24,7 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const typeFilter = parseDiscoverType(params.type);
 
-  const contents = await getPublishedContentsWithRelations({
+  const contents = await getPublishedContentsForBrowse({
     language: "en",
     type: typeFilter === "all" ? undefined : typeFilter,
     sort: "featured",
