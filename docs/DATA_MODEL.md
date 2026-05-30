@@ -60,7 +60,14 @@ user_reading_plans                     ← user's plan run (local)
 
 **`contents.content_type`:** `message`, `video`, `essay`, `cartoon`
 
-**Public reads:** `GET /api/v1/plans`, `/content`, `/today-message` — Web + mobile API fallback
+**Message Card Library** (`content_type = message`):
+
+- Taxonomy in `content_tags.type`: `category`, `situation`, `theme`, `bible_context`, `tone`, `share_intent` — keys in [`apps/web/src/lib/message-taxonomy.ts`](../apps/web/src/lib/message-taxonomy.ts)
+- Message fields in `contents.metadata`: `primaryCategory`, `shortReflection`, `prayerText`, `cardTemplateKey`, `shareIntents[]`, `isTodayEligible`, `searchAliases[]`
+- `today_messages.content_id` → daily featured slot
+- Seeds: `message_taxonomy_seed.sql`, `message_cards_pilot_seed.sql`
+
+**Public reads:** `GET /api/v1/plans`, `/content`, `/messages`, `/message-taxonomy`, `/today-message` — Web + mobile API fallback
 
 **Mobile Supabase RPC (anon/authenticated execute):**
 

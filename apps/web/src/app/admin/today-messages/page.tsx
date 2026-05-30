@@ -1,9 +1,9 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 
-import { useCatalogList } from '@/components/admin/catalog/useCatalogList';
+import { useAdminMessages, useAdminTodayMessages } from '@/components/admin/hooks/use-admin-swr';
 import { Alert } from '@/components/admin/ui/Alert';
 import { Badge } from '@/components/admin/ui/Badge';
 import { ButtonLink } from '@/components/admin/ui/Button';
@@ -11,7 +11,6 @@ import { DataTable } from '@/components/admin/ui/DataTable';
 import { EmptyState } from '@/components/admin/ui/EmptyState';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
-import type { TodayMessageBase } from '@/lib/today-messages';
 
 type TodayFilter = 'active' | 'archived' | 'all';
 
@@ -23,6 +22,7 @@ const FILTER_TABS = [
 
 const COLUMNS = [
   { key: 'message', header: 'Message' },
+  { key: 'linked', header: 'Linked card' },
   { key: 'date', header: 'Date' },
   { key: 'language', header: 'Language' },
   { key: 'status', header: 'Status' },
@@ -30,25 +30,24 @@ const COLUMNS = [
 ];
 
 export default function AdminTodayMessagesPage() {
-  const [messages, setMessages] = useState<TodayMessageBase[]>([]);
+  const {
+    data: todayData,
+    error: todayError,
+    isLoading: todayLoading,
+  } = useAdminTodayMessages();
+  const { data: messageData } = useAdminMessages();
   const [filter, setFilter] = useState<TodayFilter>('active');
-  const { error, setError, load, loading } = useCatalogList();
 
-  const loadMessages = useCallback(async () => {
-    setError(null);
-    const json = (await load('/api/v1/admin/today-messages')) as { messages?: TodayMessageBase[] } | null;
-    if (json) {
-      setMessages(json.messages ?? []);
-    }
-  }, [load, setError]);
-
-  useEffect(() => {
-    void loadMessages();
-  }, [loadMessages]);
+  const messages = todayData?.messages ?? [];
+  const linkedContentById = useMemo(
+    () => new Map((messageData?.messages ?? []).map((item) => [item.id, item])),
+    [messageData?.messages],
+  );
+  const loading = todayLoading && messages.length === 0;
 
   const filtered = useMemo(() => {
     return messages.filter((message) => {
-      const archived = Boolean((message as TodayMessageBase & { is_archived?: boolean }).is_archived);
+      const archived = Boolean((message as { is_archived?: boolean }).is_archived);
       if (filter === 'archived') return archived;
       if (filter === 'active') return !archived;
       return true;
@@ -60,13 +59,13 @@ export default function AdminTodayMessagesPage() {
       <PageHeader
         label="Home content"
         title="Today's messages"
-        description="Manage scheduled daily verse/message cards for the mobile Home tab."
+        description="Schedule daily verse cards for the mobile Home tab. Link Today-eligible message cards for deeper content."
         actions={<ButtonLink href="/admin/today-messages/new" variant="primary">New message</ButtonLink>}
       />
 
       <FilterTabs tabs={FILTER_TABS} value={filter} onChange={setFilter} ariaLabel="Today messages filter" />
 
-      {error ? <Alert tone="error">{error}</Alert> : null}
+      {todayError ? <Alert tone="error">{todayError.message}</Alert> : null}
       {loading ? <p className="admin-muted">Loading messages…</p> : null}
 
       {!loading && filtered.length === 0 ? (
@@ -84,6 +83,8 @@ export default function AdminTodayMessagesPage() {
           rows={filtered}
           rowKey={(m) => m.id}
           renderCell={(message, key) => {
+            const linked = message.content_id ? linkedContentById.get(message.content_id) ?? null : null;
+
             switch (key) {
               case 'message':
                 return (
@@ -97,6 +98,24 @@ export default function AdminTodayMessagesPage() {
                         {message.verse_text || 'No verse text yet'}
                       </small>
                     </span>
+                  </span>
+                );
+              case 'linked':
+                if (!linked) {
+                  return <span className="admin-muted">None</span>;
+                }
+                return (
+                  <span className="admin-table-cell-stack">
+                    <Link href={`/admin/content/${linked.id}`} className="admin-btn admin-btn-link">
+                      {linked.title}
+                    </Link>
+                    {linked.is_published ? (
+                      <Link href={`/messages/${linked.slug}`} className="admin-muted" target="_blank">
+                        /messages/{linked.slug}
+                      </Link>
+                    ) : (
+                      <span className="admin-muted">Card draft</span>
+                    )}
                   </span>
                 );
               case 'date':

@@ -25,6 +25,9 @@ export function SiteHeader() {
             <Link href="/today" className={navLinkClass}>
               Today
             </Link>
+            <Link href="/messages" className={navLinkClass}>
+              Messages
+            </Link>
             <Link href="/discover" className={navLinkClass}>
               Discover
             </Link>
@@ -60,6 +63,7 @@ export function SiteFooter() {
             <FooterCol title="Product">
               <FooterLink href="/">Home</FooterLink>
               <FooterLink href="/today">Today</FooterLink>
+              <FooterLink href="/messages">Messages</FooterLink>
               <FooterLink href="/discover">Discover</FooterLink>
               <FooterLink href="/support">Support</FooterLink>
             </FooterCol>

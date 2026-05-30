@@ -11,8 +11,10 @@ Post-MVP 방향 정리: **content-led Bible reading + habit tracking**.
 1. ~~Android closed-test QA~~ ✓ (2026-05-29)
 2. ~~iOS closed-test QA~~ ✓
 3. Play/TestFlight 빌드 (`versionCode` bump)
-4. ~~Real plan/content seed~~ ✓ (`content_test_seed` + `today_message_test_seed` on remote)
-5. Habit layer — Settings activity grid ([prep](./READING_STATS_CALENDAR_PREP.md)) ✓
+4. ~~Real plan/content seed~~ ✓
+5. ~~Habit layer — Settings activity grid~~ ✓
+6. ~~Message Card Library (web Phase 0–4)~~ ✓
+7. Plan Detail
 
 ## 완료 (재오픈 금지)
 
@@ -31,12 +33,13 @@ Post-MVP 방향 정리: **content-led Bible reading + habit tracking**.
 4. ~~Admin/seed `estimated_minutes` reconcile~~ ✓
 5. ~~Daily reading goal + today read minutes~~ ✓
 6. ~~Reading stats / streak / calendar~~ ✓ (Settings bottom panel)
-7. Plan Detail
-8. Story Card / Content Detail
-9. Home featured content
-10. Saved (List tab)
-11. Push notifications
-12. Visual explainers · video/animation
+7. ~~Message Card Library (web)~~ ✓ — `/messages`, Admin, API, Today link
+8. Plan Detail
+9. Story Card / Content Detail
+10. Home featured content
+11. Saved (List tab)
+12. Push notifications
+13. Visual explainers · video/animation
 
 ## Not Now
 

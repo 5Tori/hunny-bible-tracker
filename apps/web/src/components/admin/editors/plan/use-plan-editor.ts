@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 
 import { useAdminAuth } from '@/components/admin/hooks/use-admin-auth';
 import { adminFetch } from '@/lib/admin/client';
+import { revalidateAdminPlans } from '@/lib/admin/swr-mutate';
 import type { AdminPlanInput } from '@/lib/plans';
 
 import {
@@ -203,6 +204,7 @@ export function usePlanEditor(planId?: string) {
 
       const json = await response.json();
       setSuccess(planId ? 'Plan updated.' : 'Plan created.');
+      await revalidateAdminPlans();
       if (!planId) {
         router.push(`/admin/plans/${json.plan.id}`);
       }

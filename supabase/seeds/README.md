@@ -9,6 +9,8 @@ Manual test SQL — **not** run by `supabase db push`. Apply after migrations.
 | Baseline schema | `supabase/migrations/20260528000000_baseline.sql` | Full server schema |
 | Plan catalog | `supabase/migrations/20260528110000_seed_plan_*.sql` | 8 plans (MVP + Jonah, Zacchaeus, Samuel) |
 | Discover content | `supabase/seeds/content_test_seed.sql` | 4 test items + `content_plan_links` |
+| Message taxonomy | `supabase/seeds/message_taxonomy_seed.sql` | category/situation/theme/tone tags |
+| Message cards (pilot) | `supabase/seeds/message_cards_pilot_seed.sql` | ~10 message cards + plan links |
 | Today's Message | `supabase/seeds/today_message_test_seed.sql` | Mode A (today) + Mode B (yesterday, linked content) |
 
 ## Apply order
@@ -24,9 +26,13 @@ Plan seeds ship in migrations `20260528110000`–`20260528110007`.
 Optional content / today's message (local or staging):
 
 ```bash
+psql "$DATABASE_URL" -f supabase/seeds/message_taxonomy_seed.sql
+psql "$DATABASE_URL" -f supabase/seeds/message_cards_pilot_seed.sql
 psql "$DATABASE_URL" -f supabase/seeds/content_test_seed.sql
 psql "$DATABASE_URL" -f supabase/seeds/today_message_test_seed.sql
 ```
+
+Apply `message_cards_pilot_seed.sql` **after** `message_taxonomy_seed.sql` and plan catalog migrations.
 
 Run `today_message_test_seed.sql` **after** `20260529120000_simplify_today_messages.sql`.
 

@@ -8,7 +8,16 @@ import type {
   ContentAuthor,
   ContentWithRelations,
 } from '@/lib/content';
+import {
+  buildMessageMetadataPayload,
+  buildMessageTags,
+  defaultMessageEditorState,
+  messageEditorStateFromContent,
+  type MessageEditorState,
+} from '@/lib/message-admin';
 import { adminFetch, clearAdminSession } from '@/lib/admin/client';
+import { revalidateAdminContent, revalidateAdminMessageCatalog } from '@/lib/admin/swr-mutate';
+import { MessageCardEditorSection } from '@/components/admin/editors/content/MessageCardEditorSection';
 
 interface AdminContentEditorProps {
   contentId?: string;
@@ -140,7 +149,15 @@ function mapContentToForm(content: ContentWithRelations): AdminContentInput {
   };
 }
 
-function preparePayload(content: AdminContentInput, metadataText: string): AdminContentInput {
+function preparePayload(
+  content: AdminContentInput,
+  metadataText: string,
+  messageState?: MessageEditorState,
+): AdminContentInput {
+  const isMessage = content.content_type === 'message';
+  const existingMetadata =
+    typeof content.metadata === 'object' && content.metadata ? content.metadata : {};
+
   return {
     ...content,
     body: content.content_type === 'essay' ? null : content.body,
@@ -148,16 +165,23 @@ function preparePayload(content: AdminContentInput, metadataText: string): Admin
       typeof content.published_at === 'string'
         ? fromDateTimeLocal(content.published_at)
         : content.published_at,
-    metadata: metadataText.trim() ? metadataText : {},
+    metadata: isMessage
+      ? buildMessageMetadataPayload(messageState ?? defaultMessageEditorState(), existingMetadata)
+      : metadataText.trim()
+        ? metadataText
+        : {},
     assets: (content.assets ?? []).filter((asset) => asset.url.trim()),
     sections: content.content_type === 'essay' ? (content.sections ?? []) : [],
-    tags: (content.tags ?? []).filter((tag) => tag.name.trim()),
+    tags: isMessage
+      ? buildMessageTags(messageState ?? defaultMessageEditorState())
+      : (content.tags ?? []).filter((tag) => tag.name.trim()),
   };
 }
 
 export default function AdminContentEditor({ contentId }: AdminContentEditorProps) {
   const router = useRouter();
   const [content, setContent] = useState<AdminContentInput>(emptyContent);
+  const [messageState, setMessageState] = useState<MessageEditorState>(defaultMessageEditorState());
   const [metadataText, setMetadataText] = useState('');
   const [authors, setAuthors] = useState<ContentAuthor[]>([]);
   const [planOptions, setPlanOptions] = useState<PlanOption[]>([]);
@@ -218,8 +242,14 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
       }
 
       const json = await response.json();
-      const form = mapContentToForm(json.content as ContentWithRelations);
+      const loaded = json.content as ContentWithRelations;
+      const form = mapContentToForm(loaded);
       setContent(form);
+      setMessageState(
+        loaded.content_type === 'message'
+          ? messageEditorStateFromContent(loaded)
+          : defaultMessageEditorState(),
+      );
       setMetadataText(formatJson(form.metadata));
       setLoading(false);
     };
@@ -419,7 +449,7 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
         {
           method: contentId ? 'PUT' : 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(preparePayload(content, metadataText)),
+          body: JSON.stringify(preparePayload(content, metadataText, messageState)),
         },
       );
 
@@ -435,6 +465,11 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
       }
 
       setSuccess(contentId ? 'Content updated.' : 'Content created.');
+      if (content.content_type === 'message') {
+        await revalidateAdminMessageCatalog();
+      } else {
+        await revalidateAdminContent();
+      }
       if (!contentId) {
         router.push(`/admin/content/${body.content.id}`);
       }
@@ -833,6 +868,15 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
         </div>
       </section>
 
+      {content.content_type === 'message' ? (
+        <MessageCardEditorSection
+          content={content}
+          messageState={messageState}
+          onMessageStateChange={setMessageState}
+        />
+      ) : null}
+
+      {content.content_type !== 'message' ? (
       <section className="admin-form-section">
         <h2>Tags</h2>
         {(content.tags ?? []).map((tag, index) => (
@@ -864,6 +908,7 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
           Add tag
         </button>
       </section>
+      ) : null}
 
       <section className="admin-form-section">
         <h2>Related plans</h2>
@@ -949,6 +994,7 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
           </div>
         </div>
 
+        {content.content_type !== 'message' ? (
         <div className="admin-field">
           <label htmlFor="metadata">Metadata JSON</label>
           <textarea
@@ -959,6 +1005,7 @@ export default function AdminContentEditor({ contentId }: AdminContentEditorProp
             placeholder='{"series":"Advent"}'
           />
         </div>
+        ) : null}
       </section>
 
       <div className="admin-sticky-actions">

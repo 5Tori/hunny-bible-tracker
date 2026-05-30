@@ -2,16 +2,21 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 
 import { useAdminAuth } from '@/components/admin/hooks/use-admin-auth';
+import { useAdminMessages } from '@/components/admin/hooks/use-admin-swr';
 import { Alert } from '@/components/admin/ui/Alert';
+import { Badge } from '@/components/admin/ui/Badge';
 import { Button, ButtonLink } from '@/components/admin/ui/Button';
 import { FormField } from '@/components/admin/ui/FormField';
 import { FormGrid, FormSection } from '@/components/admin/ui/FormSection';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { buildTodayMessageShareImageUrl } from '@/lib/cloudinary-share-url';
 import { adminFetch } from '@/lib/admin/client';
+import { revalidateAdminTodayCatalog } from '@/lib/admin/swr-mutate';
+import { messageCategoryLabel } from '@/lib/message-admin';
+import { parseMessageMetadata } from '@/lib/message-metadata';
 import type { AdminTodayMessageInput, TodayMessageBase } from '@/lib/today-messages';
 
 const emptyForm: AdminTodayMessageInput = {
@@ -36,6 +41,9 @@ interface ContentOption {
   language: string;
   is_published: boolean;
   is_archived: boolean;
+  cover_image_url?: string | null;
+  summary?: string | null;
+  metadata?: Record<string, unknown>;
 }
 
 function mapToForm(message: TodayMessageBase): AdminTodayMessageInput {
@@ -56,14 +64,26 @@ function mapToForm(message: TodayMessageBase): AdminTodayMessageInput {
 
 export default function TodayMessageEditor({ messageId }: { messageId?: string }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { handleAdminResponse } = useAdminAuth();
   const [form, setForm] = useState<AdminTodayMessageInput>(emptyForm);
   const [loading, setLoading] = useState(Boolean(messageId));
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [contentOptions, setContentOptions] = useState<ContentOption[]>([]);
+  const { data: messageCatalogData } = useAdminMessages();
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const contentOptions = useMemo(() => {
+    const contents = (messageCatalogData?.messages ?? []) as ContentOption[];
+    return contents
+      .filter((item) => {
+        if (item.is_archived || item.content_type !== 'message') return false;
+        const metadata = parseMessageMetadata(item.metadata);
+        return metadata.isTodayEligible;
+      })
+      .sort((a, b) => a.title.localeCompare(b.title));
+  }, [messageCatalogData?.messages]);
 
   const selectedContent = useMemo(
     () => contentOptions.find((item) => item.id === form.content_id) ?? null,
@@ -76,6 +96,11 @@ export default function TodayMessageEditor({ messageId }: { messageId?: string }
     return `Linked content language (${selectedContent.language}) differs from message language (${form.language}).`;
   }, [selectedContent, form.language]);
 
+  const selectedContentMetadata = useMemo(
+    () => (selectedContent ? parseMessageMetadata(selectedContent.metadata) : null),
+    [selectedContent],
+  );
+
   const sharePreviewUrl = useMemo(() => {
     if (!form.image_public_id || !form.verse_reference.trim()) return null;
     return buildTodayMessageShareImageUrl({
@@ -87,30 +112,24 @@ export default function TodayMessageEditor({ messageId }: { messageId?: string }
   }, [form.image_public_id, form.verse_reference, form.verse_text, form.bible_version]);
 
   useEffect(() => {
-    const loadContentOptions = async () => {
-      const response = await adminFetch('/api/v1/admin/content');
-      const ok = await handleAdminResponse(response);
-      if (!ok || !response.ok) return;
-      const json = await response.json();
-      const contents = (json.contents ?? []) as ContentOption[];
-      setContentOptions(
-        contents
-          .filter((item) => !item.is_archived)
-          .sort((a, b) => a.title.localeCompare(b.title)),
-      );
-    };
+    if (messageId) return;
 
-    void loadContentOptions();
-  }, [handleAdminResponse]);
+    const publishDate =
+      searchParams.get('publish_date')?.trim() || new Date().toISOString().slice(0, 10);
+    const contentId = searchParams.get('content_id')?.trim() || '';
+
+    setForm({
+      ...emptyForm,
+      publish_date: publishDate,
+      content_id: contentId,
+    });
+    setLoading(false);
+  }, [messageId, searchParams]);
 
   useEffect(() => {
-    if (!messageId) {
-      setForm({ ...emptyForm, publish_date: new Date().toISOString().slice(0, 10) });
-      setLoading(false);
-      return;
-    }
+    if (!messageId) return;
 
-    const load = async () => {
+    const loadMessage = async () => {
       setLoading(true);
       const response = await adminFetch(`/api/v1/admin/today-messages/${messageId}`);
       const ok = await handleAdminResponse(response);
@@ -125,7 +144,7 @@ export default function TodayMessageEditor({ messageId }: { messageId?: string }
       setLoading(false);
     };
 
-    void load();
+    void loadMessage();
   }, [messageId, handleAdminResponse]);
 
   const handleUpload = async (file: File) => {
@@ -173,6 +192,7 @@ export default function TodayMessageEditor({ messageId }: { messageId?: string }
       }
       const json = await response.json();
       setSuccess(messageId ? 'Message updated.' : 'Message created.');
+      await revalidateAdminTodayCatalog();
       if (!messageId && json.message?.id) {
         router.push(`/admin/today-messages/${json.message.id}`);
       }
@@ -198,6 +218,7 @@ export default function TodayMessageEditor({ messageId }: { messageId?: string }
       setSaving(false);
       return;
     }
+    await revalidateAdminTodayCatalog();
     router.push('/admin/today-messages');
   };
 
@@ -313,6 +334,46 @@ export default function TodayMessageEditor({ messageId }: { messageId?: string }
         </div>
 
         <aside className="admin-editor-aside">
+          {selectedContent ? (
+            <FormSection title="Linked message card">
+              {selectedContent.cover_image_url ? (
+                <img
+                  src={selectedContent.cover_image_url}
+                  alt=""
+                  className="admin-cover-preview"
+                />
+              ) : null}
+              <p className="admin-linked-card-title">{selectedContent.title}</p>
+              {selectedContent.summary ? (
+                <p className="admin-muted">{selectedContent.summary}</p>
+              ) : null}
+              {selectedContentMetadata?.primaryCategory ? (
+                <p className="admin-muted">
+                  {messageCategoryLabel(selectedContentMetadata.primaryCategory)}
+                </p>
+              ) : null}
+              <div className="admin-linked-card-actions">
+                {selectedContent.is_published ? (
+                  <Badge tone="success">Published</Badge>
+                ) : (
+                  <Badge tone="neutral">Draft</Badge>
+                )}
+                <Link href={`/admin/content/${selectedContent.id}`} className="admin-btn admin-btn-link">
+                  Edit card
+                </Link>
+                {selectedContent.is_published ? (
+                  <Link
+                    href={`/messages/${selectedContent.slug}`}
+                    className="admin-btn admin-btn-link"
+                    target="_blank"
+                  >
+                    View library
+                  </Link>
+                ) : null}
+              </div>
+            </FormSection>
+          ) : null}
+
           <FormSection title="Images">
             <div className="admin-upload-box">
               <input

@@ -5,12 +5,22 @@ import {
   ContentValidationError,
   createAdminContent,
   getAdminContents,
+  getAdminContentsList,
 } from '@/lib/content';
 
 export async function GET(req: Request) {
   try {
     await requireAdminUser(req);
-    const contents = await getAdminContents();
+    const url = new URL(req.url);
+    const contentType = url.searchParams.get('content_type')?.trim() || undefined;
+    const view = url.searchParams.get('view')?.trim();
+
+    if (view === 'summary') {
+      const contents = await getAdminContentsList(contentType ? { contentType } : undefined);
+      return NextResponse.json({ contents });
+    }
+
+    const contents = await getAdminContents(contentType ? { contentType } : undefined);
     return NextResponse.json({ contents });
   } catch (error) {
     if (error instanceof AdminAuthError) {

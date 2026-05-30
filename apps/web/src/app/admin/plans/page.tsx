@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 
 import { PlanCatalogRowActions } from '@/components/admin/catalog/PlanCatalogRowActions';
 import { useCatalogList } from '@/components/admin/catalog/useCatalogList';
+import { useAdminPlans } from '@/components/admin/hooks/use-admin-swr';
 import { Alert } from '@/components/admin/ui/Alert';
 import { Badge } from '@/components/admin/ui/Badge';
 import { ButtonLink } from '@/components/admin/ui/Button';
@@ -12,6 +13,7 @@ import { EmptyState } from '@/components/admin/ui/EmptyState';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import type { PlanTemplateBase } from '@/lib/plans';
+import { revalidateAdminPlans } from '@/lib/admin/swr-mutate';
 import { planTypeLabel } from '@/lib/plan-taxonomy';
 
 type CatalogFilter = 'all' | 'active' | 'archived';
@@ -32,18 +34,13 @@ const COLUMNS = [
 ];
 
 export default function AdminPlansPage() {
-  const [plans, setPlans] = useState<PlanTemplateBase[]>([]);
+  const { data, error: swrError, isLoading } = useAdminPlans();
+  const plans = data?.plans ?? [];
   const [filter, setFilter] = useState<CatalogFilter>('active');
-  const { busyId, setBusyId, error, load, runPatch, runDelete, loading } = useCatalogList();
+  const { busyId, setBusyId, error: mutationError, runPatch, runDelete } = useCatalogList();
 
-  const loadPlans = useCallback(async () => {
-    const json = (await load('/api/v1/admin/plans')) as { plans?: PlanTemplateBase[] } | null;
-    if (json) setPlans(json.plans ?? []);
-  }, [load]);
-
-  useEffect(() => {
-    void loadPlans();
-  }, [loadPlans]);
+  const error = swrError?.message ?? mutationError;
+  const loading = isLoading && plans.length === 0;
 
   const filteredPlans = useMemo(() => {
     return plans.filter((plan) => {
@@ -58,7 +55,7 @@ export default function AdminPlansPage() {
     setBusyId(planId);
     const ok = await runPatch(`/api/v1/admin/plans/${planId}`, patch, { errorMessage: 'Catalog update failed.' });
     setBusyId(null);
-    if (ok) await loadPlans();
+    if (ok) await revalidateAdminPlans();
   };
 
   const handleDelete = async (plan: PlanTemplateBase) => {
@@ -66,7 +63,7 @@ export default function AdminPlansPage() {
     setBusyId(plan.id);
     const ok = await runDelete(`/api/v1/admin/plans/${plan.id}`, { errorMessage: 'Delete failed.' });
     setBusyId(null);
-    if (ok) await loadPlans();
+    if (ok) await revalidateAdminPlans();
   };
 
   return (

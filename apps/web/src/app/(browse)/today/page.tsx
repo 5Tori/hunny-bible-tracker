@@ -18,15 +18,23 @@ export default async function TodayRedirectPage() {
         <p className="mkt-kicker">Today</p>
         <h1 className="mkt-heading mt-3">No message yet</h1>
         <p className="mkt-lead mt-4">
-          There is no published message for today. Check back soon or browse
-          Discover.
+          There is no published message for today. Browse the message library or Discover
+          while you wait.
         </p>
-        <Link
-          href="/discover"
-          className="mt-6 inline-block font-medium text-neutral-900 underline underline-offset-4 hover:text-[#d99a12]"
-        >
-          Go to Discover →
-        </Link>
+        <div className="mt-6 flex flex-wrap gap-4 text-sm">
+          <Link
+            href="/messages"
+            className="font-medium text-neutral-900 underline underline-offset-4 hover:text-[#d99a12]"
+          >
+            Browse messages →
+          </Link>
+          <Link
+            href="/discover"
+            className="font-medium text-neutral-900 underline underline-offset-4 hover:text-[#d99a12]"
+          >
+            Go to Discover →
+          </Link>
+        </div>
       </MarketingContainer>
     </MarketingSection>
   );

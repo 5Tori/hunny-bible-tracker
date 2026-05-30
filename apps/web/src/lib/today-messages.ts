@@ -2,6 +2,7 @@ import crypto from 'crypto';
 
 import { buildTodayMessageShareImageUrl } from '@/lib/cloudinary-share-url';
 import { sql } from '@/lib/db/postgres';
+import { getPublishedMessageBySlug } from '@/lib/messages';
 import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 export interface TodayMessageBase {
@@ -42,6 +43,11 @@ export interface TodayMessageLinkedContentSummary {
   summary: string | null;
   cover_image_url: string | null;
   related_plans: TodayMessageLinkedPlanSummary[];
+  messages_url?: string | null;
+  primary_category?: string | null;
+  primary_category_label?: string | null;
+  situations?: string[];
+  theme_tags?: string[];
 }
 
 export type PublicTodayMessage = TodayMessageBase & {
@@ -200,7 +206,7 @@ async function loadLinkedContentSummary(
   const content = rows[0];
   if (!content) return null;
 
-  return {
+  const baseSummary: TodayMessageLinkedContentSummary = {
     id: content.id,
     slug: content.slug,
     content_type: content.content_type,
@@ -216,6 +222,22 @@ async function loadLinkedContentSummary(
       cta_label: plan.cta_label,
     })),
   };
+
+  if (content.content_type === 'message') {
+    const messageCard = await getPublishedMessageBySlug(content.slug, 'en');
+    if (messageCard) {
+      return {
+        ...baseSummary,
+        messages_url: messageCard.messagesUrl,
+        primary_category: messageCard.primaryCategory,
+        primary_category_label: messageCard.primaryCategoryLabel,
+        situations: messageCard.situations,
+        theme_tags: messageCard.themeTags,
+      };
+    }
+  }
+
+  return baseSummary;
 }
 
 export async function toPublicTodayMessage(

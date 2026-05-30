@@ -1,24 +1,33 @@
 export const ADMIN_NAV_ITEMS = [
-  { href: '/admin/plans', label: 'Plans' },
-  { href: '/admin/content', label: 'Content' },
+  { href: '/admin', label: 'Dashboard' },
+  { href: '/admin/messages', label: 'Message cards' },
   { href: '/admin/today-messages', label: "Today's messages" },
+  { href: '/admin/plans', label: 'Plans' },
+  { href: '/admin/content', label: 'Other content' },
 ] as const;
 
+function matchesPathPrefix(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+
 export function isAdminNavActive(href: string, pathname: string): boolean {
+  if (href === '/admin') {
+    return pathname === '/admin';
+  }
   if (href === '/admin/plans') {
-    return pathname === '/admin/plans' || pathname.startsWith('/admin/plans/');
+    return matchesPathPrefix(pathname, '/admin/plans');
+  }
+  if (href === '/admin/messages') {
+    return matchesPathPrefix(pathname, '/admin/messages');
   }
   if (href === '/admin/content') {
-    if (pathname === '/admin/content' || pathname === '/admin/content/new') return true;
-    if (pathname.startsWith('/admin/content/')) return true;
-    return false;
+    if (matchesPathPrefix(pathname, '/admin/messages')) return false;
+    return matchesPathPrefix(pathname, '/admin/content');
   }
   if (href === '/admin/today-messages') {
-    if (pathname === '/admin/today-messages' || pathname === '/admin/today-messages/new') return true;
-    if (pathname.startsWith('/admin/today-messages/')) return true;
-    return false;
+    return matchesPathPrefix(pathname, '/admin/today-messages');
   }
-  return pathname === href || pathname.startsWith(`${href}/`);
+  return matchesPathPrefix(pathname, href);
 }
 
 export function isAdminShellRoute(pathname: string): boolean {

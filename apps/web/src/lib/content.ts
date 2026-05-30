@@ -522,7 +522,7 @@ async function getAdminContentListRelations(contents: ContentBase[]) {
   return relationsByContentId;
 }
 
-async function getPublishedContentListRelations(contents: ContentBase[]) {
+export async function getPublishedContentListRelations(contents: ContentBase[]) {
   const relationsByContentId = new Map<
     string,
     Awaited<ReturnType<typeof getContentRelations>>
@@ -954,11 +954,93 @@ export async function getPublishedContentByIdentifier(identifier: string, langua
   return hydrateContent(content, relations);
 }
 
-export async function getAdminContents() {
-  const contents = (await sql`
-    select * from contents
-    order by updated_at desc
-  `) as ContentBase[];
+/** Lightweight admin list row — no author/plan joins beyond a plan count. */
+export interface AdminContentListItem {
+  id: string;
+  slug: string;
+  content_type: string;
+  language: string;
+  title: string;
+  summary: string | null;
+  cover_image_url: string | null;
+  is_published: boolean;
+  is_archived: boolean;
+  metadata: Record<string, unknown>;
+  updated_at: string;
+  related_plan_count: number;
+}
+
+type AdminContentListRow = AdminContentListItem;
+
+export async function getAdminContentsList(options?: { contentType?: string }): Promise<AdminContentListItem[]> {
+  const contentType = options?.contentType?.trim();
+
+  const rows = contentType
+    ? ((await sql`
+        select
+          c.id,
+          c.slug,
+          c.content_type,
+          c.language,
+          c.title,
+          c.summary,
+          c.cover_image_url,
+          c.is_published,
+          c.is_archived,
+          c.metadata,
+          c.updated_at,
+          coalesce(pc.related_plan_count, 0)::int as related_plan_count
+        from contents c
+        left join (
+          select content_id, count(*)::int as related_plan_count
+          from content_plan_links
+          group by content_id
+        ) pc on pc.content_id = c.id
+        where c.content_type = ${contentType}
+        order by c.updated_at desc
+      `) as AdminContentListRow[])
+    : ((await sql`
+        select
+          c.id,
+          c.slug,
+          c.content_type,
+          c.language,
+          c.title,
+          c.summary,
+          c.cover_image_url,
+          c.is_published,
+          c.is_archived,
+          c.metadata,
+          c.updated_at,
+          coalesce(pc.related_plan_count, 0)::int as related_plan_count
+        from contents c
+        left join (
+          select content_id, count(*)::int as related_plan_count
+          from content_plan_links
+          group by content_id
+        ) pc on pc.content_id = c.id
+        order by c.updated_at desc
+      `) as AdminContentListRow[]);
+
+  return rows.map((row) => ({
+    ...row,
+    metadata: row.metadata ?? {},
+    related_plan_count: Number(row.related_plan_count) || 0,
+  }));
+}
+
+export async function getAdminContents(options?: { contentType?: string }) {
+  const contentType = options?.contentType?.trim();
+  const contents = contentType
+    ? ((await sql`
+        select * from contents
+        where content_type = ${contentType}
+        order by updated_at desc
+      `) as ContentBase[])
+    : ((await sql`
+        select * from contents
+        order by updated_at desc
+      `) as ContentBase[]);
 
   if (contents.length === 0) {
     return [];

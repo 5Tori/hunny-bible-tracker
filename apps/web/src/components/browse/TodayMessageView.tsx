@@ -53,16 +53,27 @@ export function TodayMessageView({ message }: { message: PublicTodayMessage }) {
 
         {linkedContent ? (
           <section className="mt-10 rounded-2xl border border-neutral-200 p-6">
-            <p className="mkt-kicker">Related content</p>
+            <p className="mkt-kicker">
+              {linkedContent.content_type === "message" ? "Message card" : "Related content"}
+            </p>
             <h2 className="mt-2 text-xl font-semibold text-neutral-900">{linkedContent.title}</h2>
             {linkedContent.summary ? (
               <p className="mt-2 text-sm text-neutral-600">{linkedContent.summary}</p>
             ) : null}
+            {linkedContent.primary_category_label ? (
+              <p className="mt-2 text-xs text-neutral-500">{linkedContent.primary_category_label}</p>
+            ) : null}
             <Link
-              href={`/content/${linkedContent.slug}`}
+              href={
+                linkedContent.content_type === "message" && linkedContent.messages_url
+                  ? linkedContent.messages_url
+                  : `/content/${linkedContent.slug}`
+              }
               className="mt-4 inline-block font-medium text-neutral-900 underline underline-offset-4 hover:text-[#d99a12]"
             >
-              Read full story →
+              {linkedContent.content_type === "message"
+                ? "Open message card →"
+                : "Read full story →"}
             </Link>
             {linkedContent.related_plans.length > 0 ? (
               <p className="mt-4 text-sm text-neutral-500">
@@ -75,6 +86,12 @@ export function TodayMessageView({ message }: { message: PublicTodayMessage }) {
         ) : null}
 
         <div className="mt-10 flex flex-wrap gap-4 text-sm">
+          <Link
+            href="/messages"
+            className="font-medium text-neutral-900 underline underline-offset-4 hover:text-[#d99a12]"
+          >
+            Find another message →
+          </Link>
           <Link
             href="/discover"
             className="font-medium text-neutral-900 underline underline-offset-4 hover:text-[#d99a12]"

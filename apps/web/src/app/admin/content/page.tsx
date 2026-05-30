@@ -1,9 +1,10 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import Link from 'next/link';
 
 import { useCatalogList } from '@/components/admin/catalog/useCatalogList';
+import { useAdminContent } from '@/components/admin/hooks/use-admin-swr';
 import { Alert } from '@/components/admin/ui/Alert';
 import { Badge } from '@/components/admin/ui/Badge';
 import { ButtonLink } from '@/components/admin/ui/Button';
@@ -13,6 +14,7 @@ import { FilterTabs } from '@/components/admin/ui/FilterTabs';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { RowActionsMenu } from '@/components/admin/ui/RowActionsMenu';
 import type { ContentWithRelations } from '@/lib/content';
+import { revalidateAdminContent } from '@/lib/admin/swr-mutate';
 
 type ContentFilter = 'active' | 'archived' | 'all';
 
@@ -38,21 +40,17 @@ function statusBadge(content: ContentWithRelations) {
 }
 
 export default function AdminContentPage() {
-  const [contents, setContents] = useState<ContentWithRelations[]>([]);
+  const { data, error: swrError, isLoading } = useAdminContent();
+  const contents = data?.contents ?? [];
   const [filter, setFilter] = useState<ContentFilter>('active');
-  const { busyId, setBusyId, error, load, runDelete, loading } = useCatalogList();
+  const { busyId, setBusyId, error: mutationError, runDelete } = useCatalogList();
 
-  const loadContent = useCallback(async () => {
-    const json = (await load('/api/v1/admin/content')) as { contents?: ContentWithRelations[] } | null;
-    if (json) setContents(json.contents ?? []);
-  }, [load]);
-
-  useEffect(() => {
-    void loadContent();
-  }, [loadContent]);
+  const error = swrError?.message ?? mutationError;
+  const loading = isLoading && contents.length === 0;
 
   const filtered = useMemo(() => {
     return contents.filter((content) => {
+      if (content.content_type === 'message') return false;
       if (filter === 'all') return true;
       if (filter === 'archived') return content.is_archived;
       return !content.is_archived;
@@ -64,15 +62,15 @@ export default function AdminContentPage() {
     setBusyId(content.id);
     const ok = await runDelete(`/api/v1/admin/content/${content.id}`, { errorMessage: 'Delete failed.' });
     setBusyId(null);
-    if (ok) await loadContent();
+    if (ok) await revalidateAdminContent();
   };
 
   return (
     <>
       <PageHeader
-        label="Reusable content"
-        title="Content"
-        description="Manage messages, videos, essays, and cartoons for Home, Discover, and related plans."
+        label="Discover content"
+        title="Other content"
+        description="Manage videos, essays, and cartoons. Message cards live under Message cards."
         actions={<ButtonLink href="/admin/content/new" variant="primary">New content</ButtonLink>}
       />
 
