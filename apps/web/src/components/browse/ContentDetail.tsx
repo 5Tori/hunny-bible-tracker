@@ -3,6 +3,7 @@ import Link from "next/link";
 
 import { MarketingContainer } from "@/components/marketing/ui/MarketingContainer";
 import { MarketingSection } from "@/components/marketing/ui/MarketingSection";
+import { RelatedPlansSection } from "@/components/browse/RelatedPlansSection";
 import type { ContentWithRelations } from "@/lib/content";
 import { getYoutubeVideoId } from "@/lib/youtube";
 
@@ -168,19 +169,7 @@ export function ContentDetail({ content }: { content: ContentWithRelations }) {
         ) : null}
 
         {content.related_plans.length > 0 ? (
-          <section className="mt-12 rounded-2xl border border-neutral-200 p-6">
-            <p className="mkt-kicker">Related plans</p>
-            <ul className="mt-4 space-y-3">
-              {content.related_plans.map((plan) => (
-                <li key={plan.id} className="text-sm text-neutral-700">
-                  <span className="font-medium text-neutral-900">{plan.title}</span>
-                  {plan.estimated_minutes ? (
-                    <span className="text-neutral-500"> · ~{plan.estimated_minutes} min/ch</span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
-          </section>
+          <RelatedPlansSection plans={content.related_plans} />
         ) : null}
       </MarketingContainer>
     </MarketingSection>

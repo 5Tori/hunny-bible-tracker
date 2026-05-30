@@ -12,7 +12,7 @@ Read flow QA 완료 · Discover enabled · Saved/List hidden · Home Today's Mes
 
 - [ ] `supabase/migrations/` ~ plan seeds `20260528110007` 적용
 - [ ] Discover content: `apps/web/db/seeds/content_test_seed.sql` 또는 Admin publish
-- [ ] Today's Message ≥1건 Admin publish
+- [ ] Today's Message: `apps/web/db/seeds/today_message_test_seed.sql` (마이그레이션 `20260529120000` 후) 또는 Admin publish
 - [ ] Cloudflare Hyperdrive + secrets (`SUPABASE_SERVICE_ROLE_KEY`, Cloudinary)
 - [ ] `ADMIN_EMAILS` · Google OAuth SHA-1 · release `HUNNY_API_BASE_URL=https://hunnybibletracker.com`
 

@@ -481,7 +481,7 @@ No dedicated OG image work.
 4. ~~**Admin Today Message editor redesign**~~ ✓
 5. ~~**Public web Today Message redesign** (minimal)~~ ✓
 6. ~~**Mobile DTO + Home More flow**~~ ✓
-7. **Content detail / related plan CTA polish**
+7. ~~**Content detail / related plan CTA polish**~~ ✓
 8. ~~**Seed data update**~~ ✓
 9. **QA / closed testing smoke**
 
@@ -523,6 +523,7 @@ No dedicated OG image work.
 - [x] Public web page compatible with new payload
 - [x] Mobile DTO + Home More flow
 - [x] Seed data Mode A/B
+- [x] Public content page related plan CTA (app download)
 
 ---
 

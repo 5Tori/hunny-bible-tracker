@@ -65,18 +65,11 @@ export function TodayMessageView({ message }: { message: PublicTodayMessage }) {
               Read full story →
             </Link>
             {linkedContent.related_plans.length > 0 ? (
-              <div className="mt-6 border-t border-neutral-200 pt-4">
-                <p className="text-sm font-medium text-neutral-900">Related plans</p>
-                <ul className="mt-2 space-y-2 text-sm text-neutral-600">
-                  {linkedContent.related_plans.map((plan) => (
-                    <li key={plan.id}>
-                      {plan.title}
-                      {plan.total_chapters ? ` · ${plan.total_chapters} chapters` : ""}
-                      {plan.estimated_minutes ? ` · ~${plan.estimated_minutes} min/ch` : ""}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <p className="mt-4 text-sm text-neutral-500">
+                {linkedContent.related_plans.length === 1
+                  ? "Includes a related reading plan on the full story page."
+                  : `Includes ${linkedContent.related_plans.length} related reading plans on the full story page.`}
+              </p>
             ) : null}
           </section>
         ) : null}
