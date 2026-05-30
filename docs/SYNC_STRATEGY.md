@@ -1,159 +1,57 @@
 # Sync Strategy
 
-The app is offline-first. Reading data is written locally first, then optionally backed up to Supabase for signed-in users.
+**Offline-first** 읽기 데이터 설계. Live collaborative sync가 아닌 **compact backup/restore**.
+
+## Flow
 
 ```text
-User action
-  -> SQLite transaction
-  -> UI update
-  -> row marked local_only/pending
-  -> authenticated sync push
-  -> Next.js API
-  -> Supabase Postgres
+User action → SQLite transaction → UI update
+  → (signed-in) POST /api/v1/sync/push → user_reading_backups
 ```
 
-## Current Implemented Sync
+## Push scope (포함)
 
-### Auth identity
+Plan lifecycle metadata · completed progress · reading activities · completion events · backup-relevant settings
+
+## Push scope (미포함)
+
+`user_plan_chapters` · sync metadata · per-row `server_id`
+
+## Restore
+
+`GET /api/v1/sync/bootstrap` → restore plans/progress/activities/events/settings → **`user_plan_chapters`를 plan template에서 local regenerate**
+
+## Core invariant
 
 ```text
-Supabase access token
-  -> POST /api/v1/auth/sync
-  -> profiles upsert
+user_plan_chapters = local derived data only
 ```
 
-### Reading backup push
+Backup size는 started plan의 total chapter 수에 비례하지 **않음** (compact snapshot).
 
-```text
-Settings -> Sync now
-  -> ReadRepository.exportReadingBackupSnapshot()
-  -> POST /api/v1/sync/push
-  -> server validates snapshot
-  -> server upserts one user_reading_backups row for the auth user
-  -> app_settings.last_reading_sync_at updated
-```
+## Local sync metadata
 
-Push scope:
+`sync_status`: `local_only` · `pending` · `synced` · `conflict`(reserved)
 
-- plan lifecycle metadata
-- completed progress tuples
-- reading activity tuples
-- completion events
-- backup-relevant settings
+## Identity merge
 
-The push payload does not include `user_plan_chapters`, sync metadata, or per-row server ids.
+Sign-in: Supabase UUID → `local_users.auth_user_id` → `POST /api/v1/auth/sync` → `profiles`. Local data preserve 후 push. Restore는 account backup으로 **replace**.
 
-### Reading backup restore/bootstrap
+## Data rules
 
-```text
-Settings -> Restore backup
-  -> GET /api/v1/sync/bootstrap
-  -> server returns compact snapshot
-  -> mobile restores user_reading_plans
-  -> mobile regenerates user_plan_chapters from plan templates
-  -> mobile restores progress, activities, completion events, and settings
-```
-
-Core invariant:
-
-```text
-user_plan_chapters is local derived data only.
-```
-
-Server backup is for backup/restore, not live collaborative sync. Backup size should scale with actual user state, not with the total chapter count of started plans.
-
-## Local Sync Metadata
-
-Hot local tables include sync-ready fields:
-
-- `sync_status`
-- `server_id`
-- `last_synced_at`
-- `client_revision`
-
-Current values:
-
-| Value | Meaning |
+| Data | Rule |
 | --- | --- |
-| `local_only` | Row exists locally and has not been uploaded |
-| `pending` | Row changed locally and should be uploaded |
-| `synced` | Server acknowledged the row |
-| `conflict` | Reserved for future conflict handling |
+| Plan templates | Server catalog → `GET /api/v1/plans` → local cache |
+| User plan runs | Backup에 lifecycle + `templateKey` only |
+| `chapter_progress_entries` | Mutable; uncheck도 sync 대상 |
+| `reading_activities` | Append-friendly; uncheck 시 삭제 금지 |
+| `plan_completion_events` | 1 per finished run |
+| Archive | Destructive delete 아님 |
 
-Feature code sets `pending` for user-driven mutations in key tables.
+## Remaining work
 
-## Server Backup Table
+Push/restore E2E · app-start sync UX · explicit error states · conflict policy before auto merge
 
-`apps/web/db/schema.sql` includes:
+## 관련 문서
 
-- `user_reading_backups`
-
-The server stores one compact backup row per `auth_user_id`. Legacy relational reading sync tables are no longer part of the server schema.
-
-## Identity Merge
-
-Before sign-in, local data belongs to one guest `local_users` row.
-
-After sign-in:
-
-```text
-Supabase user UUID
-  -> local_users.auth_user_id
-  -> POST /api/v1/auth/sync
-  -> profiles.id
-```
-
-Current behavior preserves local data and pushes it after sign-in. Restore/bootstrap replaces local reading state from the compact account backup.
-
-## Data Categories
-
-### Template data
-
-Plan templates are source/catalog data.
-
-Published plan templates are server-managed in Supabase and downloaded through `GET /api/v1/plans`. Mobile caches them locally in Drift so Catalog and user plan creation can work from the local snapshot.
-
-### User plan runs
-
-Compact backup uploads only plan lifecycle metadata and uses `templateKey` to regenerate local derived chapters on restore.
-
-Archived plans remain syncable. Archive is a status/state update, not a destructive delete.
-
-### Chapter progress
-
-`chapter_progress_entries` is mutable current state.
-
-Explicit uncheck is a real mutation and should sync.
-
-### Reading activities
-
-`reading_activities` is append-friendly activity history.
-
-Do not delete completion activity when a user unchecks a chapter.
-
-### Completion events
-
-`plan_completion_events` is one event per finished user plan run.
-
-## Current API Surface
-
-| Route | Purpose |
-| --- | --- |
-| `POST /api/v1/sync/push` | Upload current local reading snapshot for signed-in user |
-| `GET /api/v1/sync/bootstrap` | Download server snapshot for signed-in user |
-
-All routes verify Supabase bearer tokens server-side.
-
-## Remaining Sync Work
-
-Do not treat the current sync as full multi-device collaboration. It is a practical backup/restore foundation.
-
-Remaining work:
-
-- Apply `supabase/migrations/20260528000000_baseline.sql` to the fresh Supabase database.
-- Run push/restore E2E smoke tests.
-- Throttled app-start sync UX and telemetry polish.
-- Network reconnect trigger.
-- More explicit sync error state in Settings.
-- Conflict telemetry before exposing conflict resolution UI.
-- Clear policy for cross-device edits to the same chapter before automatic merge is advertised.
+`docs/DATA_MODEL.md` · `docs/AUTH_AND_API.md` · `docs/ARCHITECTURE.md`

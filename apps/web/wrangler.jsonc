@@ -15,7 +15,7 @@
     }
   ],
   // Required for Supabase Postgres from Workers (create in dashboard or via CLI).
-  // See docs/CLOUDFLARE_DEPLOY.md — replace REPLACE_HYPERDRIVE_ID after creation.
+  // Hyperdrive binding — see docs/DEVELOPMENT.md
   "hyperdrive": [
     {
       "binding": "HYPERDRIVE",

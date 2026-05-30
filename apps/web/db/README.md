@@ -7,7 +7,7 @@ Supabase(Postgres) 스키마·시드·레거시 마이그레이션 스냅샷입�
 | 경로 | 내용 |
 | --- | --- |
 | `schema.sql` | 전체 서버 스키마 참고본 (baseline과 동기화 목적) |
-| `migrations/` | Neon/Vercel 시절 **증분** SQL (콘텐츠 카탈로그·오늘의 말씀 share 등). baseline 이후 변경 이력 참고용 |
+| `migrations/` | 레거시 **증분** SQL (baseline 이전 이력 참고용). 현재 스키마는 `supabase/migrations/` |
 | `seeds/content_test_seed.sql` | Discover용 **테스트 콘텐츠** (작가·태그·article/video/cartoon·`content_plan_links`) |
 | `seeds/plans/` | 플랜 시드 설계 메모 (선택) |
 

@@ -1,5 +1,5 @@
 # Hunny Bible Tracker — Supabase local config.
-# See docs/SUPABASE_SETUP.md for project linking and OAuth redirect URLs.
+# See docs/AUTH_AND_API.md for project linking and OAuth redirect URLs.
 
 project_id = "hunny-bible-tracker"
 

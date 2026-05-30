@@ -245,15 +245,14 @@ function hydratePlan(
   };
 }
 
-async function getPlanRelations(planId: string) {
-  const sections = (await sql`
+async function getPlanRelations(sqlExecutor: SqlLike, planId: string) {
+  const sections = (await sqlExecutor`
     select * from plan_template_sections
     where plan_template_id = ${planId}
     order by order_index asc, created_at asc
   `) as Array<Omit<PlanSection, 'items'>>;
 
-  // Subquery avoids `where section_id = any($uuid[])` — flaky on some pooler/Workers paths.
-  const items = (await sql`
+  const items = (await sqlExecutor`
     select * from plan_template_items
     where section_id in (
       select id from plan_template_sections
@@ -262,7 +261,7 @@ async function getPlanRelations(planId: string) {
     order by section_id asc, order_index asc, created_at asc
   `) as PlanItem[];
 
-  const tags = (await sql`
+  const tags = (await sqlExecutor`
     select t.* from plan_tags t
     join plan_template_tags ptt on ptt.tag_id = t.id
     where ptt.plan_template_id = ${planId}
@@ -306,7 +305,7 @@ export async function getPublishedPlansWithRelations(sort: PublishedPlanSortMode
   const plans = await getPublishedPlans(sort);
   return await Promise.all(
     plans.map(async (plan) => {
-      const { sections, items, tags } = await getPlanRelations(plan.id);
+      const { sections, items, tags } = await getPlanRelations(sql, plan.id);
       return hydratePlan(plan, sections, items, tags);
     }),
   );
@@ -320,7 +319,7 @@ export async function getPublishedPlanByIdentifier(identifier: string) {
   `) as PlanTemplateBase[];
   const plan = planRows[0];
   if (!plan) return null;
-  const { sections, items, tags } = await getPlanRelations(plan.id);
+  const { sections, items, tags } = await getPlanRelations(sql, plan.id);
   return hydratePlan(plan, sections, items, tags);
 }
 
@@ -339,7 +338,7 @@ export async function getAdminPlanById(id: string) {
   `) as PlanTemplateBase[];
   const plan = planRows[0];
   if (!plan) return null;
-  const { sections, items, tags } = await getPlanRelations(plan.id);
+  const { sections, items, tags } = await getPlanRelations(sql, plan.id);
   return hydratePlan(plan, sections, items, tags);
 }
 

@@ -19,7 +19,9 @@ type HyperdriveBinding = {
 };
 
 let cachedConfigKey: string | null = null;
-let sqlClient: ReturnType<typeof postgres> | null = null;
+let localSqlClient: ReturnType<typeof postgres> | null = null;
+let hyperdriveSqlClient: ReturnType<typeof postgres> | null = null;
+let hyperdriveConfigKey: string | null = null;
 
 function isPlaceholderDatabaseUrl(url: string): boolean {
   return url.includes('REPLACE_');
@@ -38,9 +40,9 @@ type DatabaseConfig = {
   viaHyperdrive: boolean;
 };
 
-async function getDatabaseConfig(): Promise<DatabaseConfig> {
+function getDatabaseConfig(): DatabaseConfig {
   try {
-    const { env } = await getCloudflareContext({ async: true });
+    const { env } = getCloudflareContext();
     const hyperdrive = (env as { HYPERDRIVE?: HyperdriveBinding }).HYPERDRIVE;
     const hyperdriveUrl = hyperdrive?.connectionString?.trim();
     if (hyperdriveUrl && !isPlaceholderDatabaseUrl(hyperdriveUrl)) {
@@ -58,41 +60,86 @@ async function getDatabaseConfig(): Promise<DatabaseConfig> {
   throw new Error('DATABASE_URL is not set');
 }
 
-async function getClient() {
-  const config = await getDatabaseConfig();
-  const url = normalizeDatabaseUrl(config.url);
-  const configKey = `${config.viaHyperdrive ? 'hyperdrive' : 'direct'}:${url}`;
+function createPostgresClient(config: DatabaseConfig, url: string) {
+  return postgres(
+    url,
+    config.viaHyperdrive
+      ? {
+          max: 1,
+          fetch_types: false,
+          prepare: false,
+          connect_timeout: 10,
+        }
+      : {
+          max: 1,
+          prepare: false,
+          connect_timeout: 15,
+          ssl: 'require',
+        },
+  );
+}
 
-  if (!sqlClient || cachedConfigKey !== configKey) {
-    // Hyperdrive: use the binding connection string as-is (no client-side ssl).
-    // Direct/local pooler: ssl required for Supabase.
-    sqlClient = postgres(
-      url,
-      config.viaHyperdrive
-        ? {
-            max: 5,
-            fetch_types: false,
-            prepare: false,
-            connect_timeout: 15,
-          }
-        : {
-            max: 1,
-            prepare: false,
-            connect_timeout: 15,
-            ssl: 'require',
-          },
-    );
+function resetHyperdriveClient() {
+  hyperdriveSqlClient = null;
+  hyperdriveConfigKey = null;
+}
+
+function isConnectionError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes('CONNECTION_CLOSED') ||
+    message.includes('Connection terminated') ||
+    message.includes('connection timeout') ||
+    message.includes('ECONNRESET')
+  );
+}
+
+function getClient() {
+  const config = getDatabaseConfig();
+  const url = normalizeDatabaseUrl(config.url);
+
+  if (config.viaHyperdrive) {
+    const configKey = `hyperdrive:${url}`;
+    if (!hyperdriveSqlClient || hyperdriveConfigKey !== configKey) {
+      hyperdriveSqlClient = createPostgresClient(config, url);
+      hyperdriveConfigKey = configKey;
+    }
+    return hyperdriveSqlClient;
+  }
+
+  const configKey = `direct:${url}`;
+  if (!localSqlClient || cachedConfigKey !== configKey) {
+    localSqlClient = createPostgresClient(config, url);
     cachedConfigKey = configKey;
   }
-  return sqlClient;
+  return localSqlClient;
 }
 
 function makeTagged(executor: SqlExecutor): SqlExecutor {
   return ((strings, ...values) => executor(strings, ...values)) as SqlExecutor;
 }
 
+async function runQuery<T>(
+  strings: TemplateStringsArray,
+  values: unknown[],
+): Promise<T> {
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const client = getClient();
+      return (await client(strings, ...(values as never[]))) as T;
+    } catch (error) {
+      if (attempt === 0 && getDatabaseConfig().viaHyperdrive && isConnectionError(error)) {
+        resetHyperdriveClient();
+        continue;
+      }
+      throw error;
+    }
+  }
+  throw new Error('SQL query failed');
+}
+
 async function runTransaction(fn: (txn: SqlExecutor) => readonly unknown[]) {
-  const client = await getClient();
+  const client = getClient();
   await client.begin(async (txn) => {
     const txnSql = makeTagged(txn as unknown as SqlExecutor);
     const batch = fn(txnSql);
@@ -106,7 +153,7 @@ async function runTransaction(fn: (txn: SqlExecutor) => readonly unknown[]) {
 
 const sql: SqlClient = Object.assign(
   ((strings: TemplateStringsArray, ...values: unknown[]) =>
-    getClient().then((client) => client(strings, ...(values as never[])))) as SqlExecutor,
+    runQuery(strings, values)) as SqlExecutor,
   {
     transaction: runTransaction,
   },

@@ -1,7 +1,7 @@
 packages:
   - "apps/web"
 
-# pnpm 10: allow install/postinstall for these deps (firebase-admin / Next sharp path).
+# pnpm 10: allow install/postinstall for these deps (Next sharp path).
 onlyBuiltDependencies:
   - "@firebase/util"
   - protobufjs

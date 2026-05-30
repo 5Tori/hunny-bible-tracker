@@ -13,28 +13,23 @@ The mobile app must never connect directly to Supabase Postgres. It talks to thi
 - Supabase Postgres via `postgres` (transaction pooler `DATABASE_URL`)
 - `@supabase/supabase-js` for JWT verification and admin browser auth
 - Cloudinary for admin-uploaded plan covers and today-message images
-- Vercel Analytics on the public layout
+- Cloudflare Workers (OpenNext) + Hyperdrive → Supabase Postgres
 
-See [`docs/SUPABASE_SETUP.md`](../../docs/SUPABASE_SETUP.md) for project creation, migrations, and OAuth redirect URLs.
+See [`docs/AUTH_AND_API.md`](../../docs/AUTH_AND_API.md) for Supabase, OAuth, and env vars.
 
-Deploy target: **Cloudflare Workers** (default URL `https://hunny-bible-tracker-web.<subdomain>.workers.dev`). See [`docs/CLOUDFLARE_DEPLOY.md`](../../docs/CLOUDFLARE_DEPLOY.md).
+Deploy target: **Cloudflare Workers** at https://hunnybibletracker.com. See [`docs/DEVELOPMENT.md`](../../docs/DEVELOPMENT.md) for deploy commands.
 
 ```bash
 cd apps/web
 pnpm preview   # local Workers runtime
-pnpm deploy    # build + deploy (requires wrangler login + Hyperdrive id in wrangler.jsonc)
+pnpm run deploy    # build + deploy (requires wrangler login + Hyperdrive in wrangler.jsonc)
 ```
 
 ## App Structure
 
 ```text
 apps/web
-+-- db
-|   +-- schema.sql                 # Reference schema (profiles + app tables)
-|   +-- migrations/                # Legacy incremental SQL (superseded by supabase/migrations)
-+-- supabase/migrations/           # Baseline migration for Supabase (source of truth)
-+-- docs
-|   +-- ADMIN_DASHBOARD.md         # Admin-specific operator notes
++-- db/                            # schema.sql, seeds, legacy migrations (see db/README.md)
 +-- src
 |   +-- app
 |   |   +-- layout.tsx             # Root: <html>, globals.css, metadata
@@ -52,7 +47,7 @@ apps/web
 +-- postcss.config.mjs             # Tailwind v4 PostCSS plugin
 +-- package.json
 +-- tsconfig.json
-+-- vercel.json
++-- wrangler.jsonc                 # Cloudflare Workers + Hyperdrive config
 ```
 
 Use `src/app/**/page.tsx` for UI routes and `src/app/api/**/route.ts` for API endpoints. Shared behavior belongs in `src/lib`; route handlers should stay thin.
@@ -63,7 +58,7 @@ Use `src/app/**/page.tsx` for UI routes and `src/app/api/**/route.ts` for API en
 - `src/lib/auth/verify-supabase-token.ts`: verifies Supabase access tokens via service role.
 - `src/lib/auth/auth-user-sync.ts`: upserts `public.profiles` for signed-in users.
 - `src/lib/supabase/client.ts` / `admin.ts`: browser and server Supabase clients.
-- `src/lib/admin/auth.ts`: parses bearer tokens and allows only emails listed in `ADMIN_EMAILS`.
+- `src/lib/admin/auth.ts`: verifies Supabase JWT; allows only emails in `ADMIN_EMAILS`.
 - `src/lib/admin/client.ts`: stores/reads the browser admin ID token for admin fetch calls.
 - `src/lib/plans.ts`: plan catalog validation, CRUD, publishing, archiving, public plan reads, and sort parsing.
 - `src/lib/today-messages.ts`: today-message validation, CRUD, public lookup, public share lookup, heart/share counters.
@@ -246,36 +241,30 @@ Create local env from the example:
 cp apps/web/.env.example apps/web/.env.local
 ```
 
-Required server env:
+Required (see `.env.example` and `docs/AUTH_AND_API.md`):
 
 ```text
-DATABASE_URL
-FIREBASE_PROJECT_ID
-FIREBASE_CLIENT_EMAIL
-FIREBASE_PRIVATE_KEY
+DATABASE_URL                    # Supabase pooler (6543)
+SUPABASE_URL
+SUPABASE_SERVICE_ROLE_KEY
+NEXT_PUBLIC_SUPABASE_URL
+NEXT_PUBLIC_SUPABASE_ANON_KEY
 ADMIN_EMAILS
 CLOUDINARY_CLOUD_NAME
 CLOUDINARY_API_KEY
 CLOUDINARY_API_SECRET
+NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
 ```
 
-Required browser env for `/admin/login`:
+Optional public:
 
 ```text
-NEXT_PUBLIC_FIREBASE_API_KEY
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN
-NEXT_PUBLIC_FIREBASE_PROJECT_ID
-NEXT_PUBLIC_FIREBASE_APP_ID
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID
+NEXT_PUBLIC_SITE_URL
+NEXT_PUBLIC_GTM_ID
+NEXT_PUBLIC_GOOGLE_SITE_VERIFICATION
 ```
 
-Optional:
-
-```text
-NEXT_PUBLIC_SITE_URL  # canonical origin used for today-message share URLs
-```
-
-For `FIREBASE_PRIVATE_KEY`, paste the key with escaped newlines in local and Vercel env vars.
+Production secrets and build variables: Cloudflare Worker dashboard or `wrangler.jsonc` — see `docs/DEVELOPMENT.md`.
 
 ## Commands
 
@@ -301,7 +290,7 @@ pnpm build
 
 - Keep mobile-facing behavior behind API routes; do not expose Supabase credentials or direct DB access to mobile.
 - Keep route handlers small. Put validation, SQL, and normalization in `src/lib`.
-- Use Supabase bearer tokens for authenticated mobile APIs and admin APIs.
+- Use Supabase access tokens (`Authorization: Bearer`) for authenticated mobile APIs and admin APIs.
 - Use `requireAdminUser` only for admin-only endpoints.
 - Use `db/schema.sql` as the source of truth for database setup during MVP development.
 - When changing API response shapes, check the mobile client expectations before merging.

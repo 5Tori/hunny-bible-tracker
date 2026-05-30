@@ -1,10 +1,14 @@
 # Hunny Bible Tracker
 
-오프라인 우선 성경 읽기 트래커입니다. Flutter + Drift/SQLite(로컬), Supabase Auth, Next.js API, Supabase Postgres(서버)로 구성됩니다.
+오프라인 우선, **콘텐츠 중심 성경 읽기 습관 앱**입니다. 접근하기 쉬운 성경 이야기와 짧은 가이드 콘텐츠로 시작해, 관련 읽기 플랜을 한 장씩 진행하며 꾸준한 읽기 습관을 만듭니다.
 
-앱은 성경 **전문**을 저장하지 않습니다. 책/장 참조, 읽기 플랜, 장 진행, 읽기 활동, 로컬 설정, 오늘의 말씀·Discover 콘텐츠 메타데이터, 계정 연동 메타데이터를 다룹니다.
+Flutter + Drift/SQLite(로컬), Supabase Auth, Next.js API/Admin, Supabase Postgres(서버), Cloudinary(관리자 미디어)로 구성됩니다.
+
+앱은 성경 **전문**을 저장하지 않습니다. 책/장 참조, 플랜, 진행, 읽기 활동, 설정, 오늘의 말씀·Discover 콘텐츠 메타데이터를 다룹니다. 모바일은 **로컬에 먼저** 쓰고, Supabase Postgres는 **API 경유**로만 접근합니다. 로그인 사용자는 백업/복원을 사용할 수 있으며, 기기 간 **자동 병합**은 보류입니다.
 
 ## 현재 상태
+
+**콘텐츠 중심 성경 읽기 습관 앱** — Discover에서 이야기·콘텐츠를 찾고, 관련 플랜을 읽으며, 진행과 습관을 추적합니다.
 
 클로즈드 테스트를 위해 **Home, Discover, Read, Plans, Settings**와 **공개 웹/API**를 마무리하는 단계입니다.
 
@@ -31,8 +35,6 @@
 | 공개 웹·API | https://hunnybibletracker.com |
 | Admin | https://hunnybibletracker.com/admin/login |
 | API 헬스 | `.../api/health` |
-| GA4 / Search Console | [`docs/GOOGLE_ANALYTICS_AND_SEARCH.md`](docs/GOOGLE_ANALYTICS_AND_SEARCH.md) |
-| Cloudflare Git 배포 | [`docs/CLOUDFLARE_GIT_BUILDS.md`](docs/CLOUDFLARE_GIT_BUILDS.md) |
 
 모바일 `HUNNY_API_BASE_URL`도 위 API 호스트(끝 `/` 유무 무관)를 사용합니다.
 
@@ -44,19 +46,16 @@ apps/
   web/      Next.js (공개 페이지 · API · Admin)
 
 docs/
-  PROJECT_CONTEXT.md       프로젝트 전체 컨텍스트
+  PRODUCT_STRATEGY.md      제품 정체성·핵심 루프 (소스 오브 트루스)
   ARCHITECTURE.md          런타임 구조·모듈 맵
   DATA_MODEL.md            로컬/서버 스키마, 플랜·콘텐츠
-  AUTH_AND_API.md          Supabase Auth, API, 배포 체크리스트
-  SUPABASE_SETUP.md        Supabase·OAuth·환경 변수
-  CLOUDFLARE_DEPLOY.md     Workers·Hyperdrive 배포
-  MOBILE_TESTING.md        Android/iOS 테스트·빌드 가이드
-  SYNC_STRATEGY.md         백업/복원 설계
+  AUTH_AND_API.md          Supabase Auth, OAuth, API, env
+  SYNC_STRATEGY.md         backup/restore 설계
   PRODUCT_ROADMAP.md       제품 방향·우선순위
-  ADMIN_DASHBOARD.md       Admin 화면·콘텐츠 관리
-  DEVELOPMENT.md           로컬 실행·빌드·트러블슈팅
+  MOBILE_TESTING.md        모바일 테스트·빌드
+  DEVELOPMENT.md           로컬 실행·배포·트러블슈팅 (+ Admin CRUD: Plans · Content · Today's Message)
   ref/HUNNY_RELEASE_LOG.md 릴리스·Play Console 기록
-  to-do/                   클로즈드 테스트·후속 작업
+  to-do/                   CURRENT_FOCUS · MVP 체크리스트
 ```
 
 ## 처음 읽을 문서
@@ -64,13 +63,16 @@ docs/
 새로 합류한 개발자·에이전트용 순서:
 
 1. 이 README
-2. `docs/ARCHITECTURE.md` — 시스템 맵
-3. `docs/DATA_MODEL.md` — Read·Plans·오늘의 말씀·동기화 변경 전
-4. `docs/AUTH_AND_API.md`, `docs/SUPABASE_SETUP.md` — Auth·API 변경 전
-5. `docs/CLOUDFLARE_DEPLOY.md` — 웹 배포·Workers 설정
-6. `docs/MOBILE_TESTING.md` — 모바일 프로덕션 API 테스트·빌드
-7. `docs/SYNC_STRATEGY.md` — 백업/복원 변경 전
-8. `docs/to-do/MVP_CLOSE_TESTING_TODO.md` — 클로즈드 테스트 체크리스트
+2. `docs/PRODUCT_STRATEGY.md` — 제품 정체성·핵심 루프
+3. `docs/ARCHITECTURE.md` — 시스템 맵
+4. `docs/DATA_MODEL.md` — Read·Plans·콘텐츠·동기화 변경 전
+5. `docs/AUTH_AND_API.md` — Auth·API 변경 전
+6. `docs/SYNC_STRATEGY.md` — 백업/복원 변경 전
+7. `docs/PRODUCT_ROADMAP.md` — 제품 우선순위
+8. `docs/to-do/CURRENT_FOCUS.md` — 지금 하는 일
+9. `docs/to-do/MVP_CLOSE_TESTING_TODO.md` — 클로즈드 테스트 체크리스트
+
+배포·로컬 실행: `docs/DEVELOPMENT.md`, `docs/AUTH_AND_API.md`, `docs/MOBILE_TESTING.md`
 
 ## 빠른 시작
 
@@ -118,7 +120,7 @@ cd apps/mobile
 ```bash
 pnpm install
 cp apps/web/.env.example apps/web/.env.local
-# .env.local에 DATABASE_URL, Supabase, Cloudinary 등 입력 (docs/SUPABASE_SETUP.md)
+# .env.local에 DATABASE_URL, Supabase, Cloudinary 등 입력 (apps/web/.env.example, docs/AUTH_AND_API.md)
 pnpm web:dev
 ```
 
@@ -139,7 +141,7 @@ cd apps/web
 pnpm run deploy
 ```
 
-상세: **`docs/CLOUDFLARE_DEPLOY.md`**
+상세: **`docs/DEVELOPMENT.md`** (로컬·Cloudflare Workers 배포)
 
 ## 자주 쓰는 검증 명령
 
