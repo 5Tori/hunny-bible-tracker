@@ -24,12 +24,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const referenceLabel = message.bible_version
     ? `${message.verse_reference} · ${message.bible_version}`
     : message.verse_reference;
-  const title = message.article_title || referenceLabel;
+  const title = message.hint_title || referenceLabel;
   const description =
     message.hint_summary ||
-    message.article_body ||
     message.verse_text ||
-    message.message ||
+    message.linked_content?.summary ||
     "A daily Bible message from Hunny Bible Tracker.";
   const previewImage = message.share_image_url || message.image_url;
 

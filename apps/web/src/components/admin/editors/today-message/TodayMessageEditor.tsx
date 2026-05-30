@@ -21,21 +21,21 @@ const emptyForm: AdminTodayMessageInput = {
   verse_reference: '',
   bible_version: '',
   verse_text: '',
-  message: '',
   image_url: '',
   image_public_id: '',
   hint_title: '',
   hint_summary: '',
-  article_title: '',
-  article_body: '',
-  primary_related_plan_template_id: '',
   is_published: false,
 };
 
-interface PlanOption {
+interface ContentOption {
   id: string;
+  slug: string;
   title: string;
-  template_key: string;
+  content_type: string;
+  language: string;
+  is_published: boolean;
+  is_archived: boolean;
 }
 
 function mapToForm(message: TodayMessageBase): AdminTodayMessageInput {
@@ -46,14 +46,10 @@ function mapToForm(message: TodayMessageBase): AdminTodayMessageInput {
     verse_reference: message.verse_reference,
     bible_version: message.bible_version ?? '',
     verse_text: message.verse_text ?? '',
-    message: message.message ?? '',
     image_url: message.image_url ?? '',
     image_public_id: message.image_public_id ?? '',
     hint_title: message.hint_title ?? '',
     hint_summary: message.hint_summary ?? '',
-    article_title: message.article_title ?? '',
-    article_body: message.article_body ?? '',
-    primary_related_plan_template_id: message.primary_related_plan_template_id ?? '',
     is_published: message.is_published,
   };
 }
@@ -65,25 +61,47 @@ export default function TodayMessageEditor({ messageId }: { messageId?: string }
   const [loading, setLoading] = useState(Boolean(messageId));
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [planOptions, setPlanOptions] = useState<PlanOption[]>([]);
+  const [contentOptions, setContentOptions] = useState<ContentOption[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+
+  const selectedContent = useMemo(
+    () => contentOptions.find((item) => item.id === form.content_id) ?? null,
+    [contentOptions, form.content_id],
+  );
+
+  const languageMismatchWarning = useMemo(() => {
+    if (!selectedContent || !form.language) return null;
+    if (selectedContent.language === form.language) return null;
+    return `Linked content language (${selectedContent.language}) differs from message language (${form.language}).`;
+  }, [selectedContent, form.language]);
 
   const sharePreviewUrl = useMemo(() => {
     if (!form.image_public_id || !form.verse_reference.trim()) return null;
     return buildTodayMessageShareImageUrl({
       imagePublicId: form.image_public_id,
       verseReference: form.verse_reference.trim(),
-      verseText: form.verse_text?.trim() || form.message?.trim() || null,
+      verseText: form.verse_text?.trim() || null,
       bibleVersion: form.bible_version?.trim() || null,
     });
-  }, [form.image_public_id, form.verse_reference, form.verse_text, form.message, form.bible_version]);
+  }, [form.image_public_id, form.verse_reference, form.verse_text, form.bible_version]);
 
   useEffect(() => {
-    void fetch('/api/v1/plans?sort=featured')
-      .then((r) => (r.ok ? r.json() : null))
-      .then((json) => setPlanOptions((json?.plans ?? []) as PlanOption[]));
-  }, []);
+    const loadContentOptions = async () => {
+      const response = await adminFetch('/api/v1/admin/content');
+      const ok = await handleAdminResponse(response);
+      if (!ok || !response.ok) return;
+      const json = await response.json();
+      const contents = (json.contents ?? []) as ContentOption[];
+      setContentOptions(
+        contents
+          .filter((item) => !item.is_archived)
+          .sort((a, b) => a.title.localeCompare(b.title)),
+      );
+    };
+
+    void loadContentOptions();
+  }, [handleAdminResponse]);
 
   useEffect(() => {
     if (!messageId) {
@@ -192,16 +210,17 @@ export default function TodayMessageEditor({ messageId }: { messageId?: string }
       <PageHeader
         label="Home content"
         title={messageId ? 'Edit today message' : 'New today message'}
-        description="Schedule a verse card for the mobile Home tab."
+        description="Schedule a daily verse card for the mobile Home tab."
         actions={<ButtonLink href="/admin/today-messages" variant="secondary">Back to list</ButtonLink>}
       />
 
       {error ? <Alert tone="error">{error}</Alert> : null}
       {success ? <Alert tone="success">{success}</Alert> : null}
+      {languageMismatchWarning ? <Alert tone="warning">{languageMismatchWarning}</Alert> : null}
 
       <div className="admin-editor-layout">
         <div className="admin-editor-main">
-          <FormSection title="Message">
+          <FormSection title="Publishing">
             <FormGrid columns={2}>
               <FormField label="Publish date" htmlFor="publish_date">
                 <input
@@ -222,6 +241,9 @@ export default function TodayMessageEditor({ messageId }: { messageId?: string }
                 </select>
               </FormField>
             </FormGrid>
+          </FormSection>
+
+          <FormSection title="Verse">
             <FormGrid columns={2}>
               <FormField label="Verse reference" htmlFor="verse_reference">
                 <input
@@ -239,7 +261,7 @@ export default function TodayMessageEditor({ messageId }: { messageId?: string }
                 />
               </FormField>
             </FormGrid>
-            <FormField label="Verse text" htmlFor="verse_text">
+            <FormField label="Verse text" htmlFor="verse_text" hint="Required when publishing.">
               <textarea
                 id="verse_text"
                 rows={3}
@@ -247,39 +269,16 @@ export default function TodayMessageEditor({ messageId }: { messageId?: string }
                 onChange={(e) => setForm({ ...form, verse_text: e.target.value })}
               />
             </FormField>
-            <FormField label="Short message" htmlFor="message">
-              <textarea
-                id="message"
-                rows={3}
-                value={form.message ?? ''}
-                onChange={(e) => setForm({ ...form, message: e.target.value })}
+          </FormSection>
+
+          <FormSection title="Hint">
+            <FormField label="Hint title" htmlFor="hint_title">
+              <input
+                id="hint_title"
+                value={form.hint_title ?? ''}
+                onChange={(e) => setForm({ ...form, hint_title: e.target.value })}
               />
             </FormField>
-            <FormGrid columns={2}>
-              <FormField label="Hint title" htmlFor="hint_title">
-                <input
-                  id="hint_title"
-                  value={form.hint_title ?? ''}
-                  onChange={(e) => setForm({ ...form, hint_title: e.target.value })}
-                />
-              </FormField>
-              <FormField label="Related plan" htmlFor="primary_related_plan_template_id">
-                <select
-                  id="primary_related_plan_template_id"
-                  value={form.primary_related_plan_template_id ?? ''}
-                  onChange={(e) =>
-                    setForm({ ...form, primary_related_plan_template_id: e.target.value })
-                  }
-                >
-                  <option value="">No related plan</option>
-                  {planOptions.map((plan) => (
-                    <option key={plan.id} value={plan.id}>
-                      {plan.title} ({plan.template_key})
-                    </option>
-                  ))}
-                </select>
-              </FormField>
-            </FormGrid>
             <FormField label="Hint summary" htmlFor="hint_summary">
               <textarea
                 id="hint_summary"
@@ -288,25 +287,33 @@ export default function TodayMessageEditor({ messageId }: { messageId?: string }
                 onChange={(e) => setForm({ ...form, hint_summary: e.target.value })}
               />
             </FormField>
-            <FormField label="Article title" htmlFor="article_title">
-              <input
-                id="article_title"
-                value={form.article_title ?? ''}
-                onChange={(e) => setForm({ ...form, article_title: e.target.value })}
-              />
-            </FormField>
-            <FormField label="Article body" htmlFor="article_body">
-              <textarea
-                id="article_body"
-                rows={8}
-                value={form.article_body ?? ''}
-                onChange={(e) => setForm({ ...form, article_body: e.target.value })}
-              />
+          </FormSection>
+
+          <FormSection title="Linked content">
+            <FormField
+              label="Content"
+              htmlFor="content_id"
+              hint="Optional. Deeper body, media, and related plans live on the linked content item."
+            >
+              <select
+                id="content_id"
+                value={form.content_id ?? ''}
+                onChange={(e) => setForm({ ...form, content_id: e.target.value })}
+              >
+                <option value="">No linked content</option>
+                {contentOptions.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.title} · {item.content_type} · {item.slug}
+                    {item.is_published ? '' : ' (draft)'}
+                  </option>
+                ))}
+              </select>
             </FormField>
           </FormSection>
         </div>
+
         <aside className="admin-editor-aside">
-          <FormSection title="Image">
+          <FormSection title="Images">
             <div className="admin-upload-box">
               <input
                 id="tm_image_upload"

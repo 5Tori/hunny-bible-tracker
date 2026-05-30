@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 
 import {
   getPublishedTodayMessage,
-  TodayMessageBase,
+  PublicTodayMessage,
   TodayMessageValidationError,
 } from '@/lib/today-messages';
 
@@ -26,7 +26,7 @@ export async function GET(req: Request) {
   }
 }
 
-function withShareUrl(req: Request, message: TodayMessageBase) {
+function withShareUrl(req: Request, message: PublicTodayMessage): PublicTodayMessage {
   const origin =
     process.env.NEXT_PUBLIC_SITE_URL?.replace(/\/$/, '') ||
     new URL(req.url).origin;

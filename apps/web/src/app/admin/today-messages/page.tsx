@@ -94,7 +94,7 @@ export default function AdminTodayMessagesPage() {
                     <span>
                       <strong>{message.verse_reference}</strong>
                       <small className="admin-muted">
-                        {message.message || message.verse_text || 'No message text yet'}
+                        {message.verse_text || 'No verse text yet'}
                       </small>
                     </span>
                   </span>

@@ -1,105 +1,49 @@
 # MVP Close Testing Todo
 
-This is the active cleanup checklist before the next closed-test build.
+다음 closed-test build 전 **릴리스 체크리스트**. 로드맵이 아님.
 
-## Done / Do Not Re-open As Next Task
+## Done / Do Not Re-open
 
-- Read Flow QA & Stabilization is complete.
-- Discover is enabled as a content-backed finder/list.
-- Saved/List is hidden from the MVP bottom tabs.
-- Home Today’s Message frontend is implemented.
-- General content admin CRUD and public content API are implemented.
-- Today’s Message admin fields are implemented:
-  - hint title/summary
-  - article title/body
-  - related plan
-  - Bible version
-  - heart/share counters
-- Plans screen is implemented as a full-screen Plan Manager / Plan Library.
-- Current plans can be archived without losing progress/history, then restored.
-- Help & feedback posts to the web API.
-- Backup/restore foundation exists through sync push/bootstrap.
-- Offline startup is optimized so Home and Read render from local state first.
-- Discover shows an offline-only message when the public content API is unreachable.
-- Native launch images and launcher icon sources have been refreshed for the next closed-test build.
+Read flow QA 완료 · Discover enabled · Saved/List hidden · Home Today's Message · content admin/API · Plans(full-screen, archive/restore) · feedback API · sync push/bootstrap · offline Home/Read · Discover offline message · launch/icon assets · **Documentation 정리·한국어화 (Cloudflare + Supabase 기준)**
 
-## Before Closed Testing Build
+## Before Build
 
-- Apply `supabase/migrations/20260528000000_baseline.sql` in the target Supabase project.
-- Apply required existing-environment migrations in `apps/web/db/migrations/`.
-- Confirm `ADMIN_EMAILS` includes the admin account.
-- Confirm Cloudinary env vars are set for plan, content, and Today’s Message image upload.
-- Confirm Google OAuth Android SHA-1 values for debug/release/Play App Signing.
-- Confirm iOS Bundle ID before any iOS external testing.
-- Confirm `HUNNY_API_BASE_URL` points to the deployed API for release builds.
-- Run `flutter analyze`.
-- Run `flutter test`.
-- Run `pnpm --dir apps/web typecheck`.
-- Run release-target smoke checks on Android emulator/device.
-- Confirm `apps/mobile/pubspec.yaml` version matches the upload target, currently `0.3.0+7` for the next closed-test artifact.
+**Infrastructure**
+
+- [ ] `supabase/migrations/` ~ plan seeds `20260528110007` 적용
+- [ ] Discover content: `apps/web/db/seeds/content_test_seed.sql` 또는 Admin publish
+- [ ] Today's Message ≥1건 Admin publish
+- [ ] Cloudflare Hyperdrive + secrets (`SUPABASE_SERVICE_ROLE_KEY`, Cloudinary)
+- [ ] `ADMIN_EMAILS` · Google OAuth SHA-1 · release `HUNNY_API_BASE_URL=https://hunnybibletracker.com`
+
+**Automated**
+
+- [ ] `flutter analyze` · `flutter test` · `pnpm --dir apps/web typecheck`
+- [ ] Android smoke test · `pubspec.yaml` `0.3.0+7` 확인
+
+**Production API**
+
+- [ ] `GET /api/health` 200
+- [ ] `GET /api/v1/plans?sort=featured` (target: 8 plans)
+- [ ] `GET /api/v1/content?sort=featured&language=en`
+- [ ] `GET /api/v1/today-message?date=YYYY-MM-DD&language=en` — includes `linked_content` when `content_id` set
 
 ## Content Required
 
-- Publish at least one valid Today’s Message for closed testing.
-- Verify fallback behavior: if today has no row, the latest earlier published message appears.
-- Remove Bible version text from `verse_text`; use `bible_version`.
-- Publish at least a small set of general content for Discover.
-- For local smoke testing, `apps/web/db/seeds/content_test_seed.sql` can seed sample content, tags, and assets.
-- Verify `GET /api/v1/content?sort=featured&language=en` returns published content.
-- Publish a minimum useful plan catalog:
-  - Bible in a Year
-  - The Story of Joseph
-  - Gospel of Mark
-  - Psalms for Anxiety
-  - Life of David
-- Confirm every published plan creates valid `user_plan_chapters`.
-- Confirm related plan CTA in Today’s Message opens/starts the intended plan.
+- Today's Message 1건+ · fallback(이전 publish_date) 동작
+- `verse_text` / `bible_version` 분리
+- Discover content (seed 또는 Admin publish)
+- MVP plans: target **≥5** published plans (Joseph, Mark, Psalms for Anxiety, Life of David 등)
+- Start Plan → valid `user_plan_chapters` · plan CTA via linked content (`content_plan_links`) when Today’s Message has `content_id`
 
-## Manual QA Checklist
+## Manual QA
 
-- Fresh install opens Home without account.
-- Airplane mode opens Home quickly and shows current progress or empty progress without long network delay.
-- Airplane mode Read tab works for existing local plans and chapter progress.
-- Home shows Today’s Message and current plan progress.
-- Home shows cached Today’s Message when available, otherwise the Proverbs 16:24 honeycomb offline fallback.
-- Discover loads published content.
-- Discover shows an offline message when the API is unreachable.
-- Discover search filters content by title, summary, body, verse reference, author, tags, and related plan title.
-- Discover type and tag filters work.
-- Discover content detail sheet opens without layout overflow.
-- Today’s Message heart/share update counters.
-- Today’s Message save persists locally.
-- Read More modal shows article and related plan card.
-- Start Plan from Today’s Message opens Read with that plan active.
-- Read tab title opens quick My Plans sheet.
-- Browse Plans opens Plans Catalog.
-- Manage Plans opens Plans My Plans.
-- Current plan can be continued.
-- Current plan can be archived and disappears from Current.
-- Archived plan can be restored with progress intact.
-- Chapter check/uncheck persists after app restart.
-- Plan completion creates one completion event.
-- Completed plan can Start Again as a new run.
-- Settings sign-in works.
-- Settings Sync now backs up rows.
-- Settings Restore backup restores rows after reinstall/reset.
-- Help & feedback submits successfully.
-- App launch screen shows the centered Hunny logo/name asset on a white background.
+Fresh install Home · airplane mode Home/Read · Today's Message cache/fallback · Discover online/offline · search/filter/detail sheet · heart/share/save · Read More + plan CTA · Plans browse/manage · archive/restore · chapter persist · completion event · Start Again · Settings sign-in/sync/restore/feedback · launch screen
 
-## Known Deferred Work
+## Known Deferred
 
-- Plan Detail screen.
-- Saved/List product surface.
-- Home featured content section.
-- Content detail route/deep link.
-- Push notifications.
-- Automatic multi-device incremental merge.
-- Conflict resolution UI.
-- More robust automated test coverage.
-- In-app admin/content preview tooling beyond the current admin CRUD forms.
+Plan Detail · Saved/List · Home featured · content deep link · habit layer · push · auto merge · conflict UI · automated test coverage
 
-## Release Notes Prep
+## Release Notes
 
-- Update `docs/ref/HUNNY_RELEASE_LOG.md` when a build artifact is created.
-- Include the build number, track, package/bundle ID, and known testing focus.
-- Keep Play Console notes short and tester-facing.
+`docs/ref/HUNNY_RELEASE_LOG.md`에 build number, track, package ID, testing focus 기록

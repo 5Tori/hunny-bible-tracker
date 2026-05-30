@@ -11,26 +11,42 @@ export interface TodayMessageBase {
   verse_reference: string;
   bible_version: string | null;
   verse_text: string | null;
-  message: string | null;
   image_url: string | null;
   image_public_id: string | null;
   share_image_url: string | null;
   share_image_public_id: string | null;
   hint_title: string | null;
   hint_summary: string | null;
-  article_title: string | null;
-  article_body: string | null;
-  primary_related_plan_template_id: string | null;
-  related_plan_template_key: string | null;
-  related_plan_title: string | null;
-  related_plan_chapters: number | null;
-  related_plan_minutes: number | null;
   is_published: boolean;
   heart_count: number;
   share_count: number;
   created_at: string;
   updated_at: string;
 }
+
+export interface TodayMessageLinkedPlanSummary {
+  id: string;
+  template_key: string;
+  title: string;
+  total_chapters: number | null;
+  estimated_minutes: number | null;
+  cta_label: string | null;
+}
+
+export interface TodayMessageLinkedContentSummary {
+  id: string;
+  slug: string;
+  content_type: string;
+  title: string;
+  summary: string | null;
+  cover_image_url: string | null;
+  related_plans: TodayMessageLinkedPlanSummary[];
+}
+
+export type PublicTodayMessage = TodayMessageBase & {
+  linked_content: TodayMessageLinkedContentSummary | null;
+  share_url?: string;
+};
 
 export interface AdminTodayMessageInput {
   content_id?: string | null;
@@ -39,14 +55,10 @@ export interface AdminTodayMessageInput {
   verse_reference: string;
   bible_version?: string | null;
   verse_text?: string | null;
-  message?: string | null;
   image_url?: string | null;
   image_public_id?: string | null;
   hint_title?: string | null;
   hint_summary?: string | null;
-  article_title?: string | null;
-  article_body?: string | null;
-  primary_related_plan_template_id?: string | null;
   is_published?: boolean;
 }
 
@@ -90,7 +102,7 @@ interface NormalizedAdminTodayMessageInput extends Omit<AdminTodayMessageInput, 
 function buildShareImageFields(input: NormalizedAdminTodayMessageInput) {
   const shareImageUrl = buildTodayMessageShareImageUrl({
     imagePublicId: input.image_public_id ?? null,
-    verseText: input.verse_text ?? input.message ?? null,
+    verseText: input.verse_text ?? null,
     verseReference: input.verse_reference,
     bibleVersion: input.bible_version ?? null,
   });
@@ -104,9 +116,15 @@ function buildShareImageFields(input: NormalizedAdminTodayMessageInput) {
 function normalizeInput(input: AdminTodayMessageInput): NormalizedAdminTodayMessageInput {
   const publishDate = normalizeDate(input.publish_date);
   const verseReference = input.verse_reference.trim();
+  const verseText = emptyToNull(input.verse_text);
+  const isPublished = Boolean(input.is_published);
 
   if (!verseReference) {
     throw new TodayMessageValidationError('Verse reference is required.');
+  }
+
+  if (isPublished && !verseText) {
+    throw new TodayMessageValidationError('Verse text is required to publish.');
   }
 
   return {
@@ -114,48 +132,106 @@ function normalizeInput(input: AdminTodayMessageInput): NormalizedAdminTodayMess
     language: normalizeLanguage(input.language),
     verse_reference: verseReference,
     bible_version: emptyToNull(input.bible_version)?.toUpperCase() ?? null,
-    verse_text: emptyToNull(input.verse_text),
-    message: emptyToNull(input.message),
+    verse_text: verseText,
     image_url: emptyToNull(input.image_url),
     image_public_id: emptyToNull(input.image_public_id),
     hint_title: emptyToNull(input.hint_title),
     hint_summary: emptyToNull(input.hint_summary),
-    article_title: emptyToNull(input.article_title),
-    article_body: emptyToNull(input.article_body),
     content_id: normalizeOptionalUuid(input.content_id, 'Content'),
-    primary_related_plan_template_id: normalizeOptionalUuid(
-      input.primary_related_plan_template_id,
-      'Related plan',
-    ),
-    is_published: Boolean(input.is_published),
+    is_published: isPublished,
+  };
+}
+
+async function loadLinkedContentSummary(
+  contentId: string | null,
+): Promise<TodayMessageLinkedContentSummary | null> {
+  if (!contentId) return null;
+
+  const rows = (await sql`
+    select id, slug, content_type, title, summary, cover_image_url
+    from contents
+    where id = ${contentId}
+      and is_published = true
+      and is_archived = false
+    limit 1
+  `) as Array<{
+    id: string;
+    slug: string;
+    content_type: string;
+    title: string;
+    summary: string | null;
+    cover_image_url: string | null;
+  }>;
+
+  const content = rows[0];
+  if (!content) return null;
+
+  const relatedPlans = (await sql`
+    select
+      cpl.cta_label,
+      pt.id,
+      pt.template_key,
+      pt.title,
+      pt.total_chapters,
+      pt.estimated_minutes
+    from content_plan_links cpl
+    join plan_templates pt on pt.id = cpl.plan_template_id
+    where cpl.content_id = ${contentId}
+      and pt.is_published = true
+      and pt.is_archived = false
+    order by cpl.display_order asc, pt.featured_rank asc nulls last, pt.updated_at desc
+  `) as Array<{
+    cta_label: string | null;
+    id: string;
+    template_key: string;
+    title: string;
+    total_chapters: number | null;
+    estimated_minutes: number | null;
+  }>;
+
+  return {
+    id: content.id,
+    slug: content.slug,
+    content_type: content.content_type,
+    title: content.title,
+    summary: content.summary,
+    cover_image_url: content.cover_image_url,
+    related_plans: relatedPlans.map((plan) => ({
+      id: plan.id,
+      template_key: plan.template_key,
+      title: plan.title,
+      total_chapters: plan.total_chapters,
+      estimated_minutes: plan.estimated_minutes,
+      cta_label: plan.cta_label,
+    })),
+  };
+}
+
+export async function toPublicTodayMessage(
+  message: TodayMessageBase,
+  options?: { shareUrl?: string },
+): Promise<PublicTodayMessage> {
+  const linked_content = await loadLinkedContentSummary(message.content_id);
+  return {
+    ...message,
+    linked_content,
+    ...(options?.shareUrl ? { share_url: options.shareUrl } : {}),
   };
 }
 
 export async function getAdminTodayMessages() {
   return (await sql`
-    select
-      tm.*,
-      pt.template_key as related_plan_template_key,
-      pt.title as related_plan_title,
-      pt.total_chapters as related_plan_chapters,
-      pt.estimated_minutes as related_plan_minutes
-    from today_messages tm
-    left join plan_templates pt on pt.id = tm.primary_related_plan_template_id
-    order by tm.publish_date desc, tm.updated_at desc
+    select *
+    from today_messages
+    order by publish_date desc, updated_at desc
   `) as TodayMessageBase[];
 }
 
 export async function getAdminTodayMessageById(id: string) {
   const rows = (await sql`
-    select
-      tm.*,
-      pt.template_key as related_plan_template_key,
-      pt.title as related_plan_title,
-      pt.total_chapters as related_plan_chapters,
-      pt.estimated_minutes as related_plan_minutes
-    from today_messages tm
-    left join plan_templates pt on pt.id = tm.primary_related_plan_template_id
-    where tm.id::text = ${id}
+    select *
+    from today_messages
+    where id::text = ${id}
     limit 1
   `) as TodayMessageBase[];
   return rows[0] ?? null;
@@ -163,19 +239,15 @@ export async function getAdminTodayMessageById(id: string) {
 
 export async function getPublishedTodayMessageById(id: string) {
   const rows = (await sql`
-    select
-      tm.*,
-      pt.template_key as related_plan_template_key,
-      pt.title as related_plan_title,
-      pt.total_chapters as related_plan_chapters,
-      pt.estimated_minutes as related_plan_minutes
-    from today_messages tm
-    left join plan_templates pt on pt.id = tm.primary_related_plan_template_id
-    where tm.id::text = ${id}
-      and tm.is_published = true
+    select *
+    from today_messages
+    where id::text = ${id}
+      and is_published = true
     limit 1
   `) as TodayMessageBase[];
-  return rows[0] ?? null;
+  const message = rows[0];
+  if (!message) return null;
+  return toPublicTodayMessage(message);
 }
 
 export async function getPublishedTodayMessageByShareSlug(
@@ -185,20 +257,16 @@ export async function getPublishedTodayMessageByShareSlug(
   const normalizedSlug = slug.trim();
   if (/^\d{4}-\d{2}-\d{2}$/.test(normalizedSlug)) {
     const rows = (await sql`
-      select
-        tm.*,
-        pt.template_key as related_plan_template_key,
-        pt.title as related_plan_title,
-        pt.total_chapters as related_plan_chapters,
-        pt.estimated_minutes as related_plan_minutes
-      from today_messages tm
-      left join plan_templates pt on pt.id = tm.primary_related_plan_template_id
-      where tm.publish_date = ${normalizedSlug}::date
-        and tm.language = ${normalizeLanguage(language)}
-        and tm.is_published = true
+      select *
+      from today_messages
+      where publish_date = ${normalizedSlug}::date
+        and language = ${normalizeLanguage(language)}
+        and is_published = true
       limit 1
     `) as TodayMessageBase[];
-    return rows[0] ?? null;
+    const message = rows[0];
+    if (!message) return null;
+    return toPublicTodayMessage(message);
   }
 
   return getPublishedTodayMessageById(normalizedSlug);
@@ -244,16 +312,12 @@ export async function createAdminTodayMessage(rawInput: AdminTodayMessageInput) 
       verse_reference,
       bible_version,
       verse_text,
-      message,
       image_url,
       image_public_id,
       share_image_url,
       share_image_public_id,
       hint_title,
       hint_summary,
-      article_title,
-      article_body,
-      primary_related_plan_template_id,
       is_published,
       created_at,
       updated_at
@@ -265,16 +329,12 @@ export async function createAdminTodayMessage(rawInput: AdminTodayMessageInput) 
       ${input.verse_reference},
       ${input.bible_version ?? null},
       ${input.verse_text ?? null},
-      ${input.message ?? null},
       ${input.image_url ?? null},
       ${input.image_public_id ?? null},
       ${shareImage.share_image_url},
       ${shareImage.share_image_public_id},
       ${input.hint_title ?? null},
       ${input.hint_summary ?? null},
-      ${input.article_title ?? null},
-      ${input.article_body ?? null},
-      ${input.primary_related_plan_template_id ?? null},
       ${Boolean(input.is_published)},
       now(),
       now()
@@ -298,16 +358,12 @@ export async function updateAdminTodayMessage(id: string, rawInput: AdminTodayMe
       verse_reference = ${input.verse_reference},
       bible_version = ${input.bible_version ?? null},
       verse_text = ${input.verse_text ?? null},
-      message = ${input.message ?? null},
       image_url = ${input.image_url ?? null},
       image_public_id = ${input.image_public_id ?? null},
       share_image_url = ${shareImage.share_image_url},
       share_image_public_id = ${shareImage.share_image_public_id},
       hint_title = ${input.hint_title ?? null},
       hint_summary = ${input.hint_summary ?? null},
-      article_title = ${input.article_title ?? null},
-      article_body = ${input.article_body ?? null},
-      primary_related_plan_template_id = ${input.primary_related_plan_template_id ?? null},
       is_published = ${Boolean(input.is_published)},
       updated_at = now()
     where id::text = ${id}
@@ -333,22 +389,18 @@ export async function getPublishedTodayMessage(options?: { date?: string; langua
   const date = rawDate ? normalizeDate(rawDate) : new Date().toISOString().slice(0, 10);
 
   const rows = (await sql`
-    select
-      tm.*,
-      pt.template_key as related_plan_template_key,
-      pt.title as related_plan_title,
-      pt.total_chapters as related_plan_chapters,
-      pt.estimated_minutes as related_plan_minutes
-    from today_messages tm
-    left join plan_templates pt on pt.id = tm.primary_related_plan_template_id
-    where tm.is_published = true
-      and tm.language = ${language}
-      and tm.publish_date <= ${date}::date
-    order by tm.publish_date desc, tm.updated_at desc
+    select *
+    from today_messages
+    where is_published = true
+      and language = ${language}
+      and publish_date <= ${date}::date
+    order by publish_date desc, updated_at desc
     limit 1
   `) as TodayMessageBase[];
 
-  return rows[0] ?? null;
+  const message = rows[0];
+  if (!message) return null;
+  return toPublicTodayMessage(message);
 }
 
 export async function incrementTodayMessageHeart(id: string) {

@@ -3,27 +3,21 @@ import Link from "next/link";
 
 import { MarketingContainer } from "@/components/marketing/ui/MarketingContainer";
 import { MarketingSection } from "@/components/marketing/ui/MarketingSection";
-import type { TodayMessageBase } from "@/lib/today-messages";
+import type { PublicTodayMessage } from "@/lib/today-messages";
 
-type TodayMessageWithPlan = TodayMessageBase & {
-  related_plan_template_key?: string | null;
-  related_plan_title?: string | null;
-  related_plan_chapters?: number | null;
-  related_plan_minutes?: number | null;
-};
-
-export function TodayMessageView({ message }: { message: TodayMessageWithPlan }) {
+export function TodayMessageView({ message }: { message: PublicTodayMessage }) {
   const referenceLabel = message.bible_version
     ? `${message.verse_reference} · ${message.bible_version}`
     : message.verse_reference;
+  const linkedContent = message.linked_content;
 
   return (
     <MarketingSection className="!py-12 md:!py-16">
       <MarketingContainer narrow>
         <p className="mkt-kicker">Today&apos;s message</p>
         <p className="mt-2 text-sm text-neutral-500">{message.publish_date}</p>
-        <h1 className="mkt-heading mt-3">{message.article_title || referenceLabel}</h1>
-        {message.article_title ? (
+        <h1 className="mkt-heading mt-3">{message.hint_title || referenceLabel}</h1>
+        {message.hint_title ? (
           <p className="mt-2 text-lg text-neutral-600">{referenceLabel}</p>
         ) : null}
 
@@ -46,39 +40,44 @@ export function TodayMessageView({ message }: { message: TodayMessageWithPlan })
           </blockquote>
         ) : null}
 
-        {message.message ? (
-          <p className="mkt-lead mt-6">{message.message}</p>
-        ) : null}
-
-        {message.hint_title ? (
+        {message.hint_title || message.hint_summary ? (
           <div className="mt-8 rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
-            <p className="text-sm font-semibold text-neutral-900">{message.hint_title}</p>
+            {message.hint_title ? (
+              <p className="text-sm font-semibold text-neutral-900">{message.hint_title}</p>
+            ) : null}
             {message.hint_summary ? (
               <p className="mt-2 text-sm text-neutral-600">{message.hint_summary}</p>
             ) : null}
           </div>
         ) : null}
 
-        {message.article_body
-          ? message.article_body.split("\n\n").map((paragraph) => (
-              <p key={paragraph.slice(0, 48)} className="mkt-lead mt-6">
-                {paragraph}
-              </p>
-            ))
-          : null}
-
-        {message.related_plan_title ? (
+        {linkedContent ? (
           <section className="mt-10 rounded-2xl border border-neutral-200 p-6">
-            <p className="mkt-kicker">Read in context</p>
-            <h2 className="mt-2 text-xl font-semibold text-neutral-900">
-              {message.related_plan_title}
-            </h2>
-            <p className="mt-2 text-sm text-neutral-600">
-              {message.related_plan_chapters ?? 0} chapters
-              {message.related_plan_minutes
-                ? ` · ~${message.related_plan_minutes} min`
-                : ""}
-            </p>
+            <p className="mkt-kicker">Related content</p>
+            <h2 className="mt-2 text-xl font-semibold text-neutral-900">{linkedContent.title}</h2>
+            {linkedContent.summary ? (
+              <p className="mt-2 text-sm text-neutral-600">{linkedContent.summary}</p>
+            ) : null}
+            <Link
+              href={`/content/${linkedContent.slug}`}
+              className="mt-4 inline-block font-medium text-neutral-900 underline underline-offset-4 hover:text-[#d99a12]"
+            >
+              Read full story →
+            </Link>
+            {linkedContent.related_plans.length > 0 ? (
+              <div className="mt-6 border-t border-neutral-200 pt-4">
+                <p className="text-sm font-medium text-neutral-900">Related plans</p>
+                <ul className="mt-2 space-y-2 text-sm text-neutral-600">
+                  {linkedContent.related_plans.map((plan) => (
+                    <li key={plan.id}>
+                      {plan.title}
+                      {plan.total_chapters ? ` · ${plan.total_chapters} chapters` : ""}
+                      {plan.estimated_minutes ? ` · ~${plan.estimated_minutes} min/ch` : ""}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
           </section>
         ) : null}
 
