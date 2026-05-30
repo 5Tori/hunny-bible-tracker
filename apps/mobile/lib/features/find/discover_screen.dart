@@ -166,19 +166,11 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
   }
 
   void _openContent(RemoteContent content) {
-    showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      useSafeArea: true,
-      backgroundColor: AppTheme.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => _ContentDetailSheet(
-        content: content,
-        readRepository: widget.readRepository,
-        onPlanStarted: widget.onPlanStarted,
-      ),
+    showContentDetailSheet(
+      context,
+      content: content,
+      readRepository: widget.readRepository,
+      onPlanStarted: widget.onPlanStarted,
     );
   }
 
@@ -1633,4 +1625,26 @@ String _durationLabel(int seconds) {
   final hours = minutes ~/ 60;
   final rest = minutes % 60;
   return rest == 0 ? '${hours}h' : '${hours}h ${rest}m';
+}
+
+Future<void> showContentDetailSheet(
+  BuildContext context, {
+  required RemoteContent content,
+  required ReadRepository readRepository,
+  VoidCallback? onPlanStarted,
+}) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    useSafeArea: true,
+    backgroundColor: AppTheme.surface,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+    ),
+    builder: (context) => _ContentDetailSheet(
+      content: content,
+      readRepository: readRepository,
+      onPlanStarted: onPlanStarted,
+    ),
+  );
 }

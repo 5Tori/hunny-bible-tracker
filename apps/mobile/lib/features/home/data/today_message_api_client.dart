@@ -103,6 +103,96 @@ class TodayMessageApiClient {
   }
 }
 
+class TodayMessageLinkedPlanSummary {
+  const TodayMessageLinkedPlanSummary({
+    required this.id,
+    required this.templateKey,
+    required this.title,
+    required this.totalChapters,
+    required this.estimatedMinutes,
+    required this.ctaLabel,
+  });
+
+  final String id;
+  final String templateKey;
+  final String title;
+  final int? totalChapters;
+  final int? estimatedMinutes;
+  final String? ctaLabel;
+
+  factory TodayMessageLinkedPlanSummary.fromJson(Map<String, dynamic> json) {
+    return TodayMessageLinkedPlanSummary(
+      id: _requiredString(json, 'id'),
+      templateKey: _requiredString(json, 'template_key'),
+      title: _requiredString(json, 'title'),
+      totalChapters: _nullableInt(json['total_chapters']),
+      estimatedMinutes: _nullableInt(json['estimated_minutes']),
+      ctaLabel: _nullableString(json['cta_label']),
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'template_key': templateKey,
+      'title': title,
+      'total_chapters': totalChapters,
+      'estimated_minutes': estimatedMinutes,
+      'cta_label': ctaLabel,
+    };
+  }
+}
+
+class TodayMessageLinkedContentSummary {
+  const TodayMessageLinkedContentSummary({
+    required this.id,
+    required this.slug,
+    required this.contentType,
+    required this.title,
+    required this.summary,
+    required this.coverImageUrl,
+    required this.relatedPlans,
+  });
+
+  final String id;
+  final String slug;
+  final String contentType;
+  final String title;
+  final String? summary;
+  final String? coverImageUrl;
+  final List<TodayMessageLinkedPlanSummary> relatedPlans;
+
+  factory TodayMessageLinkedContentSummary.fromJson(Map<String, dynamic> json) {
+    final relatedPlans = json['related_plans'];
+    return TodayMessageLinkedContentSummary(
+      id: _requiredString(json, 'id'),
+      slug: _requiredString(json, 'slug'),
+      contentType: _requiredString(json, 'content_type'),
+      title: _requiredString(json, 'title'),
+      summary: _nullableString(json['summary']),
+      coverImageUrl: _nullableString(json['cover_image_url']),
+      relatedPlans: relatedPlans is List
+          ? relatedPlans
+              .whereType<Map<String, dynamic>>()
+              .map(TodayMessageLinkedPlanSummary.fromJson)
+              .toList()
+          : const [],
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'slug': slug,
+      'content_type': contentType,
+      'title': title,
+      'summary': summary,
+      'cover_image_url': coverImageUrl,
+      'related_plans': relatedPlans.map((plan) => plan.toJson()).toList(),
+    };
+  }
+}
+
 class TodayMessage {
   const TodayMessage({
     required this.id,
@@ -112,20 +202,13 @@ class TodayMessage {
     required this.verseReference,
     required this.bibleVersion,
     required this.verseText,
-    required this.message,
     required this.imageUrl,
     required this.shareImageUrl,
     required this.shareImagePublicId,
     required this.shareUrl,
     required this.hintTitle,
     required this.hintSummary,
-    required this.articleTitle,
-    required this.articleBody,
-    required this.relatedPlanTemplateKey,
-    required this.primaryRelatedPlanTemplateId,
-    required this.relatedPlanTitle,
-    required this.relatedPlanChapters,
-    required this.relatedPlanMinutes,
+    required this.linkedContent,
     required this.heartCount,
     required this.shareCount,
   });
@@ -137,24 +220,17 @@ class TodayMessage {
   final String verseReference;
   final String? bibleVersion;
   final String? verseText;
-  final String? message;
   final String? imageUrl;
   final String? shareImageUrl;
   final String? shareImagePublicId;
   final String? shareUrl;
   final String? hintTitle;
   final String? hintSummary;
-  final String? articleTitle;
-  final String? articleBody;
-  final String? relatedPlanTemplateKey;
-  final String? primaryRelatedPlanTemplateId;
-  final String? relatedPlanTitle;
-  final int? relatedPlanChapters;
-  final int? relatedPlanMinutes;
+  final TodayMessageLinkedContentSummary? linkedContent;
   final int heartCount;
   final int shareCount;
 
-  String get primaryText => verseText ?? message ?? verseReference;
+  String get primaryText => verseText ?? verseReference;
 
   String get referenceLabel {
     final version = bibleVersion;
@@ -166,24 +242,12 @@ class TodayMessage {
 
   String get reflectionSummary =>
       hintSummary ??
-      message ??
       'This verse invites a slower look at how God works through ordinary days.';
 
-  String get articleHeading => articleTitle ?? reflectionTitle;
-
-  String get articleText => articleBody ?? reflectionSummary;
-
-  bool get hasRelatedPlan =>
-      relatedPlanTemplateKey != null || primaryRelatedPlanTemplateId != null;
-
-  String? get planTemplateIdentifier =>
-      relatedPlanTemplateKey ?? primaryRelatedPlanTemplateId;
-
-  String get planTitle => relatedPlanTitle ?? 'Related plan';
-
-  int get planChapters => relatedPlanChapters ?? 0;
-
-  int get planMinutes => relatedPlanMinutes ?? 0;
+  bool get hasMoreDetails =>
+      hintTitle != null ||
+      hintSummary != null ||
+      linkedContent != null;
 
   String get shareTitle => '$verseReference | Hunny Bible Tracker';
 
@@ -208,26 +272,20 @@ class TodayMessage {
       verseReference: verseReference,
       bibleVersion: bibleVersion,
       verseText: verseText,
-      message: message,
       imageUrl: imageUrl,
       shareImageUrl: shareImageUrl,
       shareImagePublicId: shareImagePublicId,
       shareUrl: shareUrl,
       hintTitle: hintTitle,
       hintSummary: hintSummary,
-      articleTitle: articleTitle,
-      articleBody: articleBody,
-      relatedPlanTemplateKey: relatedPlanTemplateKey,
-      primaryRelatedPlanTemplateId: primaryRelatedPlanTemplateId,
-      relatedPlanTitle: relatedPlanTitle,
-      relatedPlanChapters: relatedPlanChapters,
-      relatedPlanMinutes: relatedPlanMinutes,
+      linkedContent: linkedContent,
       heartCount: heartCount ?? this.heartCount,
       shareCount: shareCount ?? this.shareCount,
     );
   }
 
   factory TodayMessage.fromJson(Map<String, dynamic> json) {
+    final linkedContent = json['linked_content'];
     return TodayMessage(
       id: _requiredString(json, 'id'),
       contentId: _nullableString(json['content_id']),
@@ -236,24 +294,15 @@ class TodayMessage {
       verseReference: _requiredString(json, 'verse_reference'),
       bibleVersion: _nullableString(json['bible_version']),
       verseText: _nullableString(json['verse_text']),
-      message: _nullableString(json['message']),
       imageUrl: _nullableString(json['image_url']),
       shareImageUrl: _nullableString(json['share_image_url']),
       shareImagePublicId: _nullableString(json['share_image_public_id']),
       shareUrl: _nullableString(json['share_url']),
       hintTitle: _nullableString(json['hint_title']),
       hintSummary: _nullableString(json['hint_summary']),
-      articleTitle: _nullableString(json['article_title']),
-      articleBody: _nullableString(json['article_body']),
-      relatedPlanTemplateKey: _nullableString(
-        json['related_plan_template_key'],
-      ),
-      primaryRelatedPlanTemplateId: _nullableString(
-        json['primary_related_plan_template_id'],
-      ),
-      relatedPlanTitle: _nullableString(json['related_plan_title']),
-      relatedPlanChapters: _nullableInt(json['related_plan_chapters']),
-      relatedPlanMinutes: _nullableInt(json['related_plan_minutes']),
+      linkedContent: linkedContent is Map<String, dynamic>
+          ? TodayMessageLinkedContentSummary.fromJson(linkedContent)
+          : null,
       heartCount: _intValue(json['heart_count']),
       shareCount: _intValue(json['share_count']),
     );
@@ -268,20 +317,13 @@ class TodayMessage {
       'verse_reference': verseReference,
       'bible_version': bibleVersion,
       'verse_text': verseText,
-      'message': message,
       'image_url': imageUrl,
       'share_image_url': shareImageUrl,
       'share_image_public_id': shareImagePublicId,
       'share_url': shareUrl,
       'hint_title': hintTitle,
       'hint_summary': hintSummary,
-      'article_title': articleTitle,
-      'article_body': articleBody,
-      'related_plan_template_key': relatedPlanTemplateKey,
-      'primary_related_plan_template_id': primaryRelatedPlanTemplateId,
-      'related_plan_title': relatedPlanTitle,
-      'related_plan_chapters': relatedPlanChapters,
-      'related_plan_minutes': relatedPlanMinutes,
+      'linked_content': linkedContent?.toJson(),
       'heart_count': heartCount,
       'share_count': shareCount,
     };

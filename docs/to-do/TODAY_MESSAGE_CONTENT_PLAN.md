@@ -480,7 +480,7 @@ No dedicated OG image work.
 3. ~~**API payload cleanup** — `linked_content` embed~~ ✓
 4. ~~**Admin Today Message editor redesign**~~ ✓
 5. ~~**Public web Today Message redesign** (minimal)~~ ✓
-6. **Mobile DTO + Home More flow** — slim model; content detail navigation; drop direct plan CTA
+6. ~~**Mobile DTO + Home More flow**~~ ✓
 7. **Content detail / related plan CTA polish**
 8. **Seed data update** — Mode A + Mode B today messages
 9. **QA / closed testing smoke**
@@ -521,7 +521,7 @@ No dedicated OG image work.
 - [x] Public API returns `linked_content` when applicable
 - [x] Admin editor: no article body or direct plan selector; linked content picker added
 - [x] Public web page compatible with new payload
-- [ ] Mobile DTO + Home More flow (next PR)
+- [x] Mobile DTO + Home More flow
 - [ ] Seed data Mode A/B (next PR)
 
 ---

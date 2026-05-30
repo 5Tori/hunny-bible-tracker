@@ -11,6 +11,8 @@ import 'package:share_plus/share_plus.dart';
 
 import '../../core/api/hunny_api_client.dart';
 import '../../core/theme/app_theme.dart';
+import '../content/data/content_api_client.dart';
+import '../find/discover_screen.dart';
 import 'data/today_message_api_client.dart';
 import '../read/data/read_repository.dart';
 import '../read/domain/read_models.dart';
@@ -22,11 +24,14 @@ class HomeScreen extends StatefulWidget {
     required this.readRepository,
     required this.onReadTap,
     TodayMessageApiClient? todayMessageApiClient,
-  }) : todayMessageApiClient = todayMessageApiClient ?? TodayMessageApiClient();
+    ContentApiClient? contentApiClient,
+  })  : todayMessageApiClient = todayMessageApiClient ?? TodayMessageApiClient(),
+        contentApiClient = contentApiClient ?? ContentApiClient();
 
   final ReadRepository readRepository;
   final VoidCallback onReadTap;
   final TodayMessageApiClient todayMessageApiClient;
+  final ContentApiClient contentApiClient;
 
   @override
   State<HomeScreen> createState() => HomeScreenState();
@@ -525,8 +530,6 @@ class HomeScreenState extends State<HomeScreen> {
       bibleVersion: null,
       verseText:
           'Gracious words are a honeycomb, sweet to the soul and healing to the bones.',
-      message:
-          'You are offline. Your reading progress is still available, and Hunny will refresh today\'s message when you are back online.',
       imageUrl: 'asset://assets/image/honeycomb.jpg',
       shareImageUrl: null,
       shareImagePublicId: null,
@@ -534,45 +537,61 @@ class HomeScreenState extends State<HomeScreen> {
       hintTitle: 'Offline reading is ready',
       hintSummary:
           'Keep reading where you left off. Today\'s message will refresh when the connection returns.',
-      articleTitle: 'Offline reading is ready',
-      articleBody:
-          'Your reading plan and progress are stored on this device. You can continue reading and marking chapters offline.',
-      relatedPlanTemplateKey: null,
-      primaryRelatedPlanTemplateId: null,
-      relatedPlanTitle: null,
-      relatedPlanChapters: null,
-      relatedPlanMinutes: null,
+      linkedContent: null,
       heartCount: 0,
       shareCount: 0,
     );
   }
 
-  Future<void> _openTodayMessageArticle() async {
+  Future<void> _openTodayMessageMore() async {
     final message = _todayMessage;
-    if (message == null) return;
-    final relatedPlan = message.planTemplateIdentifier == null
-        ? null
-        : await widget.readRepository.getPlanTemplateByIdentifier(
-            message.planTemplateIdentifier!,
-          );
-    if (!mounted) return;
+    if (message == null || !message.hasMoreDetails) return;
 
-    final started = await showModalBottomSheet<bool>(
+    await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return _TodayMessageArticleSheet(
+        return _TodayMessageMoreSheet(
           message: message,
-          relatedPlan: relatedPlan,
-          onStartPlan: widget.readRepository.addPlanFromTemplate,
+          contentApiClient: widget.contentApiClient,
+          onOpenLinkedContent: (linked) async {
+            final navigator = Navigator.of(context);
+            navigator.pop();
+            if (!mounted) return;
+
+            RemoteContent? content;
+            try {
+              content = await widget.contentApiClient.fetchContentByIdentifier(
+                linked.slug,
+                language: message.language,
+              );
+            } catch (_) {
+              content = null;
+            }
+
+            if (!mounted) return;
+            if (content == null) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Could not load this story. Try again online.'),
+                ),
+              );
+              return;
+            }
+
+            await showContentDetailSheet(
+              context,
+              content: content,
+              readRepository: widget.readRepository,
+              onPlanStarted: widget.onReadTap,
+            );
+            if (!mounted) return;
+            await _load();
+          },
         );
       },
     );
-
-    if (!mounted || started != true) return;
-    await _load();
-    widget.onReadTap();
   }
 
   String _greeting() {
@@ -640,7 +659,7 @@ class HomeScreenState extends State<HomeScreen> {
               onHeart: _heartTodayMessage,
               onSave: _toggleSaveTodayMessage,
               onShare: _shareTodayMessage,
-              onReadMore: _openTodayMessageArticle,
+              onReadMore: _openTodayMessageMore,
             ),
             const SizedBox(height: 32),
 
@@ -904,21 +923,23 @@ class TodayMessageCard extends StatelessWidget {
                         fontWeight: FontWeight.w600,
                       ),
                 ),
-                const SizedBox(height: 14),
-                TextButton(
-                  onPressed: onReadMore,
-                  style: TextButton.styleFrom(
-                    foregroundColor: AppTheme.ink,
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(0, 34),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    textStyle: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 15,
+                if (current.hasMoreDetails) ...[
+                  const SizedBox(height: 14),
+                  TextButton(
+                    onPressed: onReadMore,
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppTheme.ink,
+                      padding: EdgeInsets.zero,
+                      minimumSize: const Size(0, 34),
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      textStyle: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 15,
+                      ),
                     ),
+                    child: const Text('More'),
                   ),
-                  child: const Text('Read more'),
-                ),
+                ],
               ],
             ),
           ),
@@ -989,53 +1010,26 @@ class _MessageActionButton extends StatelessWidget {
   }
 }
 
-class _TodayMessageArticleSheet extends StatefulWidget {
-  const _TodayMessageArticleSheet({
+class _TodayMessageMoreSheet extends StatelessWidget {
+  const _TodayMessageMoreSheet({
     required this.message,
-    required this.relatedPlan,
-    required this.onStartPlan,
+    required this.contentApiClient,
+    required this.onOpenLinkedContent,
   });
 
   final TodayMessage message;
-  final ReadingPlanTemplateView? relatedPlan;
-  final Future<String> Function(String templateKey) onStartPlan;
-
-  @override
-  State<_TodayMessageArticleSheet> createState() =>
-      _TodayMessageArticleSheetState();
-}
-
-class _TodayMessageArticleSheetState extends State<_TodayMessageArticleSheet> {
-  var _startingPlan = false;
-
-  Future<void> _startPlan() async {
-    final identifier = widget.message.planTemplateIdentifier ??
-        widget.relatedPlan?.templateKey;
-    if (identifier == null || _startingPlan) return;
-    setState(() => _startingPlan = true);
-    try {
-      await widget.onStartPlan(identifier);
-      if (!mounted) return;
-      Navigator.of(context).pop(true);
-    } catch (_) {
-      if (!mounted) return;
-      setState(() => _startingPlan = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not start this plan.')),
-      );
-    }
-  }
+  final ContentApiClient contentApiClient;
+  final Future<void> Function(TodayMessageLinkedContentSummary linked)
+      onOpenLinkedContent;
 
   @override
   Widget build(BuildContext context) {
-    final message = widget.message;
-    final relatedPlan = widget.relatedPlan;
-    final showRelatedPlan = message.hasRelatedPlan || relatedPlan != null;
+    final linkedContent = message.linkedContent;
 
     return DraggableScrollableSheet(
-      initialChildSize: 0.86,
-      minChildSize: 0.45,
-      maxChildSize: 0.94,
+      initialChildSize: 0.5,
+      minChildSize: 0.35,
+      maxChildSize: 0.82,
       builder: (context, scrollController) {
         return Container(
           decoration: const BoxDecoration(
@@ -1071,7 +1065,7 @@ class _TodayMessageArticleSheetState extends State<_TodayMessageArticleSheet> {
                     ),
                     const SizedBox(height: 18),
                     Text(
-                      message.articleHeading,
+                      message.reflectionTitle,
                       style:
                           Theme.of(context).textTheme.headlineSmall?.copyWith(
                                 color: AppTheme.ink,
@@ -1080,26 +1074,68 @@ class _TodayMessageArticleSheetState extends State<_TodayMessageArticleSheet> {
                                 height: 1.16,
                               ),
                     ),
-                    const SizedBox(height: 26),
+                    const SizedBox(height: 18),
                     Text(
-                      message.articleText,
+                      message.reflectionSummary,
                       style: Theme.of(context).textTheme.bodyLarge?.copyWith(
                             color: AppTheme.ink,
-                            fontSize: 20,
+                            fontSize: 18,
                             height: 1.55,
                             fontWeight: FontWeight.w500,
                           ),
                     ),
-                    if (showRelatedPlan) ...[
+                    if (linkedContent != null) ...[
                       const SizedBox(height: 28),
-                      _RelatedPlanCard(
-                        title: relatedPlan?.title ?? message.planTitle,
-                        chapters:
-                            relatedPlan?.totalChapters ?? message.planChapters,
-                        minutes: relatedPlan?.estimatedMinutes ??
-                            message.planMinutes,
-                        starting: _startingPlan,
-                        onStartPlan: _startPlan,
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(18),
+                        decoration: BoxDecoration(
+                          color: AppTheme.softSurface,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: AppTheme.border),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              linkedContent.title,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .titleMedium
+                                  ?.copyWith(fontWeight: FontWeight.w800),
+                            ),
+                            if (linkedContent.summary != null) ...[
+                              const SizedBox(height: 8),
+                              Text(
+                                linkedContent.summary!,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodyMedium
+                                    ?.copyWith(
+                                      color: AppTheme.mutedInk,
+                                      height: 1.45,
+                                    ),
+                              ),
+                            ],
+                            const SizedBox(height: 14),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FilledButton(
+                                onPressed: contentApiClient.isConfigured
+                                    ? () => onOpenLinkedContent(linkedContent)
+                                    : null,
+                                style: FilledButton.styleFrom(
+                                  backgroundColor: AppTheme.ink,
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                ),
+                                child: const Text('Read full story'),
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ],
                   ],
@@ -1109,9 +1145,7 @@ class _TodayMessageArticleSheetState extends State<_TodayMessageArticleSheet> {
                 top: 12,
                 right: 12,
                 child: IconButton(
-                  onPressed: _startingPlan
-                      ? null
-                      : () => Navigator.of(context).pop(false),
+                  onPressed: () => Navigator.of(context).pop(),
                   icon: const Icon(Icons.close),
                   color: AppTheme.ink,
                 ),
@@ -1120,106 +1154,6 @@ class _TodayMessageArticleSheetState extends State<_TodayMessageArticleSheet> {
           ),
         );
       },
-    );
-  }
-}
-
-class _RelatedPlanCard extends StatelessWidget {
-  const _RelatedPlanCard({
-    required this.title,
-    required this.chapters,
-    required this.minutes,
-    required this.starting,
-    required this.onStartPlan,
-  });
-
-  final String title;
-  final int chapters;
-  final int minutes;
-  final bool starting;
-  final VoidCallback onStartPlan;
-
-  @override
-  Widget build(BuildContext context) {
-    final details = [
-      if (chapters > 0) '$chapters chapters',
-      if (minutes > 0) '~$minutes min/ch',
-    ].join(' · ');
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        border: Border.all(color: AppTheme.border),
-        borderRadius: BorderRadius.circular(3),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'READ IN CONTEXT',
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: AppTheme.mutedInk,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2.0,
-                ),
-          ),
-          const SizedBox(height: 18),
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            color: AppTheme.ink,
-                            fontSize: 21,
-                            fontWeight: FontWeight.w900,
-                          ),
-                    ),
-                    const SizedBox(height: 4),
-                    if (details.isNotEmpty) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        details,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                              color: AppTheme.mutedInk,
-                              fontSize: 17,
-                              fontWeight: FontWeight.w600,
-                            ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-              const SizedBox(width: 16),
-              FilledButton(
-                onPressed: starting ? null : onStartPlan,
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppTheme.ink,
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: AppTheme.mutedInk,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(3),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 18,
-                    vertical: 14,
-                  ),
-                  textStyle: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                child: Text(starting ? 'Starting...' : 'Start plan'),
-              ),
-            ],
-          ),
-        ],
-      ),
     );
   }
 }
