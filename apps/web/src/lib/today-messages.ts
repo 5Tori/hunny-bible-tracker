@@ -2,6 +2,7 @@ import crypto from 'crypto';
 
 import { buildTodayMessageShareImageUrl } from '@/lib/cloudinary-share-url';
 import { sql } from '@/lib/db/postgres';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 export interface TodayMessageBase {
   id: string;
@@ -414,25 +415,47 @@ export async function getPublishedTodayMessage(options?: { date?: string; langua
 }
 
 export async function incrementTodayMessageHeart(id: string) {
-  const rows = (await sql`
-    update today_messages
-    set heart_count = heart_count + 1,
-        updated_at = now()
-    where id::text = ${id}
-      and is_published = true
-    returning *
-  `) as TodayMessageBase[];
-  return rows[0] ?? null;
+  return incrementTodayMessageEngagement(id, 'heart_count');
 }
 
 export async function incrementTodayMessageShare(id: string) {
-  const rows = (await sql`
-    update today_messages
-    set share_count = share_count + 1,
-        updated_at = now()
-    where id::text = ${id}
-      and is_published = true
-    returning *
-  `) as TodayMessageBase[];
-  return rows[0] ?? null;
+  return incrementTodayMessageEngagement(id, 'share_count');
+}
+
+async function incrementTodayMessageEngagement(
+  id: string,
+  counter: 'heart_count' | 'share_count',
+) {
+  const admin = getSupabaseAdmin();
+  const { data: existing, error: readError } = await admin
+    .from('today_messages')
+    .select('*')
+    .eq('id', id)
+    .eq('is_published', true)
+    .maybeSingle();
+
+  if (readError) {
+    console.error(`Today message ${counter} read failed`, readError);
+    throw readError;
+  }
+  if (!existing) return null;
+
+  const currentCount =
+    typeof existing[counter] === 'number' ? existing[counter] : 0;
+  const { data: updated, error: writeError } = await admin
+    .from('today_messages')
+    .update({
+      [counter]: currentCount + 1,
+      updated_at: new Date().toISOString(),
+    })
+    .eq('id', id)
+    .select('*')
+    .single();
+
+  if (writeError) {
+    console.error(`Today message ${counter} write failed`, writeError);
+    throw writeError;
+  }
+
+  return updated as TodayMessageBase;
 }

@@ -13,7 +13,8 @@ Flutter mobile
 
 Next.js web/API/admin
   → Supabase JWT verify
-  → Supabase Postgres (Hyperdrive on Cloudflare)
+  → Supabase Admin REST (profiles, backup, today-message counters)
+  → Supabase Postgres via Hyperdrive (admin CRUD, catalog SQL reads)
   → Cloudinary (admin media)
 ```
 
@@ -52,9 +53,10 @@ Next.js web/API/admin
 | `src/app/(browse)/` | Today message, Discover, content pages |
 | `src/app/admin/` | Admin dashboard |
 | `src/app/api/` | Public + admin API routes |
-| `src/lib/plans.ts` · `content.ts` · `today-messages.ts` | Catalog CRUD |
-| `src/lib/sync/reading-sync.ts` | Compact backup |
-| `src/lib/db/postgres.ts` | Postgres client |
+| `src/lib/auth/auth-user-sync.ts` | Profile upsert (Supabase Admin REST) |
+| `src/lib/sync/reading-sync.ts` | Compact backup (Supabase Admin REST) |
+| `src/lib/today-messages.ts` | Catalog CRUD + engagement increment (REST for heart/share) |
+| `src/lib/db/postgres.ts` | Postgres client (Hyperdrive; admin/catalog reads) |
 | `supabase/migrations/` | Server schema source |
 
 ## Data flow 요약
@@ -67,7 +69,9 @@ Next.js web/API/admin
 
 **Plan catalog:** Admin publish → Supabase RPC or `GET /api/v1/plans` → mobile cache → Start Plan → local `user_plan_chapters` snapshot.
 
-**Auth & backup:** Google → Supabase Auth → `POST /api/v1/auth/sync` → optional `sync/push` · restore via `sync/bootstrap` → `user_plan_chapters` local regenerate.
+**Auth & backup:** Google → Supabase Auth → `POST /api/v1/auth/sync` → optional `sync/push` · restore via `sync/bootstrap` → `user_plan_chapters` local regenerate. Settings 탭 **SYNC** 섹션에서 Sync now / Restore.
+
+**Today's Message engagement:** Heart (one-way, local + server increment) · Save (local toggle) · Share (native sheet + server increment).
 
 ## Boundaries
 

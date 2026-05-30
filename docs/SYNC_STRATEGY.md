@@ -9,7 +9,7 @@ User action → SQLite transaction → UI update
   → (signed-in) POST /api/v1/sync/push → user_reading_backups
 ```
 
-Sync/backup remains on **Next.js API** (not Supabase RPC) in Phase 7 evaluation window.
+Sync/backup remains on **Next.js API** (Worker → Supabase Admin REST). Mobile does not write `user_reading_backups` directly.
 
 ## Push scope (포함)
 
@@ -50,9 +50,15 @@ Sign-in: Supabase UUID → `local_users.auth_user_id` → `POST /api/v1/auth/syn
 | `plan_completion_events` | 1 per finished run |
 | Archive | Destructive delete 아님 |
 
+## Status (2026-05)
+
+- **Android closed-test QA:** Sync now / Restore E2E verified (`supabase_rpc` read + API write)
+- **Server storage:** `auth-user-sync.ts`, `reading-sync.ts` → Supabase Admin REST (Hyperdrive bypass for writes)
+- **Mobile:** Settings SYNC status, pending-changes indicator, restore refreshes Read tab
+
 ## Remaining work
 
-Push/restore E2E · app-start sync UX · explicit error states · conflict policy before auto merge
+- iOS closed-test QA · release `versionCode` bump · app-start background sync UX polish · conflict policy before auto merge
 
 ## 관련 문서
 

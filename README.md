@@ -10,7 +10,7 @@ Flutter + Drift/SQLite(로컬), Supabase Auth, Next.js API/Admin, Supabase Postg
 
 **콘텐츠 중심 성경 읽기 습관 앱** — Discover에서 이야기·콘텐츠를 찾고, 관련 플랜을 읽으며, 진행과 습관을 추적합니다.
 
-클로즈드 테스트를 위해 **Home, Discover, Read, Plans, Settings**와 **공개 웹/API**를 마무리하는 단계입니다.
+클로즈드 테스트를 위해 **Home, Discover, Read, Plans, Settings**와 **공개 웹/API**를 마무리하는 단계입니다. **Android 에뮬레이터 QA는 2026-05-29 완료** — iOS·릴리스 빌드가 다음입니다.
 
 - **모바일**: Flutter iOS / Android
 - **탭**: `Home`, `Discover`, `Read`, `Settings` (MVP에서 Saved/List는 비표시)
@@ -22,7 +22,7 @@ Flutter + Drift/SQLite(로컬), Supabase Auth, Next.js API/Admin, Supabase Postg
 - **Plans**: 전체 화면 플랜 관리·카탈로그 (`내 플랜`, `카탈로그`, `보관함` 등)
 - **Home**: 오늘의 말씀, 반성, Read More, 관련 플랜 CTA, 저장(로컬), 하트/공유, 진행률, 캐시·오프라인 폴백
 - **Discover**: 콘텐츠 검색, 타입/태그 필터, 상세 시트, YouTube, 관련 플랜
-- **Settings**: 로그인/로그아웃, 수동 백업·복원, 동기화 상태, 플랜 관리, 문의·피드백
+- **Settings**: 로그인/로그아웃, **SYNC**(Sync now / Restore), 플랜 관리, 문의·피드백
 - **Admin**: 플랜, 오늘의 말씀, 일반 콘텐츠 CRUD (미니멀 대시보드 UI)
 - **공개 웹**: [랜딩·지원·약관](https://hunnybibletracker.com/) (Tailwind v4)
 

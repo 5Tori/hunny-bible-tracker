@@ -32,6 +32,7 @@ class _RootShellState extends State<RootShell> {
   );
   int _readRefreshToken = 0;
   final _homeKey = GlobalKey<HomeScreenState>();
+  final _settingsKey = GlobalKey<SettingsScreenState>();
 
   void _selectTab(int index) {
     setState(() {
@@ -40,6 +41,8 @@ class _RootShellState extends State<RootShell> {
     });
     if (index == 0) {
       _homeKey.currentState?.refresh();
+    } else if (index == 3) {
+      _settingsKey.currentState?.reload();
     }
   }
 
@@ -137,6 +140,7 @@ class _RootShellState extends State<RootShell> {
           readRepository: widget.readRepository,
         ),
       3 => SettingsScreen(
+          key: _settingsKey,
           authRepository: widget.authRepository,
           readRepository: widget.readRepository,
           onReadingDataRestored: () {

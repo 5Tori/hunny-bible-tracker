@@ -2,14 +2,15 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import 'hunny_api_config.dart';
+import 'hunny_api_models.dart';
 
 class HunnyApiClient {
   HunnyApiClient._();
 
   static const requestConnectTimeout = Duration(seconds: 8);
   static const requestReceiveTimeout = Duration(seconds: 20);
-  static const probeConnectTimeout = Duration(milliseconds: 1500);
-  static const probeReceiveTimeout = Duration(milliseconds: 2000);
+  static const probeConnectTimeout = Duration(seconds: 4);
+  static const probeReceiveTimeout = Duration(seconds: 6);
 
   static Dio create(
     HunnyApiConfig config, {
@@ -136,6 +137,14 @@ class HunnyApiReachability {
       markSuccess();
       return;
     }
+    final statusCode = switch (error) {
+      HunnyApiException(:final statusCode) => statusCode,
+      _ => null,
+    };
+    if (statusCode != null && statusCode > 0 && statusCode < 500) {
+      markSuccess();
+      return;
+    }
     _snapshots[_config.baseUrl] = _ReachabilitySnapshot(
       reachable: false,
       checkedAt: DateTime.now(),
@@ -143,28 +152,51 @@ class HunnyApiReachability {
   }
 
   Future<bool> _probe(String baseUrl) async {
-    try {
-      final config = HunnyApiConfig.fromBaseUrl(baseUrl);
-      final dio = HunnyApiClient.create(
-        config,
-        connectTimeout: HunnyApiClient.probeConnectTimeout,
-        receiveTimeout: HunnyApiClient.probeReceiveTimeout,
-      );
-      final response = await dio.get<dynamic>('/api/health');
-      final code = response.statusCode ?? 0;
-      final reachable = code >= 200 && code < 500;
+    final config = HunnyApiConfig.fromBaseUrl(baseUrl);
+    final dio = HunnyApiClient.create(
+      config,
+      connectTimeout: HunnyApiClient.probeConnectTimeout,
+      receiveTimeout: HunnyApiClient.probeReceiveTimeout,
+    );
+
+    // Auth/sync routes respond quickly (401 without token). /api/health runs a
+    // DB query and can hang when Hyperdrive is slow even though sync works.
+    final bootstrap = await _probeRequest(
+      dio.get<dynamic>('/api/v1/sync/bootstrap'),
+    );
+    if (bootstrap != null) {
       _snapshots[baseUrl] = _ReachabilitySnapshot(
-        reachable: reachable,
+        reachable: bootstrap,
         checkedAt: DateTime.now(),
       );
-      return reachable;
-    } catch (_) {
-      _snapshots[baseUrl] = _ReachabilitySnapshot(
-        reachable: false,
-        checkedAt: DateTime.now(),
-      );
-      return false;
+      return bootstrap;
     }
+
+    final health = await _probeRequest(dio.get<dynamic>('/api/health'));
+    final reachable = health ?? false;
+    _snapshots[baseUrl] = _ReachabilitySnapshot(
+      reachable: reachable,
+      checkedAt: DateTime.now(),
+    );
+    return reachable;
+  }
+
+  Future<bool?> _probeRequest(Future<Response<dynamic>> request) async {
+    try {
+      final response = await request;
+      return _isReachableStatus(response.statusCode ?? 0);
+    } on DioException catch (error) {
+      final code = error.response?.statusCode ?? 0;
+      if (code > 0) return _isReachableStatus(code);
+      return null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  bool _isReachableStatus(int code) {
+    if (code == 401) return true;
+    return code >= 200 && code < 500;
   }
 }
 

@@ -48,6 +48,7 @@ class HomeScreenState extends State<HomeScreen> {
   var _todayMessageHearted = false;
   var _todayMessageSaved = false;
   var _todayMessageActionPending = false;
+  var _todayMessageSavePending = false;
   var _loadGeneration = 0;
 
   @override
@@ -80,8 +81,10 @@ class HomeScreenState extends State<HomeScreen> {
       _plan = plan;
       _readingOverview = overview;
       _todayMessage = displayMessage;
+      if (!_todayMessageSavePending) {
+        _todayMessageSaved = todayMessageSaved;
+      }
       _todayMessageHearted = todayMessageHearted;
-      _todayMessageSaved = todayMessageSaved;
       _todayMessageLoading = false;
     });
 
@@ -112,8 +115,10 @@ class HomeScreenState extends State<HomeScreen> {
     if (!mounted || generation != _loadGeneration) return;
     setState(() {
       _todayMessage = todayMessage;
+      if (!_todayMessageSavePending) {
+        _todayMessageSaved = todayMessageSaved;
+      }
       _todayMessageHearted = todayMessageHearted;
-      _todayMessageSaved = todayMessageSaved;
       _todayMessageLoading = false;
     });
   }
@@ -215,15 +220,15 @@ class HomeScreenState extends State<HomeScreen> {
       _todayMessageActionPending = true;
       _todayMessage = message.copyWith(heartCount: message.heartCount + 1);
     });
+    await widget.readRepository.setAppSetting(
+      _heartedSettingKey(message.id),
+      '1',
+    );
 
     try {
       final engagement =
           await widget.todayMessageReadClient.heartTodayMessage(message.id);
-      await widget.readRepository.setAppSetting(
-        _heartedSettingKey(message.id),
-        '1',
-      );
-      if (!mounted) return;
+      if (!mounted || !_todayMessageHearted) return;
       final updatedMessage = _todayMessage?.copyWith(
         heartCount: engagement.heartCount,
         shareCount: engagement.shareCount,
@@ -241,6 +246,11 @@ class HomeScreenState extends State<HomeScreen> {
         _todayMessageHearted = false;
         _todayMessage = message;
       });
+      await widget.readRepository.setAppSetting(
+        _heartedSettingKey(message.id),
+        '0',
+      );
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Could not save this heart.')),
       );
@@ -251,14 +261,33 @@ class HomeScreenState extends State<HomeScreen> {
 
   Future<void> _toggleSaveTodayMessage() async {
     final message = _todayMessage;
-    if (message == null) return;
+    if (message == null || _todayMessageSavePending) return;
 
-    final nextValue = !_todayMessageSaved;
-    setState(() => _todayMessageSaved = nextValue);
-    await widget.readRepository.setAppSetting(
-      _savedSettingKey(message.id),
-      nextValue ? '1' : '0',
-    );
+    final messageId = message.id;
+    final previousSaved = _todayMessageSaved;
+    final nextSaved = !previousSaved;
+
+    setState(() {
+      _todayMessageSaved = nextSaved;
+      _todayMessageSavePending = true;
+    });
+
+    try {
+      await widget.readRepository.setAppSetting(
+        _savedSettingKey(messageId),
+        nextSaved ? '1' : '0',
+      );
+    } catch (_) {
+      if (!mounted || _todayMessage?.id != messageId) return;
+      setState(() => _todayMessageSaved = previousSaved);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not update save.')),
+      );
+    } finally {
+      if (mounted && _todayMessage?.id == messageId) {
+        setState(() => _todayMessageSavePending = false);
+      }
+    }
   }
 
   Future<void> _shareTodayMessage() async {
@@ -554,13 +583,12 @@ class HomeScreenState extends State<HomeScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) {
+      builder: (sheetContext) {
         return _TodayMessageMoreSheet(
           message: message,
           contentReadClient: widget.contentReadClient,
           onOpenLinkedContent: (linked) async {
-            final navigator = Navigator.of(context);
-            navigator.pop();
+            Navigator.of(sheetContext).pop();
             if (!mounted) return;
 
             RemoteContent? content;
@@ -659,6 +687,7 @@ class HomeScreenState extends State<HomeScreen> {
               hearted: _todayMessageHearted,
               saved: _todayMessageSaved,
               actionPending: _todayMessageActionPending,
+              savePending: _todayMessageSavePending,
               onHeart: _heartTodayMessage,
               onSave: _toggleSaveTodayMessage,
               onShare: _shareTodayMessage,
@@ -745,6 +774,7 @@ class TodayMessageCard extends StatelessWidget {
     required this.hearted,
     required this.saved,
     required this.actionPending,
+    required this.savePending,
     required this.onHeart,
     required this.onSave,
     required this.onShare,
@@ -756,6 +786,7 @@ class TodayMessageCard extends StatelessWidget {
   final bool hearted;
   final bool saved;
   final bool actionPending;
+  final bool savePending;
   final VoidCallback onHeart;
   final VoidCallback onSave;
   final VoidCallback onShare;
@@ -886,7 +917,7 @@ class TodayMessageCard extends StatelessWidget {
                   icon: saved ? Icons.bookmark : Icons.bookmark_border,
                   label: 'Save',
                   selected: saved,
-                  onTap: onSave,
+                  onTap: savePending ? null : onSave,
                 ),
                 const Spacer(),
                 _MessageActionButton(

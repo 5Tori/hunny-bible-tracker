@@ -50,6 +50,19 @@ Short English release notes for Google Play.
 
 ---
 
+## Dev QA — Android emulator (2026-05-29)
+
+릴리스 아티팩트 전 **개발 QA 완료** 기록 (Play upload 아님).
+
+- **Platform:** Android emulator · production API + `supabase_rpc`
+- **Verified:** Sync now / Restore · heart (one-way) · save toggle · share · Discover/Plans/Read · sign-in
+- **Infra:** Hyperdrive password reset · `/api/health` `db: true` · web deploy `pnpm run deploy`
+- **Code (uncommitted at note time):** mobile sync/settings/home · web Supabase Admin REST for sync/engagement
+
+**Next:** iOS QA · `versionCode` bump · `app-release.aab` upload
+
+---
+
 ## v0.3.0+7 — Android Closed Testing
 
 - **Date:** 2026-05-18

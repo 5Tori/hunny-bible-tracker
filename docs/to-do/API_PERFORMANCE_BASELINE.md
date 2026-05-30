@@ -29,12 +29,14 @@ Environment: local `pnpm web:dev` → Supabase pooler (us-east-2), client bench 
 | `requestConnectTimeout` | 8000ms | `hunny_api_client.dart` |
 | `requestReceiveTimeout` | 20000ms | `hunny_api_client.dart` |
 | Plan catalog timeouts | 8000ms / 20000ms | `plan_catalog_api_client.dart` (aligned with default) |
-| Reachability online TTL | 30s | `HunnyApiReachability` |
-| Reachability offline cooldown | 20s | `HunnyApiReachability` |
+| Reachability probe | `GET /api/v1/sync/bootstrap` (401=online) | `hunny_api_client.dart` |
+| Probe connect/receive | 4000ms / 6000ms | `hunny_api_client.dart` |
 
 ## Production smoke (2026-05-30)
 
-Production was intermittently unhealthy (Hyperdrive/DB). Do not use as steady-state baseline until `/api/health` returns `db: true`.
+- **2026-05-29:** Hyperdrive password misalign → `/api/health` timeout. After password reset + Hyperdrive update: `{"ok":true,"db":true}`.
+- **Mobile reachability:** uses `GET /api/v1/sync/bootstrap` (401), not `/api/health`.
+- **Mobile writes (sync, heart, share, profiles):** Supabase Admin REST from Worker (not Hyperdrive SQL).
 
 ## Diagnosis summary
 

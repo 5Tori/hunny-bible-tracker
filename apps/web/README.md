@@ -56,13 +56,13 @@ Use `src/app/**/page.tsx` for UI routes and `src/app/api/**/route.ts` for API en
 
 - `src/lib/db/postgres.ts`: SQL client for Supabase Postgres (`DATABASE_URL` pooler).
 - `src/lib/auth/verify-supabase-token.ts`: verifies Supabase access tokens via service role.
-- `src/lib/auth/auth-user-sync.ts`: upserts `public.profiles` for signed-in users.
+- `src/lib/auth/auth-user-sync.ts`: upserts `public.profiles` via Supabase Admin REST.
 - `src/lib/supabase/client.ts` / `admin.ts`: browser and server Supabase clients.
 - `src/lib/admin/auth.ts`: verifies Supabase JWT; allows only emails in `ADMIN_EMAILS`.
 - `src/lib/admin/client.ts`: stores/reads the browser admin ID token for admin fetch calls.
 - `src/lib/plans.ts`: plan catalog validation, CRUD, publishing, archiving, public plan reads, and sort parsing.
-- `src/lib/today-messages.ts`: today-message validation, CRUD, public lookup, public share lookup, heart/share counters.
-- `src/lib/sync/reading-sync.ts`: compact mobile reading backup push/bootstrap persistence.
+- `src/lib/today-messages.ts`: today-message CRUD via Hyperdrive SQL; heart/share increment via Supabase Admin REST.
+- `src/lib/sync/reading-sync.ts`: compact mobile reading backup push/bootstrap via Supabase Admin REST.
 - `src/lib/feedback.ts`: mobile feedback validation and persistence.
 - `src/lib/cloudinary.ts`: signed Cloudinary uploads plus `media_assets` recording.
 - `src/lib/bible-books.ts`: canonical Bible book keys and chapter counts used by admin editors.
@@ -107,7 +107,7 @@ Admin users sign in with Supabase Google Auth in the browser. Access to admin AP
 GET /api/health
 ```
 
-Returns a lightweight health response.
+Returns DB health (`db: true|false`). **Not used as mobile reachability probe** — use `GET /api/v1/sync/bootstrap` instead.
 
 ### Auth/User
 

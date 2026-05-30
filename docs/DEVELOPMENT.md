@@ -47,11 +47,20 @@ Workers preview: `cd apps/web && cp .dev.vars.example .dev.vars && pnpm preview`
 | `cd apps/web && pnpm run deploy` | 긴급 로컬 deploy |
 
 Build: `pnpm install --frozen-lockfile && pnpm --filter @hunny-bible-tracker/web run cf:build`  
-Deploy: `pnpm --filter @hunny-bible-tracker/web run cf:deploy`
+Deploy: `cd apps/web && pnpm run deploy` (루트: `pnpm web:deploy`)
+
+> **주의:** pnpm 10+에서 `pnpm deploy`는 package.json 스크립트가 아니라 pnpm 내장 명령입니다. 반드시 `pnpm run deploy`를 사용하세요.
 
 Runtime secrets: `SUPABASE_SERVICE_ROLE_KEY`, `CLOUDINARY_*` · Hyperdrive → `wrangler.jsonc`
 
-검증: `curl https://hunnybibletracker.com/api/health`
+**쓰기 경로 (2026-05):** 모바일 sync/auth/heart/share는 Worker에서 **Supabase Admin REST**로 저장합니다. Admin CRUD·일부 catalog SQL read는 Hyperdrive를 계속 사용합니다.
+
+검증:
+
+```bash
+curl -s https://hunnybibletracker.com/api/health          # db: true
+curl -s -o /dev/null -w "%{http_code}\n" https://hunnybibletracker.com/api/v1/sync/bootstrap  # 401 = route alive
+```
 
 ## Analytics & SEO (설정 완료)
 
@@ -101,7 +110,10 @@ Home 빠르게 → progress/fallback · Read chapter toggle · Discover offline 
 | Google Sign-In iOS | `Info.plist` GIDClientID, URL schemes, Supabase redirect |
 | Drift stale | `flutter pub run build_runner build` |
 | Stale mobile data | 앱 삭제/reinstall |
-| API 500 / 10–30s timeout | `curl https://hunnybibletracker.com/api/health` — `db: false`면 Hyperdrive·Supabase pooler 확인 (Dashboard → Hyperdrive origin URL·비밀번호, Network restrictions) |
+| API 500 / 10–30s timeout | `curl https://hunnybibletracker.com/api/health` — `db: false`면 Hyperdrive origin 비밀번호·Supabase Network restrictions 확인 |
+| Sync/heart timeout but RPC OK | sync·heart·share·profiles upsert는 Supabase Admin REST 경로 — `SUPABASE_SERVICE_ROLE_KEY` Worker secret 확인 |
+| `pnpm deploy` → Nothing to deploy | `pnpm run deploy` 또는 `pnpm web:deploy` 사용 (pnpm 10 내장 명령과 충돌) |
+| Mobile “Sync server offline” | reachability probe는 `GET /api/v1/sync/bootstrap` (401=online). `/api/health`는 DB ping이라 느릴 수 있음 |
 | `env.IMAGES binding is not defined` | `next.config.mjs` `images.unoptimized: true` (Cloudinary 직접 사용). 또는 wrangler에 `images.binding: IMAGES` 추가 |
 | `waitUntil() tasks did not complete` | Worker background task timeout — DB 연결 hang·이미지 최적화 실패 시 발생. health·Hyperdrive 먼저 확인 |
 

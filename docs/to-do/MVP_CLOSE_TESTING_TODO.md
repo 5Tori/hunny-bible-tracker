@@ -4,45 +4,54 @@
 
 ## Done / Do Not Re-open
 
-Read flow QA 완료 · Discover enabled · Saved/List hidden · Home Today's Message · content admin/API · Plans(full-screen, archive/restore) · feedback API · sync push/bootstrap · offline Home/Read · Discover offline message · launch/icon assets · **Documentation 정리·한국어화 (Cloudflare + Supabase 기준)**
+Read flow QA · Discover enabled · Saved/List hidden · Home Today's Message · content admin/API · Plans(full-screen, archive/restore) · feedback API · **sync push/bootstrap (Android E2E)** · offline Home/Read · Discover offline message · launch/icon assets · **Supabase RPC read layer** · **heart/share/save UX** · Documentation 정리
+
+### Android manual QA (2026-05-29) ✓
+
+- Home Today's Message · heart (one-way) · save toggle · share · More → linked content
+- Discover online/offline · Plans start/read · Settings sign-in · **Sync now · Restore**
+- `HUNNY_REMOTE_READ_MODE=supabase_rpc` + `HUNNY_API_BASE_URL=https://hunnybibletracker.com`
+- Production `/api/health` → `db: true`
 
 ## Before Build
 
 **Infrastructure**
 
-- [ ] `supabase/migrations/` ~ plan seeds `20260528110007` 적용
-- [ ] Discover content: `apps/web/db/seeds/content_test_seed.sql` 또는 Admin publish
-- [ ] Today's Message: `apps/web/db/seeds/today_message_test_seed.sql` (마이그레이션 `20260529120000` 후) 또는 Admin publish
-- [ ] Cloudflare Hyperdrive + secrets (`SUPABASE_SERVICE_ROLE_KEY`, Cloudinary)
-- [ ] `ADMIN_EMAILS` · Google OAuth SHA-1 · release `HUNNY_API_BASE_URL=https://hunnybibletracker.com`
+- [x] Cloudflare Hyperdrive + secrets (`SUPABASE_SERVICE_ROLE_KEY`, Cloudinary)
+- [x] Hyperdrive origin password ↔ Supabase DB password aligned
+- [x] `ADMIN_EMAILS` · Google OAuth · release `HUNNY_API_BASE_URL=https://hunnybibletracker.com`
+- [ ] `supabase/migrations/` through `20260601120300` applied on production
+- [ ] Discover content: seed 또는 Admin publish
+- [ ] Today's Message: seed 또는 Admin publish
+- [ ] iOS manual QA (Android parity)
 
 **Automated**
 
 - [ ] `flutter analyze` · `flutter test` · `pnpm --dir apps/web typecheck`
-- [ ] Android smoke test · `pubspec.yaml` `0.3.0+7` 확인
+- [ ] `pubspec.yaml` `version` / `+versionCode` bump for next upload
 
 **Production API**
 
-- [ ] `GET /api/health` 200
+- [x] `GET /api/health` 200 (`db: true`)
 - [ ] `GET /api/v1/plans?sort=featured` (target: 8 plans)
 - [ ] `GET /api/v1/content?sort=featured&language=en`
-- [ ] `GET /api/v1/today-message?date=YYYY-MM-DD&language=en` — includes `linked_content` when `content_id` set
+- [ ] Supabase RPC smoke: `mobile_today_message_latest`, `mobile_plan_catalog`
 
 ## Content Required
 
 - Today's Message 1건+ · fallback(이전 publish_date) 동작
 - `verse_text` / `bible_version` 분리
 - Discover content (seed 또는 Admin publish)
-- MVP plans: target **≥5** published plans (Joseph, Mark, Psalms for Anxiety, Life of David 등)
-- Start Plan → valid `user_plan_chapters` · plan CTA via linked content (`content_plan_links`) when Today’s Message has `content_id`
+- MVP plans: target **≥5** published plans
+- Start Plan → valid `user_plan_chapters` · plan CTA via linked content
 
-## Manual QA
+## Manual QA (iOS remaining)
 
-Fresh install Home · airplane mode Home/Read · Today's Message cache/fallback · Discover online/offline · search/filter/detail sheet · heart/share/save · Read More + plan CTA · Plans browse/manage · archive/restore · chapter persist · completion event · Start Again · Settings sign-in/sync/restore/feedback · launch screen
+Fresh install Home · airplane mode Home/Read · Discover · Plans · Settings sync/restore · launch screen
 
 ## Known Deferred
 
-Plan Detail · Saved/List · Home featured · content deep link · habit layer · push · auto merge · conflict UI · automated test coverage
+Plan Detail · Saved/List tab · Home featured · content deep link · habit layer · push · auto merge · conflict UI · automated test coverage
 
 ## Release Notes
 

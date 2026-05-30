@@ -62,7 +62,9 @@ class ReadRepository {
         forceReachability: forceReachability,
       );
       if (plans.isEmpty) return;
-      await _replacePlanTemplateCache(plans);
+      // Summary catalog has no sections/items — merge metadata only so we do
+      // not orphan user_plan_chapters that reference local section ids.
+      await _upsertRemotePlanSummaries(plans);
     } catch (_) {
       if (!allowFailure) rethrow;
     }
@@ -530,17 +532,40 @@ class ReadRepository {
 
   Future<List<PlanSectionProgress>> getSectionsWithProgress(
       String planId) async {
-    final planChapters = await (db.select(db.userPlanChapters)
+    await _rebuildUserPlanChaptersIfStale(planId);
+
+    var planChapters = await (db.select(db.userPlanChapters)
           ..where((tbl) => tbl.userPlanId.equals(planId))
           ..orderBy([(tbl) => OrderingTerm.asc(tbl.orderIndex)]))
         .get();
     if (planChapters.isEmpty) return [];
 
     final sectionIds = planChapters.map((chapter) => chapter.sectionId).toSet();
-    final sections = await (db.select(db.planTemplateSections)
+    var sections = await (db.select(db.planTemplateSections)
           ..where((tbl) => tbl.id.isIn(sectionIds.toList()))
           ..orderBy([(tbl) => OrderingTerm.asc(tbl.orderIndex)]))
         .get();
+
+    if (sections.isEmpty) {
+      final rebuilt = await _rebuildUserPlanChaptersIfStale(planId);
+      if (!rebuilt) return [];
+
+      planChapters = await (db.select(db.userPlanChapters)
+            ..where((tbl) => tbl.userPlanId.equals(planId))
+            ..orderBy([(tbl) => OrderingTerm.asc(tbl.orderIndex)]))
+          .get();
+      if (planChapters.isEmpty) return [];
+
+      sections = await (db.select(db.planTemplateSections)
+            ..where(
+              (tbl) => tbl.id.isIn(
+                planChapters.map((chapter) => chapter.sectionId).toList(),
+              ),
+            )
+            ..orderBy([(tbl) => OrderingTerm.asc(tbl.orderIndex)]))
+          .get();
+      if (sections.isEmpty) return [];
+    }
 
     final bookKeys = planChapters.map((chapter) => chapter.bookKey).toSet();
     final books = await (db.select(db.bibleBooks)
@@ -1202,9 +1227,71 @@ class ReadRepository {
   Future<void> applyReadingSyncPushResult(
     HunnySyncPushResult result,
   ) async {
+    final syncedAt = result.updatedAt;
+    final localUserId = await _activeLocalUserId();
+    await db.transaction(() async {
+      await _markReadingRowsSynced(localUserId, syncedAt);
+    });
     await _setSetting(
       kAppSettingLastReadingSyncAt,
-      result.updatedAt.toUtc().toIso8601String(),
+      syncedAt.toUtc().toIso8601String(),
+    );
+  }
+
+  Future<void> _markReadingRowsSynced(
+    String localUserId,
+    DateTime syncedAt,
+  ) async {
+    final now = syncedAt;
+    await (db.update(db.userReadingPlans)
+          ..where(
+            (tbl) =>
+                tbl.localUserId.equals(localUserId) &
+                tbl.syncStatus.equals('pending'),
+          ))
+        .write(
+      UserReadingPlansCompanion(
+        syncStatus: const Value('synced'),
+        lastSyncedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+    await (db.update(db.chapterProgressEntries)
+          ..where(
+            (tbl) =>
+                tbl.localUserId.equals(localUserId) &
+                tbl.syncStatus.equals('pending'),
+          ))
+        .write(
+      ChapterProgressEntriesCompanion(
+        syncStatus: const Value('synced'),
+        lastSyncedAt: Value(now),
+        updatedAt: Value(now),
+      ),
+    );
+    await (db.update(db.readingActivities)
+          ..where(
+            (tbl) =>
+                tbl.localUserId.equals(localUserId) &
+                tbl.syncStatus.equals('pending'),
+          ))
+        .write(
+      ReadingActivitiesCompanion(
+        syncStatus: const Value('synced'),
+        lastSyncedAt: Value(now),
+      ),
+    );
+    await (db.update(db.planCompletionEvents)
+          ..where(
+            (tbl) =>
+                tbl.localUserId.equals(localUserId) &
+                tbl.syncStatus.equals('pending'),
+          ))
+        .write(
+      PlanCompletionEventsCompanion(
+        syncStatus: const Value('synced'),
+        lastSyncedAt: Value(now),
+      ),
     );
   }
 
@@ -1392,6 +1479,56 @@ class ReadRepository {
     return DateTime.tryParse(value);
   }
 
+  /// True when local reading rows changed since last successful push.
+  Future<bool> hasUnsyncedReadingChanges() async {
+    final localUserId = await _activeLocalUserId();
+
+    Future<bool> hasPendingRows<T extends Table, D>(
+      TableInfo<T, D> table,
+      Expression<bool> Function(T tbl) where,
+    ) async {
+      final rows = await (db.select(table)..where(where)).get();
+      return rows.isNotEmpty;
+    }
+
+    if (await hasPendingRows(
+      db.userReadingPlans,
+      (tbl) =>
+          tbl.localUserId.equals(localUserId) &
+          tbl.syncStatus.equals('pending'),
+    )) {
+      return true;
+    }
+    if (await hasPendingRows(
+      db.chapterProgressEntries,
+      (tbl) =>
+          tbl.localUserId.equals(localUserId) &
+          tbl.syncStatus.equals('pending'),
+    )) {
+      return true;
+    }
+    if (await hasPendingRows(
+      db.readingActivities,
+      (tbl) =>
+          tbl.localUserId.equals(localUserId) &
+          tbl.syncStatus.equals('pending'),
+    )) {
+      return true;
+    }
+    if (await hasPendingRows(
+      db.planCompletionEvents,
+      (tbl) =>
+          tbl.localUserId.equals(localUserId) &
+          tbl.syncStatus.equals('pending'),
+    )) {
+      return true;
+    }
+
+    final lastSyncedAt = await getLastReadingSyncAt();
+    if (lastSyncedAt != null) return false;
+    return hasAnyUserReadingPlan();
+  }
+
   Future<void> _ensureGuestLocalUser() async {
     final existing =
         await (db.select(db.localUsers)..limit(1)).getSingleOrNull();
@@ -1461,94 +1598,6 @@ class ReadRepository {
           );
         }).toList(),
       );
-    });
-  }
-
-  Future<void> _replacePlanTemplateCache(
-    List<RemotePlanTemplate> plans,
-  ) async {
-    if (plans.isEmpty) return;
-
-    await db.transaction(() async {
-      await db.delete(db.planTemplateTags).go();
-      await db.delete(db.planTags).go();
-      await db.delete(db.planTemplateItems).go();
-      await db.delete(db.planTemplateSections).go();
-      await db.delete(db.planTemplates).go();
-
-      for (final plan in plans) {
-        await db.into(db.planTemplates).insert(
-              PlanTemplatesCompanion.insert(
-                id: plan.id,
-                templateKey: plan.templateKey,
-                title: plan.title,
-                subtitle: Value(plan.subtitle),
-                description: Value(plan.description),
-                shortDescription: Value(plan.shortDescription),
-                coverImageUrl: Value(plan.coverImageUrl),
-                planType: Value(plan.planType),
-                testamentScope: Value(plan.testamentScope),
-                difficulty: Value(plan.difficulty),
-                estimatedMinutes: Value(plan.estimatedMinutes),
-                estimatedDays: Value(plan.estimatedDays),
-                totalChapters: Value(plan.totalChapters),
-                primaryBookKey: Value(plan.primaryBookKey),
-                primaryCharacter: Value(plan.primaryCharacter),
-                isBuiltin: Value(plan.isBuiltin),
-                isPublished: Value(plan.isPublished),
-                featuredRank: Value(plan.featuredRank),
-                browseVisible: Value(plan.browseVisible),
-                createdAt: plan.createdAt,
-                updatedAt: plan.updatedAt,
-              ),
-            );
-
-        for (final section in plan.sections) {
-          await db.into(db.planTemplateSections).insert(
-                PlanTemplateSectionsCompanion.insert(
-                  id: section.id,
-                  planTemplateId: plan.id,
-                  sectionKey: section.sectionKey,
-                  title: section.title,
-                  description: Value(section.description),
-                  orderIndex: section.orderIndex,
-                  createdAt: section.createdAt,
-                  updatedAt: section.updatedAt,
-                ),
-              );
-
-          for (final item in section.items) {
-            await db.into(db.planTemplateItems).insert(
-                  PlanTemplateItemsCompanion.insert(
-                    id: item.id,
-                    sectionId: section.id,
-                    orderIndex: item.orderIndex,
-                    bookKey: item.bookKey,
-                    startChapter: item.startChapter,
-                    endChapter: item.endChapter,
-                  ),
-                );
-          }
-        }
-
-        for (final tag in plan.tags) {
-          await db.into(db.planTags).insertOnConflictUpdate(
-                PlanTagsCompanion.insert(
-                  id: tag.id,
-                  key: tag.key,
-                  name: tag.name,
-                  type: tag.type,
-                ),
-              );
-          await db.into(db.planTemplateTags).insert(
-                PlanTemplateTagsCompanion.insert(
-                  planTemplateId: plan.id,
-                  tagId: tag.id,
-                ),
-                mode: InsertMode.insertOrIgnore,
-              );
-        }
-      }
     });
   }
 
@@ -1752,6 +1801,80 @@ class ReadRepository {
 
     await _setSetting('last_active_plan_id', planId);
     return planId;
+  }
+
+  Future<bool> _rebuildUserPlanChaptersIfStale(String planId) async {
+    final plan = await (db.select(db.userReadingPlans)
+          ..where((tbl) => tbl.id.equals(planId))
+          ..limit(1))
+        .getSingleOrNull();
+    if (plan == null) return false;
+
+    final template = await (db.select(db.planTemplates)
+          ..where((tbl) => tbl.id.equals(plan.templateId))
+          ..limit(1))
+        .getSingleOrNull();
+    if (template == null) return false;
+
+    var templateSections = await (db.select(db.planTemplateSections)
+          ..where((tbl) => tbl.planTemplateId.equals(template.id)))
+        .get();
+    if (templateSections.isEmpty) {
+      try {
+        await _ensureTemplateReadyForStart(template.templateKey);
+      } catch (_) {
+        return false;
+      }
+      templateSections = await (db.select(db.planTemplateSections)
+            ..where((tbl) => tbl.planTemplateId.equals(template.id)))
+          .get();
+      if (templateSections.isEmpty) return false;
+    }
+
+    final validSectionIds = templateSections.map((section) => section.id).toSet();
+    final existingChapters = await (db.select(db.userPlanChapters)
+          ..where((tbl) => tbl.userPlanId.equals(planId)))
+        .get();
+
+    final hasStaleSectionRefs = existingChapters.any(
+      (chapter) => !validSectionIds.contains(chapter.sectionId),
+    );
+    if (existingChapters.isNotEmpty && !hasStaleSectionRefs) {
+      return false;
+    }
+
+    final rebuiltChapters = await _resolveTemplateChapters(
+      userPlanId: planId,
+      templateId: template.id,
+    );
+    if (rebuiltChapters.isEmpty) return false;
+
+    final firstChapter = rebuiltChapters.first;
+    await db.transaction(() async {
+      await (db.delete(db.userPlanChapters)
+            ..where((tbl) => tbl.userPlanId.equals(planId)))
+          .go();
+      await db.batch((batch) {
+        batch.insertAll(db.userPlanChapters, rebuiltChapters);
+      });
+
+      if (plan.lastOpenedSectionId == null ||
+          !validSectionIds.contains(plan.lastOpenedSectionId)) {
+        await (db.update(db.userReadingPlans)
+              ..where((tbl) => tbl.id.equals(planId)))
+            .write(
+          UserReadingPlansCompanion(
+            lastOpenedSectionId: Value(firstChapter.sectionId.value),
+            lastOpenedBookKey: Value(firstChapter.bookKey.value),
+            updatedAt: Value(DateTime.now()),
+            syncStatus: const Value('pending'),
+            clientRevision: Value(plan.clientRevision + 1),
+          ),
+        );
+      }
+    });
+
+    return true;
   }
 
   Future<List<UserPlanChaptersCompanion>> _resolveTemplateChapters({
@@ -2035,6 +2158,34 @@ class ReadRepository {
     Map<String, dynamic> plan,
   ) async {
     final templateKey = _readString(plan, 'templateKey');
+    final templateId = _readOptionalString(plan, 'templateId') ?? '';
+    final identifier = templateKey.isNotEmpty ? templateKey : templateId;
+    if (identifier.isEmpty) return null;
+
+    var template = await _findPlanTemplate(
+      templateKey: templateKey,
+      templateId: templateId,
+    );
+
+    if (template == null || !await _templateHasChapterScope(template.id)) {
+      try {
+        await _ensureTemplateReadyForStart(identifier);
+      } catch (_) {
+        return template;
+      }
+      template = await _findPlanTemplate(
+        templateKey: templateKey,
+        templateId: templateId,
+      );
+    }
+
+    return template;
+  }
+
+  Future<PlanTemplate?> _findPlanTemplate({
+    required String templateKey,
+    required String templateId,
+  }) async {
     if (templateKey.isNotEmpty) {
       final byKey = await (db.select(db.planTemplates)
             ..where((tbl) => tbl.templateKey.equals(templateKey))
@@ -2043,12 +2194,24 @@ class ReadRepository {
       if (byKey != null) return byKey;
     }
 
-    final templateId = _readString(plan, 'templateId');
     if (templateId.isEmpty) return null;
     return (db.select(db.planTemplates)
           ..where((tbl) => tbl.id.equals(templateId))
           ..limit(1))
         .getSingleOrNull();
+  }
+
+  Future<bool> _templateHasChapterScope(String templateId) async {
+    final sections = await (db.select(db.planTemplateSections)
+          ..where((tbl) => tbl.planTemplateId.equals(templateId)))
+        .get();
+    if (sections.isEmpty) return false;
+
+    final sectionIds = sections.map((section) => section.id).toList();
+    final items = await (db.select(db.planTemplateItems)
+          ..where((tbl) => tbl.sectionId.isIn(sectionIds)))
+        .get();
+    return items.isNotEmpty;
   }
 
   Future<Set<String>> _chapterKeysForPlans(Set<String> planIds) async {

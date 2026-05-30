@@ -1,6 +1,6 @@
 import crypto from 'crypto';
 
-import { sql } from '@/lib/db/postgres';
+import { getSupabaseAdmin } from '@/lib/supabase/admin';
 
 type JsonRecord = Record<string, unknown>;
 
@@ -52,35 +52,26 @@ export async function pushReadingSync(
     .update(canonicalPayload)
     .digest('hex');
 
-  const rows = (await sql`
-    insert into user_reading_backups (
-      auth_user_id,
-      backup_version,
-      payload_jsonb,
-      payload_hash,
-      updated_at
+  const payloadObject = JSON.parse(canonicalPayload) as JsonRecord;
+  const { data: saved, error } = await getSupabaseAdmin()
+    .from('user_reading_backups')
+    .upsert(
+      {
+        auth_user_id: authUserId,
+        backup_version: snapshot.v,
+        payload_jsonb: payloadObject,
+        payload_hash: payloadHash,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'auth_user_id' },
     )
-    values (
-      ${authUserId},
-      ${snapshot.v},
-      ${canonicalPayload}::jsonb,
-      ${payloadHash},
-      now()
-    )
-    on conflict (auth_user_id)
-    do update set
-      backup_version = excluded.backup_version,
-      payload_jsonb = excluded.payload_jsonb,
-      payload_hash = excluded.payload_hash,
-      updated_at = now()
-    returning backup_version, payload_hash, updated_at
-  `) as Array<{
-    backup_version: number;
-    payload_hash: string;
-    updated_at: string | Date;
-  }>;
+    .select('backup_version, payload_hash, updated_at')
+    .single();
 
-  const saved = rows[0];
+  if (error) {
+    console.error('reading sync push store failed', error);
+    throw error;
+  }
   if (!saved) throw new SyncInputError('backup_write_failed');
 
   return {
@@ -95,23 +86,16 @@ export async function pushReadingSync(
 export async function getReadingSyncBootstrap(
   authUserId: string,
 ): Promise<ReadingSyncBootstrapResult> {
-  const rows = (await sql`
-    select
-      backup_version,
-      payload_hash,
-      payload_jsonb,
-      updated_at
-    from user_reading_backups
-    where auth_user_id = ${authUserId}
-    limit 1
-  `) as Array<{
-    backup_version: number;
-    payload_hash: string;
-    payload_jsonb: unknown;
-    updated_at: string | Date;
-  }>;
+  const { data: backup, error } = await getSupabaseAdmin()
+    .from('user_reading_backups')
+    .select('backup_version, payload_hash, payload_jsonb, updated_at')
+    .eq('auth_user_id', authUserId)
+    .maybeSingle();
 
-  const backup = rows[0];
+  if (error) {
+    console.error('reading sync bootstrap store failed', error);
+    throw error;
+  }
   if (!backup) {
     return {
       serverTime: new Date().toISOString(),

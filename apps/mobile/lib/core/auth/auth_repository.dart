@@ -172,49 +172,74 @@ class AuthRepository {
     }
   }
 
+  Future<bool> canReachSyncApi({bool force = false}) async {
+    if (!_apiConfig.isConfigured) return false;
+    return _apiReachability.canReachApi(force: force);
+  }
+
   Future<HunnySyncPushResult> pushReadingSync() async {
-    if (!await _apiReachability.canReachApi()) {
-      throw HunnyApiException('Hunny API is offline');
-    }
     final token = await _accessToken();
     final payload = await _readRepository.exportReadingBackupSnapshot();
-    final res = await _authedDio(token).post<dynamic>(
-      '/api/v1/sync/push',
-      data: payload,
-      options: Options(contentType: 'application/json'),
-    );
+    late final Response<dynamic> res;
+    try {
+      res = await _authedDio(token).post<dynamic>(
+        '/api/v1/sync/push',
+        data: payload,
+        options: Options(contentType: 'application/json'),
+      );
+    } catch (error) {
+      _apiReachability.markFailure(error);
+      throw _wrapSyncNetworkError(error, 'Could not save your backup. Try again.');
+    }
     final code = res.statusCode ?? 0;
     final data = res.data;
     if (code < 200 || code >= 300 || data is! Map<String, dynamic>) {
-      throw HunnyApiException(
+      final failure = HunnyApiException(
         _apiFailureMessage(
           'POST /api/v1/sync/push failed',
           data,
         ),
         statusCode: code,
       );
+      _apiReachability.markFailure(failure);
+      throw failure;
     }
     final result = HunnySyncPushResult.fromJson(data);
     await _readRepository.applyReadingSyncPushResult(result);
+    _apiReachability.markSuccess();
     return result;
   }
 
   Future<HunnySyncBootstrapResult> bootstrapReadingSync() async {
-    if (!await _apiReachability.canReachApi()) {
-      throw HunnyApiException('Hunny API is offline');
-    }
     final token = await _accessToken();
-    final res = await _authedDio(token).get<dynamic>(
-      '/api/v1/sync/bootstrap',
-    );
+    late final Response<dynamic> res;
+    try {
+      res = await _authedDio(token).get<dynamic>(
+        '/api/v1/sync/bootstrap',
+      );
+    } catch (error) {
+      _apiReachability.markFailure(error);
+      throw _wrapSyncNetworkError(
+        error,
+        'Could not download your backup. Try again.',
+      );
+    }
     final code = res.statusCode ?? 0;
     final data = res.data;
     if (code < 200 || code >= 300 || data is! Map<String, dynamic>) {
-      throw HunnyApiException('GET /api/v1/sync/bootstrap failed',
-          statusCode: code);
+      final failure = HunnyApiException(
+        _apiFailureMessage(
+          'GET /api/v1/sync/bootstrap failed',
+          data,
+        ),
+        statusCode: code,
+      );
+      _apiReachability.markFailure(failure);
+      throw failure;
     }
     final result = HunnySyncBootstrapResult.fromJson(data);
     await _readRepository.applyReadingSyncBootstrap(result);
+    _apiReachability.markSuccess();
     return result;
   }
 
@@ -268,10 +293,42 @@ class AuthRepository {
     if (data is Map) {
       final error = data['error'];
       if (error is String && error.isNotEmpty) {
-        return '$fallback: $error';
+        return switch (error) {
+          'missing_bearer' || 'missing_token' => 'Sign in again to sync.',
+          'invalid_token' => 'Your session expired. Sign in again.',
+          'auth_user_sync_failed' => 'Could not link your account on the server.',
+          'sync_push_failed' => 'Could not save your backup. Try again.',
+          'sync_bootstrap_failed' => 'Could not download your backup. Try again.',
+          'backup_payload_too_large' =>
+            'Your backup is too large to upload. Contact support.',
+          'unsupported_backup_version' =>
+            'This backup requires a newer app version.',
+          _ => '$fallback: $error',
+        };
       }
     }
     return fallback;
+  }
+
+  HunnyApiException _wrapSyncNetworkError(Object error, String fallback) {
+    if (error is HunnyApiException) return error;
+    if (error is DioException) {
+      switch (error.type) {
+        case DioExceptionType.connectionTimeout:
+        case DioExceptionType.sendTimeout:
+        case DioExceptionType.receiveTimeout:
+          return HunnyApiException(
+            'Sync server is taking too long. Check your connection and try again.',
+          );
+        case DioExceptionType.connectionError:
+          return HunnyApiException(
+            'Could not reach the sync server. Check your connection and try again.',
+          );
+        default:
+          break;
+      }
+    }
+    return HunnyApiException(fallback);
   }
 
   Future<String> _accessToken() async {

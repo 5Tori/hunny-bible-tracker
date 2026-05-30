@@ -30,17 +30,22 @@ class SettingsScreen extends StatefulWidget {
   final VoidCallback? onPreferencesChanged;
 
   @override
-  State<SettingsScreen> createState() => _SettingsScreenState();
+  State<SettingsScreen> createState() => SettingsScreenState();
 }
 
-class _SettingsScreenState extends State<SettingsScreen> {
+class SettingsScreenState extends State<SettingsScreen> {
   bool _loading = true;
   bool _syncing = false;
   bool _restoring = false;
+  bool _apiReachable = false;
+  bool _hasPendingChanges = false;
   LocalUserProfile? _profile;
   AuthSession? _session;
   DateTime? _lastSyncedAt;
   BibleComVersion _bibleVersion = BibleComVersion.defaultVersion;
+
+  /// Reload account + sync status (e.g. when the Settings tab is opened).
+  Future<void> reload() => _load();
 
   @override
   void initState() {
@@ -53,6 +58,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     AuthSession? session;
     LocalUserProfile? profile;
     DateTime? lastSyncedAt;
+    var apiReachable = false;
+    var hasPendingChanges = false;
     try {
       session = await widget.authRepository.refreshRemoteSession();
     } catch (_) {
@@ -68,12 +75,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } catch (_) {
       lastSyncedAt = null;
     }
+    if (widget.authRepository.isApiConfigured) {
+      try {
+        apiReachable =
+            await widget.authRepository.canReachSyncApi(force: true);
+      } catch (_) {
+        apiReachable = false;
+      }
+    }
+    try {
+      hasPendingChanges = await widget.readRepository.hasUnsyncedReadingChanges();
+    } catch (_) {
+      hasPendingChanges = false;
+    }
     final bibleVersion = await widget.readRepository.getBibleComVersion();
     if (!mounted) return;
     setState(() {
       _session = session;
       _profile = profile;
       _lastSyncedAt = lastSyncedAt;
+      _apiReachable = apiReachable;
+      _hasPendingChanges = hasPendingChanges;
       _bibleVersion = bibleVersion;
       _loading = false;
     });
@@ -159,8 +181,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final result = await widget.authRepository.pushReadingSync();
       final lastSyncedAt = await widget.readRepository.getLastReadingSyncAt();
+      final hasPendingChanges =
+          await widget.readRepository.hasUnsyncedReadingChanges();
       if (!mounted) return;
-      setState(() => _lastSyncedAt = lastSyncedAt ?? result.serverTime);
+      setState(() {
+        _lastSyncedAt = lastSyncedAt ?? result.serverTime;
+        _hasPendingChanges = hasPendingChanges;
+        _apiReachable = true;
+      });
       widget.onReadingDataRestored?.call();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -229,8 +257,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
     try {
       final result = await widget.authRepository.bootstrapReadingSync();
       final lastSyncedAt = await widget.readRepository.getLastReadingSyncAt();
+      final hasPendingChanges =
+          await widget.readRepository.hasUnsyncedReadingChanges();
       if (!mounted) return;
-      setState(() => _lastSyncedAt = lastSyncedAt ?? result.serverTime);
+      setState(() {
+        _lastSyncedAt = lastSyncedAt ?? result.serverTime;
+        _hasPendingChanges = hasPendingChanges;
+        _apiReachable = true;
+      });
+      widget.onReadingDataRestored?.call();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -244,6 +279,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.message)),
+      );
+    } on StateError catch (error) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(error.message)),
       );
     } catch (e) {
       if (!mounted) return;
@@ -442,11 +482,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 28),
 
-          _SectionLabel(title: 'BACKUP'),
+          _SectionLabel(title: 'SYNC'),
           const SizedBox(height: 12),
-          _BackupCard(
+          _SyncCard(
             signedIn: signedIn,
             apiConfigured: widget.authRepository.isApiConfigured,
+            apiReachable: _apiReachable,
+            hasPendingChanges: _hasPendingChanges,
             syncing: _syncing,
             restoring: _restoring,
             lastSyncedAt: _lastSyncedAt,
@@ -1173,10 +1215,12 @@ String _detectedTimezoneLabel() {
   return timezone.isEmpty ? offset : '$timezone ($offset)';
 }
 
-class _BackupCard extends StatelessWidget {
-  const _BackupCard({
+class _SyncCard extends StatelessWidget {
+  const _SyncCard({
     required this.signedIn,
     required this.apiConfigured,
+    required this.apiReachable,
+    required this.hasPendingChanges,
     required this.syncing,
     required this.restoring,
     required this.lastSyncedAt,
@@ -1186,22 +1230,44 @@ class _BackupCard extends StatelessWidget {
 
   final bool signedIn;
   final bool apiConfigured;
+  final bool apiReachable;
+  final bool hasPendingChanges;
   final bool syncing;
   final bool restoring;
   final DateTime? lastSyncedAt;
   final VoidCallback? onSyncNow;
   final VoidCallback? onRestore;
 
+  String _statusLabel() {
+    if (!apiConfigured) {
+      return 'Set HUNNY_API_BASE_URL in your build config to enable sync.';
+    }
+    if (!signedIn) {
+      return 'Sign in to back up and restore reading progress.';
+    }
+    if (!apiReachable) {
+      return 'Sync server looks offline. Check your connection or API URL.';
+    }
+    if (lastSyncedAt == null) {
+      return hasPendingChanges
+          ? 'Not synced yet · changes waiting to upload'
+          : 'Not synced yet';
+    }
+    final synced =
+        'Last synced ${DateFormat('MMM d, h:mm a').format(lastSyncedAt!.toLocal())}';
+    if (hasPendingChanges) {
+      return '$synced · changes waiting to upload';
+    }
+    return synced;
+  }
+
   @override
   Widget build(BuildContext context) {
     final title =
-        signedIn ? 'Back up reading progress' : 'Sign in to back up progress';
+        signedIn ? 'Back up reading progress' : 'Sign in to sync progress';
     final subtitle = signedIn
-        ? 'Save your plans, chapter progress, reading activity, and completed history to your account.'
-        : 'Your progress is saved on this device. Sign in and sync to back it up.';
-    final lastSyncedLabel = lastSyncedAt == null
-        ? 'Not synced yet'
-        : 'Last synced ${DateFormat('MMM d, h:mm a').format(lastSyncedAt!.toLocal())}';
+        ? 'Upload plans, chapter progress, reading activity, and completed history to your account.'
+        : 'Your progress stays on this device until you sign in and sync.';
     final busy = syncing || restoring;
     final buttonEnabled = signedIn && apiConfigured && !busy;
 
@@ -1226,7 +1292,9 @@ class _BackupCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(3),
                 ),
                 child: Icon(
-                  Icons.cloud_upload_outlined,
+                  signedIn && apiReachable
+                      ? Icons.cloud_done_outlined
+                      : Icons.cloud_off_outlined,
                   size: 22,
                   color: AppTheme.mutedInk,
                 ),
@@ -1257,12 +1325,11 @@ class _BackupCard extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            apiConfigured
-                ? lastSyncedLabel
-                : 'Backup server is not configured.',
+            _statusLabel(),
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: AppTheme.mutedInk,
                   fontWeight: FontWeight.w600,
+                  height: 1.35,
                 ),
           ),
           const SizedBox(height: 14),

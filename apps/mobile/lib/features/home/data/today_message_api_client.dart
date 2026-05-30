@@ -71,9 +71,6 @@ class TodayMessageApiClient {
     if (!_config.isConfigured) {
       throw StateError('HUNNY_API_BASE_URL is not set');
     }
-    if (!await _reachability.canReachApi()) {
-      throw StateError('Hunny API is offline');
-    }
 
     late final Response<dynamic> response;
     try {
