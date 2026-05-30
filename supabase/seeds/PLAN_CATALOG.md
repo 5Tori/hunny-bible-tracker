@@ -17,15 +17,14 @@ Supabase 시드 SQL: `supabase/migrations/20260528110000_seed_plan_*.sql`
 
 `featured_rank` 낮을수록 카탈로그 상단 (요셉·이야기형 플랜 우선, `bible_in_a_year`는 20).
 
-## `apps/web/db`에 있던 다른 데이터
+## Other seed data (this folder)
 
-| 파일 | 내용 |
+| File | Contents |
 | --- | --- |
-| `seeds/content_test_seed.sql` | Discover 테스트 콘텐츠 4건 + `content_plan_links` → `gospel_of_mark`, `psalms_for_anxiety`, `jonah` |
-| `seeds/README.md` | 시드 적용 순서 및 API 검증 (문서) |
-| `migrations/*.sql` (apps/web/db) | 스키마 증분 이력 (baseline에 통합됨) |
+| `seeds/content_test_seed.sql` | Discover test content (4 items) + `content_plan_links` → `gospel_of_mark`, `psalms_for_anxiety`, `jonah` |
+| `seeds/README.md` | Seed apply order and API verification |
 
-**아직 없음 (다음 구현 PR):** Supabase content / Today's Message 시드 마이그레이션. 현재는 Admin UI 또는 `content_test_seed.sql` 수동 적용.
+**Not yet in migrations:** content / Today's Message auto-seed on deploy. Use Admin or run the SQL files in `supabase/seeds/` manually.
 
 Admin에서 수동으로 만든 플랜(예: `the_story_of_jonah`)은 `template_key`가 다를 수 있습니다. 시드 실행 시 동일 key는 **삭제 후 재삽입**됩니다.
 

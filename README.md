@@ -230,8 +230,8 @@ flutter build ipa --release --dart-define-from-file=.env.ios.json
 | Home·오늘의 말씀 | `apps/mobile/lib/features/home/` |
 | Discover | `apps/mobile/lib/features/find/discover_screen.dart` |
 | 모바일 env 예시 | `apps/mobile/.env.example.json` |
-| 서버 스키마 참고 | `apps/web/db/schema.sql` |
-| Supabase 마이그레이션 | `supabase/migrations/` |
+| 서버 스키마 참고 | `supabase/schema.sql` |
+| Supabase 마이그레이션·시드 | `supabase/migrations/`, `supabase/seeds/` |
 | API 라우트 | `apps/web/src/app/api` |
 | Admin | `apps/web/src/app/admin` |
 | Workers 설정 | `apps/web/wrangler.jsonc` |

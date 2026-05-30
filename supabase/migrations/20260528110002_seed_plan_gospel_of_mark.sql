@@ -24,7 +24,7 @@ insert into public.plan_templates (
   16,
   'mark',
   'Jesus',
-  true,
+  false,
   true,
   false,
   6,

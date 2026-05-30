@@ -27,7 +27,7 @@ supabase login && supabase link --project-ref tbexpdwipdjgcjtlujis && supabase d
 | Transaction pooler | 6543 | `DATABASE_URL`, Hyperdrive (`?pgbouncer=true`) |
 | Direct | 5432 | migrations only |
 
-Content seed (optional): `apps/web/db/seeds/content_test_seed.sql`
+Content seed (optional): `supabase/seeds/content_test_seed.sql`
 
 ## Google OAuth
 

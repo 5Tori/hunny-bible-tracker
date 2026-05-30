@@ -310,7 +310,8 @@ pnpm build
 - Keep route handlers small. Put validation, SQL, and normalization in `src/lib`.
 - Use Supabase access tokens (`Authorization: Bearer`) for authenticated mobile APIs and admin APIs.
 - Use `requireAdminUser` only for admin-only endpoints.
-- Use `db/schema.sql` as the source of truth for database setup during MVP development.
+- Use `supabase/migrations/` as the source of truth for database setup (`supabase db push`).
+- `supabase/schema.sql` is a read-only mirror for browsing; do not apply it instead of migrations.
 - When changing API response shapes, check the mobile client expectations before merging.
 - When changing admin forms, update both the API validation in `src/lib/*` and the editor component in `src/components/admin/*`.
 - When adding image upload flows, record provider metadata in `media_assets`.
@@ -318,7 +319,7 @@ pnpm build
 ## Manual Smoke Test
 
 1. Fill `apps/web/.env.local`.
-2. Apply `apps/web/db/schema.sql` to Supabase if the database is new.
+2. Run `supabase db push` from the repo root (or link project and push) if the database is new.
 3. Run `pnpm web:dev` from the repo root.
 4. Open `/admin/login` and sign in with an email in `ADMIN_EMAILS`.
 5. Create or edit a plan, add at least one section and chapter range, upload a cover, publish it.

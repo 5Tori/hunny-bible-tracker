@@ -42,7 +42,7 @@ insert into public.plan_templates (
   1189,
   'genesis',
   null,
-  true,
+  false,
   true,
   false,
   20,

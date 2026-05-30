@@ -60,7 +60,7 @@ Plans should **not** be attached directly to Today's Message in the target model
 
 ## Current State
 
-Verified against `supabase/migrations/20260528000000_baseline.sql`, `apps/web/db/schema.sql`, and application code.
+Verified against `supabase/migrations/20260528000000_baseline.sql`, `supabase/schema.sql`, and application code.
 
 ### Database schema
 
@@ -97,7 +97,7 @@ No `contents.share_image_*` columns (not needed this phase).
 
 #### Seeds
 
-- `apps/web/db/seeds/content_test_seed.sql` — Discover content with tags, sections, `content_plan_links`.
+- `supabase/seeds/content_test_seed.sql` — Discover content with tags, sections, `content_plan_links`.
 - **No** seed links `today_messages.content_id` to content.
 - Plan seeds in `supabase/migrations/2026052811000*.sql` + `PLAN_CATALOG.md`.
 
@@ -461,7 +461,7 @@ No dedicated OG image work.
 | M5 | `contents` | No column changes | N/A |
 | M6 | Data | Seed Mode A/B today messages | Done (`today_message_test_seed.sql`) |
 
-`apps/web/db/schema.sql` mirror and `docs/DATA_MODEL.md` updated in the same PR.
+`supabase/schema.sql` mirror and `docs/DATA_MODEL.md` updated in the same PR.
 
 **Target fields on `today_messages`:**
 
@@ -531,7 +531,7 @@ No dedicated OG image work.
 
 | Area | Path |
 | --- | --- |
-| Server schema | `supabase/migrations/20260528000000_baseline.sql`, `apps/web/db/schema.sql` |
+| Server schema | `supabase/migrations/20260528000000_baseline.sql`, `supabase/schema.sql` |
 | Today Message lib | `apps/web/src/lib/today-messages.ts` |
 | Content lib | `apps/web/src/lib/content.ts` |
 | Share URL helper | `apps/web/src/lib/cloudinary-share-url.ts` |
@@ -541,4 +541,4 @@ No dedicated OG image work.
 | Mobile Home | `apps/mobile/lib/features/home/home_screen.dart` |
 | Mobile TM client | `apps/mobile/lib/features/home/data/today_message_api_client.dart` |
 | Mobile Discover / content | `apps/mobile/lib/features/find/discover_screen.dart`, `content_api_client.dart` |
-| Content seed | `apps/web/db/seeds/content_test_seed.sql` |
+| Content seed | `supabase/seeds/content_test_seed.sql` |

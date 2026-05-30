@@ -1,7 +1,7 @@
 -- Example Today Messages for closed testing.
 -- Run after:
 --   1. supabase/migrations/20260529120000_simplify_today_messages.sql
---   2. apps/web/db/seeds/content_test_seed.sql (for Mode B linked content)
+--   2. supabase/seeds/content_test_seed.sql (for Mode B linked content)
 
 -- Mode A — simple daily card (image + verse + hint, no linked content)
 insert into today_messages (

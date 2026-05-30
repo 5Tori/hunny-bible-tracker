@@ -63,7 +63,7 @@ class PlanTemplates extends Table {
   IntColumn get totalChapters => integer().withDefault(const Constant(0))();
   TextColumn get primaryBookKey => text().nullable()();
   TextColumn get primaryCharacter => text().nullable()();
-  BoolColumn get isBuiltin => boolean().withDefault(const Constant(true))();
+  BoolColumn get isBuiltin => boolean().withDefault(const Constant(false))();
   BoolColumn get isPublished => boolean().withDefault(const Constant(true))();
   IntColumn get featuredRank => integer().nullable()();
   BoolColumn get browseVisible => boolean().withDefault(const Constant(true))();

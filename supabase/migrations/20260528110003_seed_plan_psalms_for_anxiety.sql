@@ -24,7 +24,7 @@ insert into public.plan_templates (
   12,
   'psalms',
   null,
-  true,
+  false,
   true,
   false,
   5,

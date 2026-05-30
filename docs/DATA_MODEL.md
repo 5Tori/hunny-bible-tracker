@@ -8,7 +8,7 @@
 | --- | --- |
 | Mobile (Drift v4) | `apps/mobile/lib/core/database/app_database.dart` |
 | Server | `supabase/migrations/` (baseline: `20260528000000_baseline.sql`) |
-| Reference mirror | `apps/web/db/schema.sql` |
+| Reference mirror | `supabase/schema.sql` |
 
 MVP 중 stale local data → 앱 삭제/reinstall 또는 simulator reset.
 
@@ -92,4 +92,4 @@ RPC output shapes mirror existing mobile DTOs / API JSON. Base tables are not gr
 
 ## 관련 문서
 
-`docs/SYNC_STRATEGY.md` · `docs/ARCHITECTURE.md` · `apps/web/db/seeds/PLAN_CATALOG.md`
+`docs/SYNC_STRATEGY.md` · `docs/ARCHITECTURE.md` · `supabase/seeds/PLAN_CATALOG.md`

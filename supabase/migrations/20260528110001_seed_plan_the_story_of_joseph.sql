@@ -24,7 +24,7 @@ insert into public.plan_templates (
   14,
   'genesis',
   'Joseph',
-  true,
+  false,
   true,
   false,
   1,
