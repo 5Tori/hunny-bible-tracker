@@ -417,12 +417,22 @@ export async function getPublishedPlans(sort: PublishedPlanSortMode = 'featured'
 
 export async function getPublishedPlansWithRelations(sort: PublishedPlanSortMode = 'featured') {
   const plans = await getPublishedPlans(sort);
-  return Promise.all(
-    plans.map(async (plan) => {
-      const { sections, items, tags } = await getPlanRelations(sql, plan.id);
-      return hydratePlan(plan, sections, items, tags);
-    }),
+  if (plans.length === 0) {
+    return [];
+  }
+
+  const planIds = plans.map((plan) => plan.id);
+  const { sectionsByPlan, itemsBySection, tagsByPlan } = await getPlanRelationsForPlans(
+    sql,
+    planIds,
   );
+
+  return plans.map((plan) => {
+    const sections = sectionsByPlan.get(plan.id) ?? [];
+    const items = sections.flatMap((section) => itemsBySection.get(section.id) ?? []);
+    const tags = tagsByPlan.get(plan.id) ?? [];
+    return hydratePlan(plan, sections, items, tags);
+  });
 }
 
 export async function getPublishedPlanByIdentifier(identifier: string) {

@@ -6,6 +6,8 @@ import {
 } from "@/components/browse/TodayMessageView";
 import { getPublishedTodayMessageByShareSlug } from "@/lib/today-messages";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }

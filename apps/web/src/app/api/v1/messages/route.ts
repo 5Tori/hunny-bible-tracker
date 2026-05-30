@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { jsonWithPublicCache } from '@/lib/http/public-cache';
 import { getPublishedMessages, parseMessageLimit } from '@/lib/messages';
 import { withApiTiming } from '@/lib/perf/api-timing';
 
@@ -16,5 +17,5 @@ export const GET = withApiTiming('GET /api/v1/messages', async (req: Request) =>
     limit: parseMessageLimit(searchParams.get('limit')),
   });
 
-  return NextResponse.json({ items });
+  return jsonWithPublicCache({ items });
 });

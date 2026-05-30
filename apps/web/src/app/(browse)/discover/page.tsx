@@ -8,6 +8,9 @@ import {
 import { MarketingContainer } from "@/components/marketing/ui/MarketingContainer";
 import { MarketingSection } from "@/components/marketing/ui/MarketingSection";
 import { getPublishedContentsForBrowse } from "@/lib/content";
+import { PUBLIC_CATALOG_REVALIDATE_SECONDS } from "@/lib/http/public-cache";
+
+export const revalidate = PUBLIC_CATALOG_REVALIDATE_SECONDS;
 
 export const metadata: Metadata = {
   title: "Discover",

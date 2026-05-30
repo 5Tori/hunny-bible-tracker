@@ -4,7 +4,10 @@ import { MessageCardGrid } from "@/components/messages/MessageCardGrid";
 import { MessageFilters } from "@/components/messages/MessageFilters";
 import { MarketingContainer } from "@/components/marketing/ui/MarketingContainer";
 import { MarketingSection } from "@/components/marketing/ui/MarketingSection";
+import { PUBLIC_CATALOG_REVALIDATE_SECONDS } from "@/lib/http/public-cache";
 import { getPublishedMessages } from "@/lib/messages";
+
+export const revalidate = PUBLIC_CATALOG_REVALIDATE_SECONDS;
 
 export const metadata: Metadata = {
   title: "Messages",

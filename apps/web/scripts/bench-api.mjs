@@ -4,8 +4,9 @@ const baseUrl = (process.env.HUNNY_API_BASE_URL ?? 'http://127.0.0.1:3000').repl
 
 const endpoints = [
   { method: 'GET', path: '/api/health' },
-  { method: 'GET', path: '/api/v1/plans?sort=featured' },
+  { method: 'GET', path: '/api/v1/plans?sort=featured&detail=full' },
   { method: 'GET', path: '/api/v1/plans?sort=featured&detail=summary' },
+  { method: 'GET', path: '/api/v1/content?sort=featured&detail=summary' },
   { method: 'GET', path: '/api/v1/content?sort=featured&language=en' },
   { method: 'GET', path: '/api/v1/today-message?language=en' },
 ];

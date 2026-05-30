@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 import { ContentDetail, ContentNotFound } from "@/components/browse/ContentDetail";
 import { getPublishedContentByIdentifier } from "@/lib/content";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{ slug: string }>;
 }

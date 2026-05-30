@@ -1,9 +1,9 @@
 import {
+  type ContentAuthor,
   type ContentBase,
+  type ContentRelatedPlan,
   type ContentTag,
   type ContentWithRelations,
-  getPublishedContentByIdentifier,
-  getPublishedContentTagRelations,
   parseContentLimit,
 } from '@/lib/content';
 import { sql } from '@/lib/db/postgres';
@@ -72,11 +72,6 @@ function normalizeKey(value?: string | null) {
   return trimmed ? trimmed : null;
 }
 
-function normalizeSearch(value?: string | null) {
-  const trimmed = value?.trim();
-  return trimmed ? `%${trimmed}%` : null;
-}
-
 function tagsByType(tags: ContentTag[]) {
   const grouped: Partial<Record<MessageTagType, string[]>> = {};
   for (const tag of tags) {
@@ -85,6 +80,31 @@ function tagsByType(tags: ContentTag[]) {
     grouped[type]!.push(tag.key);
   }
   return grouped;
+}
+
+function parseRpcMessageContent(value: unknown): ContentWithRelations | null {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) {
+    return null;
+  }
+
+  const row = value as Record<string, unknown>;
+  if (typeof row.id !== 'string' || typeof row.slug !== 'string') {
+    return null;
+  }
+
+  const content = row as unknown as ContentBase;
+
+  return {
+    ...content,
+    metadata: (content.metadata ?? {}) as Record<string, unknown>,
+    author: (row.author as ContentAuthor | null) ?? null,
+    assets: [],
+    sections: [],
+    tags: Array.isArray(row.tags) ? (row.tags as ContentTag[]) : [],
+    related_plans: Array.isArray(row.related_plans)
+      ? (row.related_plans as ContentRelatedPlan[])
+      : [],
+  };
 }
 
 export function mapContentToPublicMessage(content: ContentWithRelations): PublicMessageCard {
@@ -133,106 +153,43 @@ export function mapContentToPublicMessage(content: ContentWithRelations): Public
   };
 }
 
-async function hydratePublishedMessages(contents: ContentBase[]) {
-  if (contents.length === 0) return [];
-
-  const relationsByContentId = await getPublishedContentTagRelations(contents);
-  return contents.map((content) => {
-    const relations = relationsByContentId.get(content.id) ?? { author: null, tags: [] };
-    const withRelations: ContentWithRelations = {
-      ...content,
-      author: relations.author,
-      assets: [],
-      sections: [],
-      tags: relations.tags,
-      related_plans: [],
-    };
-    return mapContentToPublicMessage(withRelations);
-  });
-}
-
 export async function getPublishedMessages(options?: GetPublishedMessagesOptions) {
-  const language = normalizeLanguage(options?.language);
-  const category = normalizeKey(options?.category);
-  const situation = normalizeKey(options?.situation);
-  const tag = normalizeKey(options?.tag);
-  const tone = normalizeKey(options?.tone);
-  const q = normalizeSearch(options?.q);
-  const limit = options?.limit ?? parseContentLimit(null);
+  const rows = (await sql`
+    select mobile_message_list(
+      ${normalizeLanguage(options?.language)}::text,
+      ${normalizeKey(options?.category)}::text,
+      ${normalizeKey(options?.situation)}::text,
+      ${normalizeKey(options?.tag)}::text,
+      ${normalizeKey(options?.tone)}::text,
+      ${options?.q?.trim() || null}::text,
+      ${options?.limit ?? parseContentLimit(null)}::int
+    ) as payload
+  `) as Array<{ payload: unknown }>;
 
-  const contents = (await sql`
-    select distinct c.* from contents c
-    where c.content_type = 'message'
-      and c.is_published = true
-      and c.is_archived = false
-      and c.browse_visible = true
-      and c.language = ${language}
-      and (${category}::text is null or exists (
-        select 1 from content_tag_links ctl
-        join content_tags ct on ct.id = ctl.tag_id
-        where ctl.content_id = c.id
-          and ct.type = 'category'
-          and ct.key = ${category}
-      ))
-      and (${situation}::text is null or exists (
-        select 1 from content_tag_links ctl
-        join content_tags ct on ct.id = ctl.tag_id
-        where ctl.content_id = c.id
-          and ct.type = 'situation'
-          and ct.key = ${situation}
-      ))
-      and (${tone}::text is null or exists (
-        select 1 from content_tag_links ctl
-        join content_tags ct on ct.id = ctl.tag_id
-        where ctl.content_id = c.id
-          and ct.type = 'tone'
-          and ct.key = ${tone}
-      ))
-      and (${tag}::text is null or exists (
-        select 1 from content_tag_links ctl
-        join content_tags ct on ct.id = ctl.tag_id
-        where ctl.content_id = c.id
-          and (
-            (ct.type = 'theme' and ct.key = ${tag})
-            or lower(ct.name) = ${tag}
-          )
-      ))
-      and (${q}::text is null or (
-        c.title ilike ${q}
-        or coalesce(c.subtitle, '') ilike ${q}
-        or coalesce(c.summary, '') ilike ${q}
-        or coalesce(c.primary_verse_reference, '') ilike ${q}
-        or coalesce(c.verse_text, '') ilike ${q}
-        or coalesce(c.metadata->>'shortReflection', '') ilike ${q}
-        or coalesce(c.metadata->>'prayerText', '') ilike ${q}
-        or exists (
-          select 1
-          from jsonb_array_elements_text(
-            case
-              when jsonb_typeof(c.metadata->'searchAliases') = 'array'
-              then c.metadata->'searchAliases'
-              else '[]'::jsonb
-            end
-          ) alias(value)
-          where alias.value ilike ${q}
-        )
-        or exists (
-          select 1 from content_tag_links ctl
-          join content_tags ct on ct.id = ctl.tag_id
-          where ctl.content_id = c.id
-            and ct.name ilike ${q}
-        )
-      ))
-    order by c.featured_rank asc nulls last, c.published_at desc nulls last, c.updated_at desc
-    limit ${limit}
-  `) as ContentBase[];
+  const payload = rows[0]?.payload;
+  if (!Array.isArray(payload)) {
+    return [];
+  }
 
-  return hydratePublishedMessages(contents);
+  return payload
+    .map((row) => parseRpcMessageContent(row))
+    .filter((content): content is ContentWithRelations => content != null)
+    .map(mapContentToPublicMessage);
 }
 
 export async function getPublishedMessageBySlug(slug: string, language?: string | null) {
-  const content = await getPublishedContentByIdentifier(slug, language);
-  if (!content || content.content_type !== 'message') return null;
+  const rows = (await sql`
+    select mobile_message_detail(
+      ${slug.trim()}::text,
+      ${normalizeLanguage(language)}::text
+    ) as payload
+  `) as Array<{ payload: unknown }>;
+
+  const content = parseRpcMessageContent(rows[0]?.payload);
+  if (!content || content.content_type !== 'message') {
+    return null;
+  }
+
   return mapContentToPublicMessage(content);
 }
 

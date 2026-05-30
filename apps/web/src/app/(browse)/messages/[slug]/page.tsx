@@ -1,7 +1,10 @@
 import type { Metadata } from "next";
 
 import { MessageDetailView, MessageNotFound } from "@/components/messages/MessageDetailView";
+import { PUBLIC_CATALOG_REVALIDATE_SECONDS } from "@/lib/http/public-cache";
 import { getPublishedMessageBySlug, getPublishedMessages } from "@/lib/messages";
+
+export const revalidate = PUBLIC_CATALOG_REVALIDATE_SECONDS;
 
 interface PageProps {
   params: Promise<{ slug: string }>;

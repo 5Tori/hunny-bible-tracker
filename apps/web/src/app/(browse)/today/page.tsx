@@ -5,6 +5,8 @@ import { MarketingContainer } from "@/components/marketing/ui/MarketingContainer
 import { MarketingSection } from "@/components/marketing/ui/MarketingSection";
 import { getPublishedTodayMessage } from "@/lib/today-messages";
 
+export const dynamic = "force-dynamic";
+
 export default async function TodayRedirectPage() {
   const message = await getPublishedTodayMessage({ language: "en" });
 

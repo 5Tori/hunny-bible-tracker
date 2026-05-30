@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 
+import { jsonWithPublicCache } from '@/lib/http/public-cache';
 import { getPublishedMessageBySlug } from '@/lib/messages';
 import { withApiTiming } from '@/lib/perf/api-timing';
 
@@ -14,6 +15,6 @@ export const GET = withApiTiming(
       return NextResponse.json({ error: 'Message not found.' }, { status: 404 });
     }
 
-    return NextResponse.json({ message });
+    return jsonWithPublicCache({ message });
   },
 );

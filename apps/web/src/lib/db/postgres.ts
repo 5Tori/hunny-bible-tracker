@@ -26,7 +26,7 @@ let hyperdriveSqlClient: ReturnType<typeof postgres> | null = null;
 let hyperdriveConfigKey: string | null = null;
 let hyperdriveClientCreatedAt = 0;
 
-const HYPERDRIVE_CLIENT_MAX_AGE_MS = 30_000;
+const HYPERDRIVE_CLIENT_MAX_AGE_MS = 5 * 60_000;
 
 function isPlaceholderDatabaseUrl(url: string): boolean {
   return url.includes('REPLACE_');
@@ -80,7 +80,7 @@ function createPostgresClient(url: string, viaHyperdrive: boolean) {
     prepare: false,
     connect_timeout: 5,
     idle_timeout: viaHyperdrive ? 10 : 20,
-    max_lifetime: viaHyperdrive ? 30 : 60 * 30,
+    max_lifetime: viaHyperdrive ? 300 : 60 * 30,
     ...(viaHyperdrive ? {} : { ssl: 'require' as const }),
   });
 }
