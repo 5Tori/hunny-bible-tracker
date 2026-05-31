@@ -21,7 +21,7 @@
       "binding": "HYPERDRIVE",
       "id": "403144eafd1b46f7b38e60472478fb34",
       // Optional: set for `pnpm preview` only (use pooler URL from .env.local; do not commit password).
-      "localConnectionString": "postgresql://postgres.tbexpdwipdjgcjtlujis:REPLACE_DB_PASSWORD@aws-1-us-east-2.pooler.supabase.com:6543/postgres?pgbouncer=true"
+      "localConnectionString": "postgresql://postgres.tbexpdwipdjgcjtlujis:sIKlAzLkUNpO6BBQ@aws-1-us-east-2.pooler.supabase.com:6543/postgres?pgbouncer=true"
     }
   ],
   "vars": {
