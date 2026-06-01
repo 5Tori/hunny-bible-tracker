@@ -147,7 +147,9 @@ class TodayMessageLinkedContentSummary {
     required this.contentType,
     required this.title,
     required this.summary,
+    required this.context,
     required this.coverImageUrl,
+    required this.messagesUrl,
     required this.relatedPlans,
   });
 
@@ -156,8 +158,14 @@ class TodayMessageLinkedContentSummary {
   final String contentType;
   final String title;
   final String? summary;
+  final String? context;
   final String? coverImageUrl;
+  final String? messagesUrl;
   final List<TodayMessageLinkedPlanSummary> relatedPlans;
+
+  bool get isMessageCard => contentType == 'message';
+
+  String? get linkedPreviewText => context ?? summary;
 
   factory TodayMessageLinkedContentSummary.fromJson(Map<String, dynamic> json) {
     final relatedPlans = json['related_plans'];
@@ -167,7 +175,9 @@ class TodayMessageLinkedContentSummary {
       contentType: _requiredString(json, 'content_type'),
       title: _requiredString(json, 'title'),
       summary: _nullableString(json['summary']),
+      context: _nullableString(json['context']),
       coverImageUrl: _nullableString(json['cover_image_url']),
+      messagesUrl: _nullableString(json['messages_url']),
       relatedPlans: relatedPlans is List
           ? relatedPlans
               .whereType<Map<String, dynamic>>()
@@ -184,7 +194,9 @@ class TodayMessageLinkedContentSummary {
       'content_type': contentType,
       'title': title,
       'summary': summary,
+      'context': context,
       'cover_image_url': coverImageUrl,
+      'messages_url': messagesUrl,
       'related_plans': relatedPlans.map((plan) => plan.toJson()).toList(),
     };
   }
@@ -205,6 +217,7 @@ class TodayMessage {
     required this.shareUrl,
     required this.hintTitle,
     required this.hintSummary,
+    required this.context,
     required this.linkedContent,
     required this.heartCount,
     required this.shareCount,
@@ -223,6 +236,7 @@ class TodayMessage {
   final String? shareUrl;
   final String? hintTitle;
   final String? hintSummary;
+  final String? context;
   final TodayMessageLinkedContentSummary? linkedContent;
   final int heartCount;
   final int shareCount;
@@ -238,10 +252,13 @@ class TodayMessage {
   String get reflectionTitle => hintTitle ?? 'A quick reflection';
 
   String get reflectionSummary =>
+      context ??
+      linkedContent?.context ??
       hintSummary ??
       'This verse invites a slower look at how God works through ordinary days.';
 
   bool get hasMoreDetails =>
+      context != null ||
       hintTitle != null ||
       hintSummary != null ||
       linkedContent != null;
@@ -296,6 +313,7 @@ class TodayMessage {
       shareUrl: shareUrl,
       hintTitle: hintTitle,
       hintSummary: hintSummary,
+      context: context,
       linkedContent: linkedContent,
       heartCount: heartCount ?? this.heartCount,
       shareCount: shareCount ?? this.shareCount,
@@ -318,6 +336,7 @@ class TodayMessage {
       shareUrl: _nullableString(json['share_url']),
       hintTitle: _nullableString(json['hint_title']),
       hintSummary: _nullableString(json['hint_summary']),
+      context: _nullableString(json['context']),
       linkedContent: linkedContent is Map<String, dynamic>
           ? TodayMessageLinkedContentSummary.fromJson(linkedContent)
           : null,
@@ -341,6 +360,7 @@ class TodayMessage {
       'share_url': shareUrl,
       'hint_title': hintTitle,
       'hint_summary': hintSummary,
+      'context': context,
       'linked_content': linkedContent?.toJson(),
       'heart_count': heartCount,
       'share_count': shareCount,

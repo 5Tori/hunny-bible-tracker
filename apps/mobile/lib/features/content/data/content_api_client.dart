@@ -27,6 +27,7 @@ class ContentApiClient {
     String? contentType,
     String? tag,
     int? limit,
+    bool discoverOnly = true,
     bool skipReachabilityCheck = false,
   }) async {
     if (!_config.isConfigured) return const [];
@@ -37,6 +38,7 @@ class ContentApiClient {
     final query = <String, dynamic>{
       'sort': sort,
       'language': language,
+      if (discoverOnly) 'discoverOnly': '1',
       if (contentType != null && contentType.trim().isNotEmpty)
         'type': contentType,
       if (tag != null && tag.trim().isNotEmpty) 'tag': tag,
@@ -70,6 +72,7 @@ class ContentApiClient {
     return contents
         .whereType<Map<String, dynamic>>()
         .map(RemoteContent.fromJson)
+        .where((content) => content.contentType != 'message')
         .toList();
   }
 

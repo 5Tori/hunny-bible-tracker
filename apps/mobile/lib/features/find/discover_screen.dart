@@ -102,7 +102,7 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
 
   List<String> get _contentTypes {
     final types = _contents.map((content) => content.contentType).toSet()
-      ..removeWhere((type) => type.trim().isEmpty);
+      ..removeWhere((type) => type.trim().isEmpty || type == 'message');
     final sorted = types.toList()
       ..sort((a, b) {
         final aOrder = _typeSortOrder(a);
@@ -167,10 +167,36 @@ class _DiscoverScreenState extends State<DiscoverScreen> {
     });
   }
 
-  void _openContent(RemoteContent content) {
-    showContentDetailSheet(
+  Future<void> _openContent(RemoteContent content) async {
+    if (!mounted) return;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => const Center(
+        child: CircularProgressIndicator(strokeWidth: 2),
+      ),
+    );
+
+    var display = content;
+    try {
+      final detailed = await widget.contentReadClient.fetchContentByIdentifier(
+        content.slug,
+        language: content.language,
+      );
+      if (detailed != null) {
+        display = detailed;
+      }
+    } catch (_) {
+      // Fall back to list payload when detail fetch fails offline.
+    }
+
+    if (!mounted) return;
+    Navigator.of(context, rootNavigator: true).pop();
+
+    await showContentDetailSheet(
       context,
-      content: content,
+      content: display,
       readRepository: widget.readRepository,
       onOpenPlan: widget.onOpenPlan,
     );

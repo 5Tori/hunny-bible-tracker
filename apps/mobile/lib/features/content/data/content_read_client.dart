@@ -40,6 +40,7 @@ class ContentReadClient {
     String? contentType,
     String? tag,
     int? limit,
+    bool discoverOnly = true,
     bool skipReachabilityCheck = false,
   }) async {
     if (_mode.prefersSupabaseRpc && _supabaseClient.isConfigured) {
@@ -48,13 +49,16 @@ class ContentReadClient {
         return const [];
       }
       try {
-        return await _supabaseClient.fetchPublishedContent(
+        final contents = await _supabaseClient.fetchPublishedContent(
           sort: sort,
           language: language,
           contentType: contentType,
           tag: tag,
           limit: limit,
         );
+        return contents
+            .where((content) => content.contentType != 'message')
+            .toList();
       } catch (_) {
         if (!_fallbackToApi) rethrow;
       }
@@ -66,6 +70,7 @@ class ContentReadClient {
       contentType: contentType,
       tag: tag,
       limit: limit,
+      discoverOnly: discoverOnly,
       skipReachabilityCheck: skipReachabilityCheck,
     );
   }

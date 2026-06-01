@@ -20,6 +20,7 @@ TodayMessage _message({
     shareUrl: shareUrl,
     hintTitle: null,
     hintSummary: null,
+    context: null,
     linkedContent: null,
     heartCount: 0,
     shareCount: 0,

@@ -10,8 +10,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../core/api/hunny_api_client.dart';
+import '../../core/api/hunny_api_config.dart';
 import '../../core/theme/app_theme.dart';
 import '../content/data/content_api_client.dart';
 import '../content/data/content_read_client.dart';
@@ -583,10 +585,39 @@ class HomeScreenState extends State<HomeScreen> {
       hintTitle: 'Offline reading is ready',
       hintSummary:
           'Keep reading where you left off. Today\'s message will refresh when the connection returns.',
+      context: null,
       linkedContent: null,
       heartCount: 0,
       shareCount: 0,
     );
+  }
+
+  Future<void> _openMessageCardLink(
+    TodayMessageLinkedContentSummary linked,
+  ) async {
+    final raw = linked.messagesUrl?.trim();
+    if (raw == null || raw.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Message card link is unavailable right now.'),
+        ),
+      );
+      return;
+    }
+
+    final uri = raw.startsWith('http')
+        ? Uri.parse(raw)
+        : Uri.parse('${HunnyApiConfig.fromEnvironment().baseUrl}$raw');
+    final launched = await launchUrl(
+      uri,
+      mode: LaunchMode.externalApplication,
+    );
+    if (!launched && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the message card.')),
+      );
+    }
   }
 
   Future<void> _openTodayMessageMore() async {
@@ -604,6 +635,11 @@ class HomeScreenState extends State<HomeScreen> {
           onOpenLinkedContent: (linked) async {
             Navigator.of(sheetContext).pop();
             if (!mounted) return;
+
+            if (linked.isMessageCard) {
+              await _openMessageCardLink(linked);
+              return;
+            }
 
             RemoteContent? content;
             try {
@@ -1152,10 +1188,10 @@ class _TodayMessageMoreSheet extends StatelessWidget {
                                   .titleMedium
                                   ?.copyWith(fontWeight: FontWeight.w800),
                             ),
-                            if (linkedContent.summary != null) ...[
+                            if (linkedContent.linkedPreviewText != null) ...[
                               const SizedBox(height: 8),
                               Text(
-                                linkedContent.summary!,
+                                linkedContent.linkedPreviewText!,
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodyMedium
@@ -1169,9 +1205,15 @@ class _TodayMessageMoreSheet extends StatelessWidget {
                             SizedBox(
                               width: double.infinity,
                               child: FilledButton(
-                                onPressed: contentReadClient.isConfigured
-                                    ? () => onOpenLinkedContent(linkedContent)
-                                    : null,
+                                onPressed: linkedContent.isMessageCard
+                                    ? (linkedContent.messagesUrl != null
+                                        ? () =>
+                                            onOpenLinkedContent(linkedContent)
+                                        : null)
+                                    : (contentReadClient.isConfigured
+                                        ? () =>
+                                            onOpenLinkedContent(linkedContent)
+                                        : null),
                                 style: FilledButton.styleFrom(
                                   backgroundColor: AppTheme.ink,
                                   foregroundColor: Colors.white,
@@ -1179,7 +1221,11 @@ class _TodayMessageMoreSheet extends StatelessWidget {
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                 ),
-                                child: const Text('Read full story'),
+                                child: Text(
+                                  linkedContent.isMessageCard
+                                      ? 'Open message card'
+                                      : 'Read full story',
+                                ),
                               ),
                             ),
                           ],
