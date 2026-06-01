@@ -22,6 +22,10 @@ export function revalidateAdminContent() {
   return mutate(ADMIN_SWR_KEYS.content);
 }
 
+export function revalidateAdminDiscover() {
+  return mutate(ADMIN_SWR_KEYS.discover);
+}
+
 /** Invalidate list caches affected by message card edits. */
 export function revalidateAdminMessageCatalog() {
   return Promise.all([revalidateAdminMessages(), revalidateAdminOverview()]);

@@ -185,7 +185,7 @@ export function AndroidTesterCta({
 
 function getButtonClassName(variant: AndroidTesterCtaVariant) {
   if (variant === "header") {
-    return "ml-1 hidden rounded-lg bg-neutral-900 px-4 py-2 text-sm text-white transition hover:bg-black sm:inline-flex";
+    return "ml-1 hidden shrink-0 whitespace-nowrap rounded-lg bg-neutral-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-black md:inline-flex md:items-center";
   }
 
   if (variant === "hb") {

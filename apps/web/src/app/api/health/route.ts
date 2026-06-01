@@ -1,17 +1,28 @@
 import { NextResponse } from 'next/server';
 
 import { sql } from '@/lib/db/postgres';
+import { isOfflineMode } from '@/lib/mock/mode';
 import { withApiTiming } from '@/lib/perf/api-timing';
 
 export const GET = withApiTiming('GET /api/health', async (req: Request) => {
   const base = {
     service: 'hunny-bible-tracker-web',
+    ...(isOfflineMode() ? { mode: 'offline' as const } : {}),
   };
   const checkDb = new URL(req.url).searchParams.get('db') === '1';
 
   if (!checkDb) {
     return NextResponse.json({
       ok: true,
+      ...base,
+    });
+  }
+
+  if (isOfflineMode()) {
+    return NextResponse.json({
+      ok: true,
+      db: true,
+      dbSource: 'mock',
       ...base,
     });
   }

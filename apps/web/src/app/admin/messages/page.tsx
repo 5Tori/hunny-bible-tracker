@@ -15,12 +15,15 @@ import { PageHeader } from '@/components/admin/ui/PageHeader';
 import { RowActionsMenu } from '@/components/admin/ui/RowActionsMenu';
 import type { AdminContentListItem } from '@/lib/content';
 import { revalidateAdminMessageCatalog } from '@/lib/admin/swr-mutate';
-import { messageCategoryLabel } from '@/lib/message-admin';
-import { MESSAGE_CATEGORIES } from '@/lib/message-taxonomy';
-import { parseMessageMetadata } from '@/lib/message-metadata';
+import {
+  formatMessageClassificationSummary,
+  messageCardListPreview,
+  messageListTaxonomyFromItem,
+} from '@/lib/message-admin';
+import { MESSAGE_PRIMARY_CATEGORIES, getAllSituations } from '@/lib/message-taxonomy';
 
 type ArchiveFilter = 'active' | 'archived' | 'all';
-type StatusFilter = 'all' | 'published' | 'draft' | 'today_eligible';
+type StatusFilter = 'all' | 'published' | 'draft';
 
 const ARCHIVE_TABS = [
   { id: 'active' as const, label: 'Active' },
@@ -32,14 +35,12 @@ const STATUS_FILTERS: Array<{ id: StatusFilter; label: string }> = [
   { id: 'all', label: 'All statuses' },
   { id: 'published', label: 'Published' },
   { id: 'draft', label: 'Draft' },
-  { id: 'today_eligible', label: 'Today-eligible' },
 ];
 
 const COLUMNS = [
   { key: 'content', header: 'Message card' },
-  { key: 'category', header: 'Category' },
+  { key: 'classification', header: 'Classification' },
   { key: 'status', header: 'Status' },
-  { key: 'today', header: 'Today' },
   { key: 'plans', header: 'Plans' },
   { key: 'actions', header: 'Actions' },
 ];
@@ -56,6 +57,7 @@ export default function AdminMessagesPage() {
   const [archiveFilter, setArchiveFilter] = useState<ArchiveFilter>('active');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [categoryFilter, setCategoryFilter] = useState('');
+  const [situationFilter, setSituationFilter] = useState('');
   const { busyId, setBusyId, error: mutationError, runDelete } = useCatalogList();
 
   const error = swrError?.message ?? mutationError;
@@ -63,22 +65,20 @@ export default function AdminMessagesPage() {
 
   const filtered = useMemo(() => {
     return messages.filter((message) => {
-      const metadata = parseMessageMetadata(message.metadata);
+      const taxonomy = messageListTaxonomyFromItem(message);
 
       if (archiveFilter === 'archived' && !message.is_archived) return false;
       if (archiveFilter === 'active' && message.is_archived) return false;
 
       if (statusFilter === 'published' && (!message.is_published || message.is_archived)) return false;
       if (statusFilter === 'draft' && (message.is_published || message.is_archived)) return false;
-      if (statusFilter === 'today_eligible' && (!metadata.isTodayEligible || message.is_archived)) {
-        return false;
-      }
 
-      if (categoryFilter && metadata.primaryCategory !== categoryFilter) return false;
+      if (categoryFilter && taxonomy.primaryCategory !== categoryFilter) return false;
+      if (situationFilter && !taxonomy.situations.includes(situationFilter)) return false;
 
       return true;
     });
-  }, [messages, archiveFilter, statusFilter, categoryFilter]);
+  }, [messages, archiveFilter, statusFilter, categoryFilter, situationFilter]);
 
   const handleDelete = async (message: AdminContentListItem) => {
     if (!window.confirm(`Delete "${message.title}"? This cannot be undone.`)) return;
@@ -93,7 +93,7 @@ export default function AdminMessagesPage() {
       <PageHeader
         label="Message Card Library"
         title="Message cards"
-        description="Manage published message cards for /messages and Today-eligible Home scheduling."
+        description="Verse cards for /messages — public taxonomy (category, situations, themes) plus internal metadata."
         actions={<ButtonLink href="/admin/messages/new" variant="primary">New message card</ButtonLink>}
       />
 
@@ -115,16 +115,31 @@ export default function AdminMessagesPage() {
           </select>
         </label>
         <label className="admin-filter-field" htmlFor="message_category_filter">
-          <span className="admin-muted">Category</span>
+          <span className="admin-muted">Primary category</span>
           <select
             id="message_category_filter"
             value={categoryFilter}
             onChange={(event) => setCategoryFilter(event.target.value)}
           >
             <option value="">All categories</option>
-            {MESSAGE_CATEGORIES.map((category) => (
+            {MESSAGE_PRIMARY_CATEGORIES.map((category) => (
               <option key={category.key} value={category.key}>
                 {category.label}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="admin-filter-field" htmlFor="message_situation_filter">
+          <span className="admin-muted">Situation</span>
+          <select
+            id="message_situation_filter"
+            value={situationFilter}
+            onChange={(event) => setSituationFilter(event.target.value)}
+          >
+            <option value="">All situations</option>
+            {getAllSituations().map((situation) => (
+              <option key={situation.key} value={situation.key}>
+                {situation.label}
               </option>
             ))}
           </select>
@@ -150,39 +165,41 @@ export default function AdminMessagesPage() {
           rowKey={(message) => message.id}
           renderCell={(message, key) => {
             const busy = busyId === message.id;
-            const metadata = parseMessageMetadata(message.metadata);
+            const taxonomy = messageListTaxonomyFromItem(message);
 
             switch (key) {
-              case 'content':
+              case 'content': {
+                const preview = messageCardListPreview(message);
                 return (
-                  <span className="admin-table-title-cell">
+                  <span className="admin-message-card-cell">
                     {message.cover_image_url ? (
-                      <img src={message.cover_image_url} alt="" className="admin-table-thumb" />
-                    ) : null}
-                    <span>
-                      <strong>{message.title}</strong>
-                      <small className="admin-muted">{message.summary || message.slug}</small>
+                      <img src={message.cover_image_url} alt="" className="admin-message-card-thumb" />
+                    ) : (
+                      <span className="admin-message-card-thumb admin-message-card-thumb-empty" aria-hidden />
+                    )}
+                    <span className="admin-message-card-copy">
+                      <strong className="admin-message-card-verse">{preview.verseReference}</strong>
+                      {preview.context ? (
+                        <span className="admin-message-card-context">{preview.context}</span>
+                      ) : null}
                     </span>
                   </span>
                 );
-              case 'category':
+              }
+              case 'classification':
                 return (
-                  <span className="admin-muted">{messageCategoryLabel(metadata.primaryCategory)}</span>
+                  <span className="admin-message-classification">
+                    {formatMessageClassificationSummary(taxonomy)}
+                  </span>
                 );
               case 'status':
                 return statusBadge(message);
-              case 'today':
-                return metadata.isTodayEligible && !message.is_archived ? (
-                  <Badge tone="info">Eligible</Badge>
-                ) : (
-                  <span className="admin-muted">—</span>
-                );
               case 'plans':
                 return String(message.related_plan_count);
               case 'actions':
                 return (
                   <span className="admin-table-actions">
-                    <Link href={`/admin/content/${message.id}`} className="admin-btn admin-btn-link">
+                    <Link href={`/admin/messages/${message.id}`} className="admin-btn admin-btn-link">
                       Edit
                     </Link>
                     {message.is_published && !message.is_archived ? (
@@ -190,7 +207,7 @@ export default function AdminMessagesPage() {
                         View
                       </Link>
                     ) : null}
-                    {metadata.isTodayEligible && !message.is_archived ? (
+                    {message.is_published && !message.is_archived ? (
                       <Link
                         href={`/admin/today-messages/new?content_id=${message.id}`}
                         className="admin-btn admin-btn-link"

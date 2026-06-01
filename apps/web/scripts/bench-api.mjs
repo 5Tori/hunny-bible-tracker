@@ -3,11 +3,13 @@
 const baseUrl = (process.env.HUNNY_API_BASE_URL ?? 'http://127.0.0.1:3000').replace(/\/$/, '');
 
 const endpoints = [
-  { method: 'GET', path: '/api/health' },
-  { method: 'GET', path: '/api/v1/plans?sort=featured&detail=full' },
+  { method: 'GET', path: '/api/health', note: 'infra only — not mobile reachability' },
+  { method: 'GET', path: '/api/v1/plans?sort=featured&detail=full', note: 'avoid on mobile' },
   { method: 'GET', path: '/api/v1/plans?sort=featured&detail=summary' },
-  { method: 'GET', path: '/api/v1/content?sort=featured&detail=summary' },
+  { method: 'GET', path: '/api/v1/content?sort=featured&detail=summary&language=en' },
+  { method: 'GET', path: '/api/v1/content?sort=featured&detail=summary&language=en&discoverOnly=1' },
   { method: 'GET', path: '/api/v1/content?sort=featured&language=en' },
+  { method: 'GET', path: '/api/v1/content/sabbath-rest-explained?language=en', note: 'detail + public cache' },
   { method: 'GET', path: '/api/v1/today-message?language=en' },
 ];
 
@@ -35,7 +37,8 @@ async function main() {
     try {
       const result = await measureEndpoint(endpoint);
       console.log(
-        `${result.method} ${result.path} -> ${result.status} ${result.totalMs}ms ${result.responseBytes}B`,
+        `${result.method} ${result.path} -> ${result.status} ${result.totalMs}ms ${result.responseBytes}B` +
+          (endpoint.note ? ` (${endpoint.note})` : ''),
       );
     } catch (error) {
       console.error(`${endpoint.method} ${endpoint.path} -> failed`, error.message);

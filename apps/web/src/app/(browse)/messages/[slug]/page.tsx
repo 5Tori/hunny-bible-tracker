@@ -20,17 +20,22 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   }
 
   const description =
-    message.shortReflection ||
-    message.summary ||
+    message.context ||
+    message.hint ||
     message.verseText ||
     "A gentle Bible message from Hunny Bible Tracker.";
+  const pageTitle = message.verseReference
+    ? message.translation
+      ? `${message.verseReference} · ${message.translation}`
+      : message.verseReference
+    : message.title;
 
   return {
-    title: message.title,
+    title: pageTitle,
     description,
     alternates: { canonical: message.messagesUrl },
     openGraph: {
-      title: message.title,
+      title: pageTitle,
       description,
       type: "article",
       images: message.coverImageUrl ? [{ url: message.coverImageUrl }] : undefined,

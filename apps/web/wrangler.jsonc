@@ -1,6 +1,7 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "hunny-bible-tracker-web",
+  "account_id": "9db9c656b99b34ecbf1a652ad0754579",
   "main": ".open-next/worker.js",
   "compatibility_date": "2026-05-28",
   "compatibility_flags": ["nodejs_compat"],

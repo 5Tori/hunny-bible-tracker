@@ -1,15 +1,17 @@
--- Example Today Messages for closed testing.
--- Run after:
---   1. supabase/migrations/20260529120000_simplify_today_messages.sql
---   2. supabase/seeds/content_test_seed.sql (for Mode B linked content)
+-- Today's Message slots for closed testing.
+-- Run after message_cards_pilot_seed.sql (Message Card must exist first).
+--
+-- Model (latest): today_messages.content_id → Message Card only.
+-- Verse / image / hint are denormalized from the linked card (same as Admin save).
 
--- Mode A — simple daily card (image + verse + hint, no linked content)
 insert into today_messages (
   publish_date,
   language,
   verse_reference,
   bible_version,
   verse_text,
+  image_url,
+  image_public_id,
   hint_title,
   hint_summary,
   content_id,
@@ -17,36 +19,45 @@ insert into today_messages (
   created_at,
   updated_at
 )
-values (
+select
   current_date,
   'en',
-  'Psalm 46:10',
-  'NIV',
-  'Be still, and know that I am God.',
-  'A pause before the day',
-  'Stillness is not empty time. It is room to remember who holds the day.',
+  coalesce(c.primary_verse_reference, ''),
+  c.bible_version,
+  c.verse_text,
+  c.cover_image_url,
+  c.cover_image_public_id,
   null,
-  true,
+  nullif(trim(coalesce(c.metadata->>'hint', c.metadata->>'prayerText', '')), ''),
+  c.id,
+  c.is_published,
   now(),
   now()
-)
+from contents c
+where c.slug = 'when-your-mind-feels-crowded'
+  and c.content_type = 'message'
+  and c.is_archived = false
 on conflict (publish_date, language) do update set
   verse_reference = excluded.verse_reference,
   bible_version = excluded.bible_version,
   verse_text = excluded.verse_text,
+  image_url = excluded.image_url,
+  image_public_id = excluded.image_public_id,
   hint_title = excluded.hint_title,
   hint_summary = excluded.hint_summary,
   content_id = excluded.content_id,
   is_published = excluded.is_published,
   updated_at = now();
 
--- Mode B — linked to Discover content + content_plan_links plans
+-- Yesterday slot — second Message Card (calendar / RPC history smoke)
 insert into today_messages (
   publish_date,
   language,
   verse_reference,
   bible_version,
   verse_text,
+  image_url,
+  image_public_id,
   hint_title,
   hint_summary,
   content_id,
@@ -57,23 +68,27 @@ insert into today_messages (
 select
   current_date - 1,
   'en',
-  'Philippians 4:6-7',
-  'NIV',
-  'Do not be anxious about anything, but in every situation, by prayer and petition, with thanksgiving, present your requests to God.',
-  'Peace when you feel rushed',
-  'Start with a short pause, then open the linked story and its reading plan.',
+  coalesce(c.primary_verse_reference, ''),
+  c.bible_version,
+  c.verse_text,
+  c.cover_image_url,
+  c.cover_image_public_id,
+  null,
+  nullif(trim(coalesce(c.metadata->>'hint', c.metadata->>'prayerText', '')), ''),
   c.id,
-  true,
+  c.is_published,
   now(),
   now()
 from contents c
-where c.slug = 'peace-when-you-feel-rushed'
-  and c.is_published = true
+where c.slug = 'when-tomorrow-feels-heavy'
+  and c.content_type = 'message'
   and c.is_archived = false
 on conflict (publish_date, language) do update set
   verse_reference = excluded.verse_reference,
   bible_version = excluded.bible_version,
   verse_text = excluded.verse_text,
+  image_url = excluded.image_url,
+  image_public_id = excluded.image_public_id,
   hint_title = excluded.hint_title,
   hint_summary = excluded.hint_summary,
   content_id = excluded.content_id,

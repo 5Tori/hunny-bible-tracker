@@ -4,6 +4,7 @@ import {
   GooglePlayStoreBadgeIcon,
   StoreDownloadLabel,
 } from "@/components/public/StoreDownloadButtons";
+import { formatPlanMeta } from "@/lib/plan-display";
 import { siteConfig } from "@/lib/site-config";
 
 export interface BrowseRelatedPlan {
@@ -14,17 +15,6 @@ export interface BrowseRelatedPlan {
   total_chapters: number | null;
   estimated_minutes: number | null;
   cta_label?: string | null;
-}
-
-function formatPlanMeta(plan: BrowseRelatedPlan): string | null {
-  const parts: string[] = [];
-  if (plan.total_chapters) {
-    parts.push(`${plan.total_chapters} chapters`);
-  }
-  if (plan.estimated_minutes) {
-    parts.push(`~${plan.estimated_minutes} min/ch`);
-  }
-  return parts.length > 0 ? parts.join(" · ") : null;
 }
 
 export function RelatedPlansSection({ plans }: { plans: BrowseRelatedPlan[] }) {

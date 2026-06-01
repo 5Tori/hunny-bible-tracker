@@ -13,6 +13,14 @@ void main() {
       expect(formatReadingDuration(4205), '70 hrs 5 mins');
     });
 
+    test('formatCatalogReadingDuration', () {
+      expect(formatCatalogReadingDuration(0), '0 hrs');
+      expect(formatCatalogReadingDuration(15), '0.5 hrs');
+      expect(formatCatalogReadingDuration(56), '1 hr');
+      expect(formatCatalogReadingDuration(3600), '60 hrs');
+      expect(formatCatalogReadingDuration(3716), '62 hrs');
+    });
+
     test('formatReadingDurationRemaining', () {
       expect(formatReadingDurationRemaining(18), '18 mins left');
       expect(formatReadingDurationRemaining(1), '1 min left');
@@ -24,14 +32,21 @@ void main() {
           minutesPerChapter: 4,
           totalChapters: 14,
         ),
-        '56 mins',
+        '1 hr',
       );
       expect(
         formatCatalogPlanTotalDuration(
           minutesPerChapter: 2,
           totalChapters: 12,
         ),
-        '24 mins',
+        '0.5 hrs',
+      );
+      expect(
+        formatCatalogPlanTotalDuration(
+          minutesPerChapter: 4,
+          totalChapters: 929,
+        ),
+        '62 hrs',
       );
     });
 

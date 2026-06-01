@@ -33,7 +33,7 @@ Post-MVP 방향 정리: **content-led Bible reading + habit tracking**.
 4. ~~Admin/seed `estimated_minutes` reconcile~~ ✓
 5. ~~Daily reading goal + today read minutes~~ ✓
 6. ~~Reading stats / streak / calendar~~ ✓ (Settings bottom panel)
-7. ~~Message Card Library (web)~~ ✓ — `/messages`, Admin, API, Today link
+7. ~~Message Card Library (web)~~ ✓ — `/messages`, Admin, API, Today link — **관계 정리:** `docs/to-do/CONTENT_REFACTOR_MEMO.md`
 8. Plan Detail
 9. Story Card / Content Detail
 10. Home featured content
@@ -47,5 +47,6 @@ Full Bible reader · social · heavy animation production · auto multi-device m
 
 ## Checklists
 
+- **Content refactor direction:** `docs/to-do/CONTENT_REFACTOR_MEMO.md` — Message Card ↔ Today's Message (confirmed)
 - Release: `docs/to-do/MVP_CLOSE_TESTING_TODO.md`
 - Roadmap: `docs/PRODUCT_ROADMAP.md`

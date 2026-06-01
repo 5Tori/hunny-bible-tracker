@@ -360,7 +360,122 @@
 
 .admin-table-plans .admin-table-row {
   grid-template-columns:
-    minmax(0, 1.35fr) minmax(0, 0.75fr) minmax(0, 0.95fr) minmax(0, 0.85fr) 140px minmax(0, 1.2fr);
+    minmax(0, 2fr) minmax(0, 1.1fr) minmax(0, 0.85fr) minmax(0, 0.65fr) minmax(0, 0.75fr) minmax(0, 1.15fr);
+}
+
+.admin-plan-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.admin-plan-thumb {
+  flex-shrink: 0;
+  width: 40px;
+  height: 50px;
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  object-fit: cover;
+  background: #fff;
+}
+
+.admin-plan-thumb-empty {
+  display: block;
+  background: linear-gradient(145deg, #fff8eb, #f5f5f5);
+}
+
+.admin-plan-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-plan-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.admin-plan-key {
+  font-size: 12px;
+  font-family: var(--admin-mono, ui-monospace, monospace);
+}
+
+.admin-plan-cover-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  align-items: flex-start;
+}
+
+.admin-plan-cover-preview {
+  width: 120px;
+  aspect-ratio: 4 / 5;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  object-fit: cover;
+  background: #fff;
+}
+
+.admin-plan-cover-preview-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(145deg, #fff8eb, #f5f5f5);
+  font-size: 12px;
+}
+
+.admin-plan-cover-panel-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 200px;
+}
+
+.admin-reading-stats {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.admin-reading-stats div {
+  display: grid;
+  gap: 2px;
+}
+
+.admin-reading-stats dt {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--admin-muted-fg);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.admin-reading-stats dd {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 500;
+}
+
+.admin-reading-stats-note {
+  padding-top: 4px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.admin-reading-estimate-field {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.admin-reading-estimate-field input {
+  width: 6rem;
 }
 
 .admin-table-content .admin-table-row {
@@ -369,7 +484,187 @@
 
 .admin-table-messages .admin-table-row {
   grid-template-columns:
-    minmax(0, 2fr) minmax(0, 1fr) minmax(0, 0.75fr) minmax(0, 0.65fr) minmax(0, 0.45fr) minmax(0, 1.35fr);
+    minmax(0, 2.2fr) minmax(0, 1.35fr) minmax(0, 0.7fr) minmax(0, 0.45fr) minmax(0, 1.2fr);
+}
+
+.admin-table-discover .admin-table-row {
+  grid-template-columns:
+    minmax(0, 2.2fr) minmax(0, 0.65fr) minmax(0, 0.7fr) minmax(0, 0.45fr) minmax(0, 1.15fr);
+}
+
+.admin-discover-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.admin-discover-thumb {
+  flex-shrink: 0;
+  width: 56px;
+  height: 42px;
+  border: 1px solid var(--admin-border);
+  border-radius: 6px;
+  object-fit: cover;
+  background: #fff;
+}
+
+.admin-discover-thumb-empty {
+  display: block;
+  background: var(--admin-bg);
+}
+
+.admin-discover-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-discover-slug {
+  font-family: var(--admin-mono, ui-monospace, monospace);
+  font-size: 12px;
+}
+
+.admin-discover-format-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+@media (max-width: 900px) {
+  .admin-discover-format-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-discover-format-card {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 14px;
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.admin-discover-format-card input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.admin-discover-format-card-selected {
+  border-color: var(--admin-accent, #d99a12);
+  background: #fff8eb;
+}
+
+.admin-discover-format-label {
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.admin-discover-add-blocks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-field-inline {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 180px;
+}
+
+.admin-field-inline label {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--admin-muted-fg, #6b7280);
+}
+
+.admin-message-card-cell {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+
+.admin-message-card-thumb {
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  object-fit: cover;
+  background: #fff;
+}
+
+.admin-message-card-thumb-empty {
+  display: block;
+  background: var(--admin-bg);
+}
+
+.admin-message-card-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.admin-message-card-verse {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.admin-message-card-context {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--admin-text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.admin-message-classification {
+  font-size: 0.8125rem;
+  line-height: 1.45;
+  color: var(--admin-text-muted);
+}
+
+.admin-editor-aside-preview {
+  gap: 1.5rem;
+}
+
+.admin-message-library-preview {
+  margin-bottom: 0.25rem;
+}
+
+.admin-message-library-preview-label {
+  margin: 0 0 0.75rem;
+  font-size: 0.8125rem;
+}
+
+.admin-message-library-preview-tile {
+  width: 100%;
+  max-width: 280px;
+}
+
+.content-plan-option-suggested {
+  border-color: color-mix(in srgb, var(--admin-accent, #d99a12) 35%, var(--admin-border));
+  background: color-mix(in srgb, var(--admin-accent, #d99a12) 6%, #fff);
+}
+
+.admin-taxonomy-suggested-mark {
+  margin-left: 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--admin-accent, #d99a12);
 }
 
 .admin-table-today .admin-table-row {
@@ -476,6 +771,11 @@
   margin-bottom: 0;
 }
 
+.admin-dashboard-section-lead {
+  margin: 4px 0 0;
+  font-size: 13px;
+}
+
 .admin-dashboard-grid {
   display: grid;
   gap: 12px;
@@ -543,6 +843,188 @@
 
 .admin-schedule-detail {
   color: var(--admin-text-muted);
+}
+
+.admin-today-schedule-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+.admin-today-calendar,
+.admin-today-list {
+  border: 1px solid var(--admin-border);
+  border-radius: var(--admin-radius);
+  background: var(--admin-surface);
+  padding: 20px;
+}
+
+.admin-today-calendar-header,
+.admin-today-list-header {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+.admin-today-calendar-header h2,
+.admin-today-list-header h2 {
+  margin: 0 0 4px;
+  font-size: 1.125rem;
+}
+
+.admin-today-calendar-nav,
+.admin-today-list-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-today-calendar-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 12px;
+  font-size: 0.8125rem;
+  color: var(--admin-text-muted);
+}
+
+.admin-today-calendar-legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-today-calendar-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  border: 1px solid var(--admin-border);
+}
+
+.admin-today-calendar-dot.is-published {
+  background: #dcfce7;
+  border-color: #86efac;
+}
+
+.admin-today-calendar-dot.is-draft {
+  background: #f3f4f6;
+  border-color: #d1d5db;
+}
+
+.admin-today-calendar-dot.is-gap {
+  background: #fffbeb;
+  border-color: #fde68a;
+}
+
+.admin-today-calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+  margin-bottom: 4px;
+}
+
+.admin-today-calendar-weekday {
+  text-align: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--admin-text-muted);
+  padding: 4px 0;
+}
+
+.admin-today-calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.admin-today-calendar-day {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 4px;
+  min-height: 92px;
+  padding: 8px;
+  border: 1px solid var(--admin-border);
+  border-radius: 8px;
+  background: #fff;
+  text-align: left;
+  cursor: pointer;
+}
+
+.admin-today-calendar-day:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+.admin-today-calendar-day.is-outside {
+  background: var(--admin-bg);
+}
+
+.admin-today-calendar-day.is-selected {
+  border-color: var(--admin-accent);
+  box-shadow: inset 0 0 0 1px var(--admin-accent);
+}
+
+.admin-today-calendar-day.is-today .admin-today-calendar-day-number {
+  color: var(--admin-accent);
+  font-weight: 700;
+}
+
+.admin-today-calendar-day.is-published {
+  background: #f0fdf4;
+}
+
+.admin-today-calendar-day.is-draft {
+  background: #f9fafb;
+}
+
+.admin-today-calendar-day.is-gap {
+  background: #fffbeb;
+}
+
+.admin-today-calendar-day-number {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.admin-today-calendar-day-label {
+  flex: 1;
+  font-size: 0.6875rem;
+  line-height: 1.3;
+  color: var(--admin-text-muted);
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.admin-today-calendar-day-status {
+  margin-top: auto;
+}
+
+.admin-today-calendar-selection {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid var(--admin-border);
+}
+
+.admin-table-today .admin-table-title-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.admin-table-today .admin-table-title-cell small {
+  display: block;
+  margin-top: 2px;
 }
 
 .admin-coverage-grid {
@@ -670,7 +1152,7 @@
 
 .admin-editor-layout {
   display: grid;
-  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(200px, 280px);
   gap: 32px;
   align-items: start;
 }
@@ -828,6 +1310,95 @@
   padding: 16px;
   border: 1px dashed var(--admin-border);
   border-radius: var(--admin-radius);
+}
+
+.admin-upload-label {
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.admin-upload-input-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.admin-message-image-panels {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 1rem;
+}
+
+.admin-message-image-panel {
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  padding: 1rem 1.125rem;
+  background: #fff;
+}
+
+.admin-message-image-panel-title {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.admin-message-image-panel-header {
+  margin-bottom: 1rem;
+}
+
+.admin-message-image-panel-header .admin-muted {
+  margin: 0.35rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.45;
+}
+
+.admin-message-image-panel-body {
+  display: grid;
+  grid-template-columns: minmax(100px, 120px) minmax(0, 1fr);
+  gap: 1rem;
+  align-items: start;
+}
+
+.admin-message-image-preview {
+  display: block;
+  width: 100%;
+  border: 1px solid var(--admin-border);
+  border-radius: 10px;
+  object-fit: cover;
+  background: var(--admin-bg);
+}
+
+.admin-message-image-preview-empty {
+  background: linear-gradient(145deg, #f5f5f4 0%, #e7e5e4 100%);
+}
+
+.admin-message-image-panel-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.admin-upload-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+}
+
+@media (max-width: 640px) {
+  .admin-message-image-panel-body {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-message-image-preview {
+    max-width: 140px;
+  }
 }
 
 .admin-share-preview {
@@ -1023,6 +1594,15 @@
 
   .admin-schedule-item {
     grid-template-columns: 1fr;
+  }
+
+  .admin-today-schedule-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-today-calendar-day {
+    min-height: 72px;
+    padding: 6px;
   }
 }
 

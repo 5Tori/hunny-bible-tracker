@@ -62,8 +62,9 @@ user_reading_plans                     ← user's plan run (local)
 
 **Message Card Library** (`content_type = message`):
 
-- Taxonomy in `content_tags.type`: `category`, `situation`, `theme`, `bible_context`, `tone`, `share_intent` — keys in [`apps/web/src/lib/message-taxonomy.ts`](../apps/web/src/lib/message-taxonomy.ts)
-- Message fields in `contents.metadata`: `primaryCategory`, `shortReflection`, `prayerText`, `cardTemplateKey`, `shareIntents[]`, `isTodayEligible`, `searchAliases[]`
+- Taxonomy in `content_tags.type`: `category` (primary), `situation`, `theme` (public discovery); `bible_context`, `tone`, `share_intent` (internal metadata) — vocabulary in [`apps/web/src/lib/message-taxonomy.ts`](../apps/web/src/lib/message-taxonomy.ts). Limits: category 1, situations 0–2, themes 1–3.
+- Message fields in `contents.metadata`: `primaryCategory`, `context`, `hint`, `cardTemplateKey`, `shareIntents[]`, `searchAliases[]`, optional `compositeImageUrl` / `compositeImagePublicId` (pre-rendered card; falls back to `cover_image_url`)
+- Base image: `contents.cover_image_url` (background for live verse overlay). Composite: `public/messages/composites/{slug}.webp` when added.
 - `today_messages.content_id` → daily featured slot
 - Seeds: `message_taxonomy_seed.sql`, `message_cards_pilot_seed.sql`
 

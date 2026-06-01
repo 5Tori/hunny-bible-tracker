@@ -2,6 +2,7 @@ import { getCloudflareContext } from '@opennextjs/cloudflare';
 import postgres from 'postgres';
 
 import { recordDbQuery } from '@/lib/perf/db-timing';
+import { isOfflineMode } from '@/lib/mock/mode';
 
 export type SqlExecutor = {
   <T = unknown>(
@@ -146,6 +147,12 @@ async function runQuery<T>(
   strings: TemplateStringsArray,
   values: unknown[],
 ): Promise<T> {
+  if (isOfflineMode()) {
+    throw new Error(
+      'Database access is disabled while HUNNY_OFFLINE_MODE is enabled. Public catalog reads should use mock fixtures.',
+    );
+  }
+
   const config = await resolveDatabaseConfig();
 
   for (let attempt = 0; attempt < 2; attempt++) {

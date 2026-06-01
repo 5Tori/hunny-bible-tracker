@@ -2,16 +2,13 @@ import Image from "next/image";
 import Link from "next/link";
 
 import type { ContentWithRelations } from "@/lib/content";
-
-const typeLabels: Record<string, string> = {
-  video: "Video",
-  essay: "Essay",
-  cartoon: "Cartoon",
-  message: "Message",
-};
+import { discoverContentTypeLabel } from "@/lib/discover-content";
 
 export function ContentCard({ content }: { content: ContentWithRelations }) {
-  const typeLabel = typeLabels[content.content_type] ?? content.content_type;
+  const typeLabel =
+    content.content_type === "message"
+      ? "Message"
+      : discoverContentTypeLabel(content.content_type);
 
   return (
     <Link

@@ -25,6 +25,7 @@ export function usePlanEditor(planId?: string) {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [estimatedTotalMinutes, setEstimatedTotalMinutes] = useState<number | null>(null);
 
   const calculatedTotalChapters = calculatePlanTotalChapters(plan.sections);
 
@@ -56,8 +57,15 @@ export function usePlanEditor(planId?: string) {
         }
 
         const json = await response.json();
-        setPlan(mapPlanToForm(json.plan));
+        const mapped = mapPlanToForm(json.plan);
+        const chapters = calculatePlanTotalChapters(mapped.sections);
+        setPlan(mapped);
         setTagsString((json.plan.tags as Array<{ name: string }>).map((tag) => tag.name).join(', '));
+        setEstimatedTotalMinutes(
+          mapped.estimated_minutes != null && mapped.estimated_minutes > 0 && chapters > 0
+            ? mapped.estimated_minutes * chapters
+            : null,
+        );
       } catch (loadError) {
         setError((loadError as Error).message || 'Unable to load plan');
       } finally {
@@ -143,6 +151,15 @@ export function usePlanEditor(planId?: string) {
     }));
   };
 
+  const clearCover = () => {
+    setPlan((current) => ({
+      ...current,
+      cover_image_url: '',
+      cover_image_public_id: '',
+    }));
+    setSuccess('Cover removed.');
+  };
+
   const handleUpload = async (file: File) => {
     setUploading(true);
     setError(null);
@@ -180,6 +197,7 @@ export function usePlanEditor(planId?: string) {
     try {
       const payload = {
         ...plan,
+        estimated_total_minutes: estimatedTotalMinutes,
         sections: normalizeSections(plan.sections),
         total_chapters: calculatedTotalChapters,
         tags: tagsString
@@ -203,6 +221,13 @@ export function usePlanEditor(planId?: string) {
       }
 
       const json = await response.json();
+      const saved = json.plan as {
+        estimated_minutes: number | null;
+      };
+      const chapters = calculatePlanTotalChapters(plan.sections);
+      if (saved.estimated_minutes != null && saved.estimated_minutes > 0 && chapters > 0) {
+        setEstimatedTotalMinutes(saved.estimated_minutes * chapters);
+      }
       setSuccess(planId ? 'Plan updated.' : 'Plan created.');
       await revalidateAdminPlans();
       if (!planId) {
@@ -226,6 +251,8 @@ export function usePlanEditor(planId?: string) {
     error,
     success,
     calculatedTotalChapters,
+    estimatedTotalMinutes,
+    setEstimatedTotalMinutes,
     updateSection,
     updateSectionItem,
     addSection,
@@ -233,6 +260,7 @@ export function usePlanEditor(planId?: string) {
     addItem,
     removeItem,
     handleUpload,
+    clearCover,
     submit,
   };
 }

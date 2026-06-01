@@ -1,1 +1,1 @@
-export { default } from './editors/content/ContentEditor';
+export { default } from './AdminDiscoverContentEditor';

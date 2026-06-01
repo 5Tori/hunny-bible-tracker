@@ -3,7 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev",
+    "dev": "HUNNY_OFFLINE_MODE=1 next dev",
+    "dev:online": "HUNNY_OFFLINE_MODE=0 next dev",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
@@ -14,6 +15,8 @@
     "cf:deploy": "opennextjs-cloudflare deploy",
     "deploy": "pnpm run cf:build && pnpm run cf:deploy",
     "db:check": "node scripts/check-db.mjs",
+    "infra:sync-hyperdrive": "node scripts/sync-hyperdrive-origin.mjs --apply",
+    "infra:verify": "node scripts/verify-infra.mjs",
     "bench:api": "node scripts/bench-api.mjs",
     "cf-typegen": "wrangler types --env-interface CloudflareEnv cloudflare-env.d.ts",
     "icons:sync": "bash scripts/sync-brand-icons.sh"

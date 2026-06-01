@@ -42,15 +42,16 @@ export default function AdminDashboardPage() {
   return (
     <>
       <PageHeader
+        label="Content operations"
         title="Dashboard"
-        description="Content operations overview — message cards, daily Home slots, and plan catalog."
+        description="Message Card Library (/messages), Today’s Message schedule, and reading plans (/plans)."
         actions={
           <>
             <ButtonLink href="/admin/messages/new" variant="primary">
               New message card
             </ButtonLink>
-            <ButtonLink href="/admin/today-messages/new" variant="secondary">
-              Schedule today
+            <ButtonLink href="/admin/plans/new" variant="secondary">
+              New plan
             </ButtonLink>
           </>
         }
@@ -62,7 +63,7 @@ export default function AdminDashboardPage() {
       {overview ? (
         <>
           <section className="admin-dashboard-section">
-            <h2>Counts</h2>
+            <h2>At a glance</h2>
             <div className="admin-dashboard-grid admin-dashboard-grid-stats">
               <StatCard
                 label="Published message cards"
@@ -70,28 +71,33 @@ export default function AdminDashboardPage() {
                 hint={`${overview.messageCounts.draft} draft · ${overview.messageCounts.archived} archived`}
               />
               <StatCard
-                label="Today-eligible cards"
-                value={overview.messageCounts.todayEligible}
-                hint="Ready for Home scheduling"
+                label="Plans on /plans"
+                value={overview.planCounts.browseVisible}
+                hint={`${overview.planCounts.published} published · ${overview.planCounts.draft} draft`}
               />
               <StatCard
-                label="Active plans"
+                label="Plan templates (active)"
                 value={overview.planCounts.active}
-                hint={`${overview.planCounts.published} published`}
+                hint={`${overview.planCounts.total} total · ${overview.planCounts.archived} archived`}
               />
               <StatCard
-                label="Schedule gaps (7 days)"
+                label="Today schedule gaps"
                 value={gapDays.length}
-                hint={gapDays.length === 0 ? 'Next week covered' : 'Days without a slot'}
+                hint={gapDays.length === 0 ? 'Next 7 days covered' : 'Days without a Home slot'}
               />
             </div>
           </section>
 
           <section className="admin-dashboard-section">
             <div className="admin-dashboard-section-header">
-              <h2>Today schedule</h2>
+              <div>
+                <h2>Today schedule</h2>
+                <p className="admin-muted admin-dashboard-section-lead">
+                  Home daily message slots — link a published message card per day.
+                </p>
+              </div>
               <ButtonLink href="/admin/today-messages" variant="ghost">
-                View all
+                Open calendar
               </ButtonLink>
             </div>
             <ul className="admin-schedule-list">
@@ -124,7 +130,12 @@ export default function AdminDashboardPage() {
 
           <section className="admin-dashboard-section">
             <div className="admin-dashboard-section-header">
-              <h2>Category coverage</h2>
+              <div>
+                <h2>Message categories</h2>
+                <p className="admin-muted admin-dashboard-section-lead">
+                  Published cards per primary category (metadata or category tag).
+                </p>
+              </div>
               <ButtonLink href="/messages" variant="ghost">
                 Public library
               </ButtonLink>
@@ -132,10 +143,10 @@ export default function AdminDashboardPage() {
             {emptyCategories.length > 0 ? (
               <Alert tone="warning">
                 {emptyCategories.length} categor{emptyCategories.length === 1 ? 'y has' : 'ies have'} no published
-                cards yet.
+                cards yet: {emptyCategories.map((item) => item.label).join(', ')}.
               </Alert>
             ) : (
-              <Alert tone="success">All categories have at least one published card.</Alert>
+              <Alert tone="success">All primary categories have at least one published card.</Alert>
             )}
             <div className="admin-coverage-grid">
               {overview.categoryCoverage.map((category) => (
@@ -160,14 +171,23 @@ export default function AdminDashboardPage() {
               <ButtonLink href="/admin/messages/new" variant="secondary">
                 New message card
               </ButtonLink>
-              <ButtonLink href="/admin/today-messages/new" variant="secondary">
-                Schedule today&apos;s message
+              <ButtonLink href="/admin/today-messages" variant="secondary">
+                Today schedule
               </ButtonLink>
               <ButtonLink href="/admin/plans" variant="secondary">
                 Manage plans
               </ButtonLink>
+              <ButtonLink href="/admin/plans/new" variant="secondary">
+                New plan
+              </ButtonLink>
+              <ButtonLink href="/admin/discover" variant="secondary">
+                Discover content
+              </ButtonLink>
               <ButtonLink href="/messages" variant="secondary">
                 Open /messages
+              </ButtonLink>
+              <ButtonLink href="/plans" variant="secondary">
+                Open /plans
               </ButtonLink>
             </div>
           </section>

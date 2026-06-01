@@ -5,87 +5,87 @@ import { MarketingContainer } from "@/components/marketing/ui/MarketingContainer
 import { MarketingSection } from "@/components/marketing/ui/MarketingSection";
 import type { PublicTodayMessage } from "@/lib/today-messages";
 
-export function TodayMessageView({ message }: { message: PublicTodayMessage }) {
-  const referenceLabel = message.bible_version
+function verseLabel(message: PublicTodayMessage) {
+  if (!message.verse_reference) return null;
+  return message.bible_version
     ? `${message.verse_reference} · ${message.bible_version}`
     : message.verse_reference;
+}
+
+export function TodayMessageView({ message }: { message: PublicTodayMessage }) {
+  const referenceLabel = verseLabel(message);
   const linkedContent = message.linked_content;
 
   return (
     <MarketingSection className="!py-12 md:!py-16">
       <MarketingContainer narrow>
-        <p className="mkt-kicker">Today&apos;s message</p>
-        <p className="mt-2 text-sm text-neutral-500">{message.publish_date}</p>
-        <h1 className="mkt-heading mt-3">{message.hint_title || referenceLabel}</h1>
-        {message.hint_title ? (
-          <p className="mt-2 text-lg text-neutral-600">{referenceLabel}</p>
-        ) : null}
+        <div className="mx-auto max-w-xl text-center">
+          <p className="mkt-kicker">Today&apos;s message</p>
+          <p className="mt-2 text-sm text-neutral-500">{message.publish_date}</p>
 
-        {message.image_url ? (
-          <div className="relative mt-8 aspect-[4/3] w-full overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50">
-            <Image
-              src={message.image_url}
-              alt=""
-              fill
-              className="object-cover"
-              sizes="(max-width: 768px) 100vw, 720px"
-              priority
-            />
-          </div>
-        ) : null}
+          {message.image_url ? (
+            <div className="relative mx-auto mt-8 aspect-square w-full max-w-md overflow-hidden rounded-2xl border border-neutral-200 bg-neutral-50">
+              <Image
+                src={message.image_url}
+                alt=""
+                fill
+                className="object-cover"
+                sizes="(max-width: 768px) 100vw, 480px"
+                priority
+              />
+            </div>
+          ) : null}
 
-        {message.verse_text ? (
-          <blockquote className="mt-8 border-l-2 border-[#d99a12] pl-4 text-lg leading-relaxed text-neutral-800">
-            {message.verse_text}
-          </blockquote>
-        ) : null}
+          {referenceLabel ? (
+            <p className="mt-8 text-sm font-medium text-[#d99a12]">{referenceLabel}</p>
+          ) : null}
 
-        {message.hint_title || message.hint_summary ? (
-          <div className="mt-8 rounded-2xl border border-neutral-200 bg-neutral-50 p-5">
-            {message.hint_title ? (
-              <p className="text-sm font-semibold text-neutral-900">{message.hint_title}</p>
-            ) : null}
-            {message.hint_summary ? (
-              <p className="mt-2 text-sm text-neutral-600">{message.hint_summary}</p>
-            ) : null}
-          </div>
-        ) : null}
+          {message.verse_text ? (
+            <blockquote className="mt-4 text-xl leading-relaxed text-neutral-900 md:text-2xl">
+              {message.verse_text}
+            </blockquote>
+          ) : null}
 
-        {linkedContent ? (
-          <section className="mt-10 rounded-2xl border border-neutral-200 p-6">
-            <p className="mkt-kicker">
-              {linkedContent.content_type === "message" ? "Message card" : "Related content"}
-            </p>
-            <h2 className="mt-2 text-xl font-semibold text-neutral-900">{linkedContent.title}</h2>
-            {linkedContent.summary ? (
-              <p className="mt-2 text-sm text-neutral-600">{linkedContent.summary}</p>
-            ) : null}
-            {linkedContent.primary_category_label ? (
-              <p className="mt-2 text-xs text-neutral-500">{linkedContent.primary_category_label}</p>
-            ) : null}
-            <Link
-              href={
-                linkedContent.content_type === "message" && linkedContent.messages_url
-                  ? linkedContent.messages_url
-                  : `/content/${linkedContent.slug}`
-              }
-              className="mt-4 inline-block font-medium text-neutral-900 underline underline-offset-4 hover:text-[#d99a12]"
-            >
-              {linkedContent.content_type === "message"
-                ? "Open message card →"
-                : "Read full story →"}
-            </Link>
-            {linkedContent.related_plans.length > 0 ? (
-              <p className="mt-4 text-sm text-neutral-500">
-                {linkedContent.related_plans.length === 1
-                  ? "Includes a related reading plan on the full story page."
-                  : `Includes ${linkedContent.related_plans.length} related reading plans on the full story page.`}
+          {message.context ? (
+            <p className="mt-8 text-base leading-relaxed text-neutral-700">{message.context}</p>
+          ) : null}
+
+          {message.hint_summary ? (
+            <div className="mt-8 rounded-2xl border border-neutral-200 bg-neutral-50 p-5 text-left">
+              <p className="text-xs font-medium uppercase tracking-[0.12em] text-neutral-500">
+                Hint
               </p>
-            ) : null}
-          </section>
-        ) : null}
+              <p className="mt-2 text-sm leading-relaxed text-neutral-700">{message.hint_summary}</p>
+            </div>
+          ) : null}
 
-        <div className="mt-10 flex flex-wrap gap-4 text-sm">
+          {linkedContent ? (
+            <section className="mt-10 rounded-2xl border border-neutral-200 p-6 text-left">
+              <p className="mkt-kicker">Message card</p>
+              {linkedContent.primary_category_label ? (
+                <p className="mt-2 text-xs text-neutral-500">{linkedContent.primary_category_label}</p>
+              ) : null}
+              <Link
+                href={
+                  linkedContent.content_type === "message" && linkedContent.messages_url
+                    ? linkedContent.messages_url
+                    : `/content/${linkedContent.slug}`
+                }
+                className="mt-4 inline-block font-medium text-neutral-900 underline underline-offset-4 hover:text-[#d99a12]"
+              >
+                Open full message card →
+              </Link>
+              {linkedContent.related_plans.length > 0 ? (
+                <p className="mt-4 text-sm text-neutral-500">
+                  Includes {linkedContent.related_plans.length} related reading plan
+                  {linkedContent.related_plans.length === 1 ? "" : "s"}.
+                </p>
+              ) : null}
+            </section>
+          ) : null}
+        </div>
+
+        <div className="mt-10 flex flex-wrap justify-center gap-4 text-sm">
           <Link
             href="/messages"
             className="font-medium text-neutral-900 underline underline-offset-4 hover:text-[#d99a12]"
@@ -119,10 +119,10 @@ export function TodayMessageNotFound() {
           This daily message is unavailable or unpublished.
         </p>
         <Link
-          href="/discover"
+          href="/today"
           className="mt-6 inline-block font-medium text-neutral-900 underline underline-offset-4"
         >
-          Browse Discover
+          View today&apos;s message
         </Link>
       </MarketingContainer>
     </MarketingSection>

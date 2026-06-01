@@ -1,7 +1,15 @@
 import crypto from 'crypto';
 
-import { calculatePlanEstimatedMinutes } from '@/lib/plan-estimates';
+import { resolveEstimatedMinutesForSave } from '@/lib/plan-estimates';
 import { sql, queryByUuidIds, type SqlLike } from '@/lib/db/postgres';
+import { assertOnlineForWrites, isOfflineMode } from '@/lib/mock/mode';
+import {
+  mockGetAdminPlanById,
+  mockGetAdminPlans,
+  mockGetPublishedPlanByIdentifier,
+  mockGetPublishedPlans,
+  mockGetPublishedPlansWithRelations,
+} from '@/lib/mock/readers';
 import { normalizeDifficulty, normalizePlanType, normalizeTestamentScope } from '@/lib/plan-taxonomy';
 
 export interface PlanTemplateBase {
@@ -9,7 +17,6 @@ export interface PlanTemplateBase {
   template_key: string;
   title: string;
   subtitle: string | null;
-  short_description: string | null;
   description: string | null;
   cover_image_url: string | null;
   cover_image_public_id: string | null;
@@ -69,7 +76,6 @@ export interface PlanTemplateWithRelations extends PlanTemplateBase {
 export interface AdminPlanInput {
   title: string;
   subtitle?: string | null;
-  short_description?: string | null;
   description?: string | null;
   cover_image_url?: string | null;
   cover_image_public_id?: string | null;
@@ -77,6 +83,8 @@ export interface AdminPlanInput {
   testament_scope?: string | null;
   difficulty?: string | null;
   estimated_minutes?: number | null;
+  /** When set, saved as `estimated_minutes` = total ÷ chapter count (rounded). Omit or null for auto. */
+  estimated_total_minutes?: number | null;
   estimated_days?: number | null;
   total_chapters?: number | null;
   primary_book_key?: string | null;
@@ -202,14 +210,17 @@ function normalizeInput(input: AdminPlanInput): AdminPlanInput {
     ...input,
     title,
     subtitle: emptyToNull(input.subtitle),
-    short_description: emptyToNull(input.short_description),
     description: emptyToNull(input.description),
     cover_image_url: emptyToNull(input.cover_image_url),
     cover_image_public_id: emptyToNull(input.cover_image_public_id),
     plan_type: planType,
     testament_scope: emptyToNull(normalizeTestamentScope(String(input.testament_scope ?? ''))),
     difficulty: emptyToNull(normalizeDifficulty(String(input.difficulty ?? ''))),
-    estimated_minutes: calculatePlanEstimatedMinutes(sections),
+    estimated_minutes: resolveEstimatedMinutesForSave(
+      input.estimated_total_minutes,
+      sections,
+      calculateTotalChapters(sections),
+    ),
     estimated_days: normalizeNullableNumber(input.estimated_days),
     total_chapters: calculateTotalChapters(sections),
     primary_book_key: emptyToNull(input.primary_book_key),
@@ -394,6 +405,10 @@ export function parsePublishedPlanSort(value: string | null | undefined): Publis
 }
 
 export async function getPublishedPlans(sort: PublishedPlanSortMode = 'featured') {
+  if (isOfflineMode()) {
+    return mockGetPublishedPlans(sort);
+  }
+
   if (sort === 'new') {
     return (await sql`
       select * from plan_templates
@@ -416,6 +431,10 @@ export async function getPublishedPlans(sort: PublishedPlanSortMode = 'featured'
 }
 
 export async function getPublishedPlansWithRelations(sort: PublishedPlanSortMode = 'featured') {
+  if (isOfflineMode()) {
+    return mockGetPublishedPlansWithRelations(sort);
+  }
+
   const plans = await getPublishedPlans(sort);
   if (plans.length === 0) {
     return [];
@@ -436,6 +455,10 @@ export async function getPublishedPlansWithRelations(sort: PublishedPlanSortMode
 }
 
 export async function getPublishedPlanByIdentifier(identifier: string) {
+  if (isOfflineMode()) {
+    return mockGetPublishedPlanByIdentifier(identifier);
+  }
+
   const planRows = (await sql`
     select * from plan_templates
     where is_published = true and is_archived = false and browse_visible = true and (id::text = ${identifier} or template_key = ${identifier})
@@ -448,6 +471,10 @@ export async function getPublishedPlanByIdentifier(identifier: string) {
 }
 
 export async function getAdminPlans() {
+  if (isOfflineMode()) {
+    return mockGetAdminPlans();
+  }
+
   return (await sql`
     select * from plan_templates
     order by updated_at desc
@@ -455,6 +482,10 @@ export async function getAdminPlans() {
 }
 
 export async function getAdminPlanById(id: string) {
+  if (isOfflineMode()) {
+    return mockGetAdminPlanById(id);
+  }
+
   const planRows = (await sql`
     select * from plan_templates
     where id::text = ${id}
@@ -554,6 +585,7 @@ function buildTagQueries(planId: string, tags: string[] | undefined, txn: SqlLik
 }
 
 export async function createAdminPlan(rawInput: AdminPlanInput) {
+  assertOnlineForWrites();
   const input = normalizeInput(rawInput);
   const planId = crypto.randomUUID();
   const totalChapters = calculateTotalChapters(input.sections);
@@ -566,7 +598,6 @@ export async function createAdminPlan(rawInput: AdminPlanInput) {
         template_key,
         title,
         subtitle,
-        short_description,
         description,
         cover_image_url,
         cover_image_public_id,
@@ -589,7 +620,6 @@ export async function createAdminPlan(rawInput: AdminPlanInput) {
         ${templateKey},
         ${input.title},
         ${input.subtitle ?? null},
-        ${input.short_description ?? null},
         ${input.description ?? null},
         ${input.cover_image_url ?? null},
         ${input.cover_image_public_id ?? null},
@@ -617,6 +647,7 @@ export async function createAdminPlan(rawInput: AdminPlanInput) {
 }
 
 export async function updateAdminPlan(id: string, rawInput: AdminPlanInput) {
+  assertOnlineForWrites();
   const input = normalizeInput(rawInput);
   const totalChapters = calculateTotalChapters(input.sections);
 
@@ -625,7 +656,7 @@ export async function updateAdminPlan(id: string, rawInput: AdminPlanInput) {
       update plan_templates set
         title = ${input.title},
         subtitle = ${input.subtitle ?? null},
-        short_description = ${input.short_description ?? null},
+        short_description = null,
         description = ${input.description ?? null},
         cover_image_url = ${input.cover_image_url ?? null},
         cover_image_public_id = ${input.cover_image_public_id ?? null},
@@ -656,6 +687,7 @@ export async function updateAdminPlan(id: string, rawInput: AdminPlanInput) {
 type CatalogPatch = { is_published?: boolean; is_archived?: boolean };
 
 export async function patchAdminPlanCatalog(id: string, patch: CatalogPatch) {
+  assertOnlineForWrites();
   if (typeof patch.is_published !== 'boolean' && typeof patch.is_archived !== 'boolean') {
     throw new PlanValidationError('Provide is_published and/or is_archived.');
   }
@@ -694,6 +726,7 @@ export async function patchAdminPlanCatalog(id: string, patch: CatalogPatch) {
 }
 
 export async function deleteAdminPlan(id: string): Promise<boolean> {
+  assertOnlineForWrites();
   const row = (
     (await sql`
     select is_builtin from plan_templates where id::text = ${id} limit 1

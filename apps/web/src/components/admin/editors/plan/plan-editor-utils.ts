@@ -9,7 +9,6 @@ import {
 export const emptyPlan: AdminPlanInput = {
   title: '',
   subtitle: '',
-  short_description: '',
   description: '',
   cover_image_url: '',
   cover_image_public_id: '',
@@ -88,7 +87,6 @@ export function mapPlanToForm(plan: PlanTemplateWithRelations): AdminPlanInput {
   return {
     title: plan.title,
     subtitle: plan.subtitle,
-    short_description: plan.short_description,
     description: plan.description,
     cover_image_url: plan.cover_image_url,
     cover_image_public_id: plan.cover_image_public_id,

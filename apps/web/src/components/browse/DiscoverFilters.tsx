@@ -3,9 +3,8 @@ import Link from "next/link";
 const filters = [
   { key: "all", label: "All" },
   { key: "video", label: "Videos" },
-  { key: "essay", label: "Essays" },
+  { key: "essay", label: "Articles" },
   { key: "cartoon", label: "Cartoons" },
-  { key: "message", label: "Messages" },
 ] as const;
 
 export type DiscoverTypeFilter = (typeof filters)[number]["key"];
@@ -39,7 +38,7 @@ export function parseDiscoverType(
   value: string | string[] | undefined,
 ): DiscoverTypeFilter {
   const raw = Array.isArray(value) ? value[0] : value;
-  if (raw === "video" || raw === "essay" || raw === "cartoon" || raw === "message") {
+  if (raw === "video" || raw === "essay" || raw === "cartoon") {
     return raw;
   }
   return "all";

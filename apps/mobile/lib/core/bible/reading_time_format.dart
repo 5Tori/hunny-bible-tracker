@@ -5,7 +5,19 @@ String _hourUnit(int hours) => hours == 1 ? 'hr' : 'hrs';
 
 String _minuteUnit(int minutes) => minutes == 1 ? 'min' : 'mins';
 
-/// Total duration as `N hr M min` (omits zero parts, e.g. `24 min`, `70 hrs`).
+/// Plan catalog cards — nearest 0.5 hr (e.g. `61.5 hrs`, `60 hrs`, `1 hr`).
+String formatCatalogReadingDuration(int totalMinutes) {
+  if (totalMinutes <= 0) return '0 hrs';
+
+  final halfHours = (totalMinutes / 30).round();
+  if (halfHours.isEven) {
+    final wholeHours = halfHours ~/ 2;
+    return wholeHours == 1 ? '1 hr' : '$wholeHours hrs';
+  }
+  return '${(halfHours / 2).toStringAsFixed(1)} hrs';
+}
+
+/// In-session / progress — minute precision (e.g. `24 mins`, `1 hr 40 mins`).
 String formatReadingDuration(int totalMinutes) {
   if (totalMinutes <= 0) return '0 min';
 
@@ -44,7 +56,7 @@ String? formatCatalogPlanTotalDuration({
     totalChapters: totalChapters,
   );
   if (total == null || total <= 0) return null;
-  return formatReadingDuration(total);
+  return formatCatalogReadingDuration(total);
 }
 
 /// Plan progress panel: remaining + total from bible_chapters sums.

@@ -3,7 +3,7 @@ export const ADMIN_NAV_ITEMS = [
   { href: '/admin/messages', label: 'Message cards' },
   { href: '/admin/today-messages', label: "Today's messages" },
   { href: '/admin/plans', label: 'Plans' },
-  { href: '/admin/content', label: 'Other content' },
+  { href: '/admin/discover', label: 'Discover' },
 ] as const;
 
 function matchesPathPrefix(pathname: string, href: string) {
@@ -20,9 +20,11 @@ export function isAdminNavActive(href: string, pathname: string): boolean {
   if (href === '/admin/messages') {
     return matchesPathPrefix(pathname, '/admin/messages');
   }
-  if (href === '/admin/content') {
+  if (href === '/admin/discover') {
     if (matchesPathPrefix(pathname, '/admin/messages')) return false;
-    return matchesPathPrefix(pathname, '/admin/content');
+    return (
+      matchesPathPrefix(pathname, '/admin/discover') || matchesPathPrefix(pathname, '/admin/content')
+    );
   }
   if (href === '/admin/today-messages') {
     return matchesPathPrefix(pathname, '/admin/today-messages');

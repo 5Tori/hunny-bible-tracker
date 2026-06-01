@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useMemo, useState } from 'react';
 
 import { PlanCatalogRowActions } from '@/components/admin/catalog/PlanCatalogRowActions';
@@ -12,9 +13,13 @@ import { DataTable } from '@/components/admin/ui/DataTable';
 import { EmptyState } from '@/components/admin/ui/EmptyState';
 import { FilterTabs } from '@/components/admin/ui/FilterTabs';
 import { PageHeader } from '@/components/admin/ui/PageHeader';
-import type { PlanTemplateBase } from '@/lib/plans';
 import { revalidateAdminPlans } from '@/lib/admin/swr-mutate';
-import { planTypeLabel } from '@/lib/plan-taxonomy';
+import {
+  formatPlanAdminClassification,
+  formatPlanMeta,
+  planListBlurb,
+} from '@/lib/plan-display';
+import type { PlanTemplateBase } from '@/lib/plans';
 
 type CatalogFilter = 'all' | 'active' | 'archived';
 
@@ -25,11 +30,11 @@ const FILTER_TABS = [
 ] as const;
 
 const COLUMNS = [
-  { key: 'title', header: 'Title' },
-  { key: 'type', header: 'Type' },
+  { key: 'plan', header: 'Plan' },
+  { key: 'classification', header: 'Classification' },
+  { key: 'reading', header: 'Reading' },
   { key: 'catalog', header: 'Catalog' },
   { key: 'browse', header: 'Browse' },
-  { key: 'updated', header: 'Updated' },
   { key: 'actions', header: 'Actions' },
 ];
 
@@ -69,8 +74,9 @@ export default function AdminPlansPage() {
   return (
     <>
       <PageHeader
+        label="Reading plans"
         title="Plans"
-        description="Create and edit templates, control draft vs published, archive, or delete plans."
+        description="Templates for /plans — journey and book plans with covers, taxonomy, and chapter sections. Reading time is derived from chapters on save."
         actions={<ButtonLink href="/admin/plans/new" variant="primary">New plan</ButtonLink>}
       />
 
@@ -102,24 +108,37 @@ export default function AdminPlansPage() {
             const archived = Boolean(plan.is_archived);
             const published = Boolean(plan.is_published);
             const builtin = Boolean(plan.is_builtin);
+            const blurb = planListBlurb(plan);
+            const readingMeta = formatPlanMeta(plan);
 
             switch (key) {
-              case 'title':
+              case 'plan':
                 return (
-                  <span className="admin-table-title">
-                    {plan.title}
-                    {builtin ? <Badge tone="info">Built-in</Badge> : null}
+                  <span className="admin-plan-cell">
+                    {plan.cover_image_url ? (
+                      <img src={plan.cover_image_url} alt="" className="admin-plan-thumb" />
+                    ) : (
+                      <span className="admin-plan-thumb admin-plan-thumb-empty" aria-hidden />
+                    )}
+                    <span className="admin-plan-copy">
+                      <strong className="admin-plan-title">
+                        {plan.title}
+                        {builtin ? <Badge tone="info">Built-in</Badge> : null}
+                      </strong>
+                      {blurb ? <span className="admin-muted">{blurb}</span> : null}
+                      <span className="admin-muted admin-plan-key">{plan.template_key}</span>
+                    </span>
                   </span>
                 );
-              case 'type':
-                return <span className="admin-muted">{planTypeLabel(plan.plan_type)}</span>;
+              case 'classification':
+                return (
+                  <span className="admin-muted">{formatPlanAdminClassification(plan)}</span>
+                );
+              case 'reading':
+                return <span className="admin-muted">{readingMeta ?? '—'}</span>;
               case 'catalog':
                 if (archived) {
-                  return (
-                    <span className="admin-table-cell-stack">
-                      <Badge tone="neutral">Archived</Badge>
-                    </span>
-                  );
+                  return <Badge tone="neutral">Archived</Badge>;
                 }
                 return published ? <Badge tone="success">Published</Badge> : <Badge tone="neutral">Draft</Badge>;
               case 'browse': {
@@ -133,19 +152,32 @@ export default function AdminPlansPage() {
                   </span>
                 );
               }
-              case 'updated':
-                return <span className="admin-muted">{new Date(plan.updated_at).toLocaleString()}</span>;
               case 'actions':
                 return (
-                  <PlanCatalogRowActions
-                    plan={plan}
-                    busy={busy}
-                    onPublish={() => void handlePatch(plan.id, { is_published: true })}
-                    onUnpublish={() => void handlePatch(plan.id, { is_published: false })}
-                    onArchive={() => void handlePatch(plan.id, { is_archived: true })}
-                    onUnarchive={() => void handlePatch(plan.id, { is_archived: false })}
-                    onDelete={() => void handleDelete(plan)}
-                  />
+                  <span className="admin-table-actions">
+                    <Link href={`/admin/plans/${plan.id}`} className="admin-btn admin-btn-link">
+                      Edit
+                    </Link>
+                    {published && !archived ? (
+                      <Link
+                        href={`/plans/${plan.template_key}`}
+                        className="admin-btn admin-btn-link"
+                        target="_blank"
+                      >
+                        View
+                      </Link>
+                    ) : null}
+                    <PlanCatalogRowActions
+                      plan={plan}
+                      busy={busy}
+                      showEditLink={false}
+                      onPublish={() => void handlePatch(plan.id, { is_published: true })}
+                      onUnpublish={() => void handlePatch(plan.id, { is_published: false })}
+                      onArchive={() => void handlePatch(plan.id, { is_archived: true })}
+                      onUnarchive={() => void handlePatch(plan.id, { is_archived: false })}
+                      onDelete={() => void handleDelete(plan)}
+                    />
+                  </span>
                 );
               default:
                 return null;

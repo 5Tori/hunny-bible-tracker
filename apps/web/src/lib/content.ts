@@ -1,6 +1,23 @@
 import crypto from 'crypto';
 
+import { normalizeVerseReferenceString } from '@/lib/bible-verse-reference';
 import { sql, queryByUuidIds, type SqlLike } from '@/lib/db/postgres';
+import { messageEditorStateFromTags } from '@/lib/message-admin';
+import { validateMessageCardInput } from '@/lib/message-content-validation';
+import { assertOnlineForWrites, isOfflineMode } from '@/lib/mock/mode';
+import {
+  filterNonEmptyDiscoverSections,
+  isDiscoverContentType,
+} from '@/lib/discover-content';
+import {
+  mockGetAdminContentAuthors,
+  mockGetAdminContentById,
+  mockGetAdminContents,
+  mockGetAdminContentsList,
+  mockGetPublishedContentByIdentifier,
+  mockGetPublishedContentsForBrowse,
+  mockGetPublishedContentsWithRelations,
+} from '@/lib/mock/readers';
 
 export interface ContentAuthor {
   id: string;
@@ -197,6 +214,11 @@ export function parseContentLimit(value: string | null | undefined) {
   return Math.min(Math.max(Math.floor(parsed), 1), 50);
 }
 
+export function parseDiscoverOnlyQuery(value: string | null | undefined) {
+  const raw = value?.trim().toLowerCase();
+  return raw === '1' || raw === 'true' || raw === 'yes';
+}
+
 function emptyToNull(value?: string | null) {
   const trimmed = value?.trim();
   return trimmed ? trimmed : null;
@@ -254,12 +276,19 @@ function normalizePublishedAt(value?: string | null) {
 }
 
 function normalizeInput(input: AdminContentInput) {
-  const title = input.title?.trim();
-  if (!title) throw new ContentValidationError('Title is required.');
-
   const contentType = normalizeContentType(input.content_type);
   if (!contentType) {
     throw new ContentValidationError('Choose a valid content type.');
+  }
+
+  let title = input.title?.trim() || '';
+  if (contentType === 'message') {
+    title = emptyToNull(input.primary_verse_reference) || title || '';
+    if (!title) {
+      throw new ContentValidationError('Verse reference is required.');
+    }
+  } else if (!title) {
+    throw new ContentValidationError('Title is required.');
   }
 
   const slug = slugify(input.slug || title);
@@ -352,20 +381,27 @@ function normalizeInput(input: AdminContentInput) {
     })
     .filter((plan): plan is NonNullable<typeof plan> => Boolean(plan));
 
-  return {
+  let primaryVerseReference = emptyToNull(input.primary_verse_reference);
+  let bibleVersion = emptyToNull(input.bible_version)?.toUpperCase() ?? null;
+  if (contentType === 'message' && primaryVerseReference) {
+    const canonical = normalizeVerseReferenceString(primaryVerseReference);
+    if (canonical) primaryVerseReference = canonical;
+  }
+
+  const normalized = {
     slug,
     content_type: contentType,
     language: normalizeLanguage(input.language),
     title,
     subtitle: emptyToNull(input.subtitle),
-    summary: emptyToNull(input.summary),
-    body: contentType === 'essay' ? null : emptyToNull(input.body),
+    summary: contentType === 'message' ? null : emptyToNull(input.summary),
+    body: contentType === 'message' ? null : emptyToNull(input.body),
     cover_image_url: emptyToNull(input.cover_image_url),
     cover_image_public_id: emptyToNull(input.cover_image_public_id),
     author_id: emptyToNull(input.author_id),
     author_display_name: emptyToNull(input.author_display_name),
-    primary_verse_reference: emptyToNull(input.primary_verse_reference),
-    bible_version: emptyToNull(input.bible_version)?.toUpperCase() ?? null,
+    primary_verse_reference: primaryVerseReference,
+    bible_version: bibleVersion,
     verse_text: emptyToNull(input.verse_text),
     duration_seconds: normalizeNullableNumber(input.duration_seconds),
     external_url: emptyToNull(input.external_url),
@@ -376,10 +412,34 @@ function normalizeInput(input: AdminContentInput) {
     browse_visible: input.browse_visible !== false,
     metadata: normalizeJsonObject(input.metadata),
     assets,
-    sections: contentType === 'essay' ? sections : [],
+    sections:
+      contentType === 'message'
+        ? []
+        : isDiscoverContentType(contentType)
+          ? filterNonEmptyDiscoverSections(sections)
+          : contentType === 'essay'
+            ? sections
+            : [],
     tags,
     related_plans: relatedPlans,
   };
+
+  if (contentType === 'message') {
+    const editorState = messageEditorStateFromTags(tags, normalized.metadata);
+    const validationError = validateMessageCardInput({
+      primary_verse_reference: normalized.primary_verse_reference,
+      bible_version: normalized.bible_version,
+      verse_text: normalized.verse_text,
+      cover_image_url: normalized.cover_image_url,
+      is_published: normalized.is_published,
+      messageState: editorState,
+    });
+    if (validationError) {
+      throw new ContentValidationError(validationError);
+    }
+  }
+
+  return normalized;
 }
 
 function normalizeTag(value?: string | null) {
@@ -874,11 +934,14 @@ export async function getPublishedContents(options?: {
   language?: string | null;
   tag?: string | null;
   limit?: number;
+  /** When true, only video / essay / cartoon (excludes message cards). */
+  discoverOnly?: boolean;
 }) {
   const contentType = normalizeContentType(options?.type);
   const language = normalizeLanguage(options?.language);
   const tag = normalizeTag(options?.tag);
   const limit = options?.limit ?? 20;
+  const discoverOnly = Boolean(options?.discoverOnly);
 
   if (options?.sort === 'new') {
     return (await sql`
@@ -890,6 +953,10 @@ export async function getPublishedContents(options?: {
         and c.browse_visible = true
         and c.language = ${language}
         and (${contentType}::text is null or c.content_type = ${contentType})
+        and (
+          ${discoverOnly}::boolean = false
+          or c.content_type in ('video', 'essay', 'cartoon')
+        )
         and (${tag}::text is null or ct.key = ${tag} or lower(ct.name) = ${tag})
       order by c.published_at desc nulls last, c.updated_at desc
       limit ${limit}
@@ -905,6 +972,10 @@ export async function getPublishedContents(options?: {
       and c.browse_visible = true
       and c.language = ${language}
       and (${contentType}::text is null or c.content_type = ${contentType})
+      and (
+        ${discoverOnly}::boolean = false
+        or c.content_type in ('video', 'essay', 'cartoon')
+      )
       and (${tag}::text is null or ct.key = ${tag} or lower(ct.name) = ${tag})
     order by c.featured_rank asc nulls last, c.published_at desc nulls last, c.updated_at desc
     limit ${limit}
@@ -987,7 +1058,12 @@ export async function getPublishedContentsForBrowse(options?: {
   language?: string | null;
   tag?: string | null;
   limit?: number;
+  discoverOnly?: boolean;
 }) {
+  if (isOfflineMode()) {
+    return mockGetPublishedContentsForBrowse(options);
+  }
+
   const contents = await getPublishedContents(options);
   if (contents.length === 0) {
     return [];
@@ -1012,13 +1088,37 @@ export async function getPublishedContentsForBrowse(options?: {
   });
 }
 
+/** Public /discover grid — videos, articles, and galleries only. */
+export async function getPublishedDiscoverContentsForBrowse(options?: {
+  sort?: PublishedContentSortMode;
+  type?: string | null;
+  language?: string | null;
+  limit?: number;
+}) {
+  const type = options?.type?.trim().toLowerCase() ?? null;
+  if (type && type !== 'all' && !isDiscoverContentType(type)) {
+    return [];
+  }
+
+  return getPublishedContentsForBrowse({
+    ...options,
+    type: type && type !== 'all' ? type : null,
+    discoverOnly: true,
+  });
+}
+
 export async function getPublishedContentsWithRelations(options?: {
   sort?: PublishedContentSortMode;
   type?: string | null;
   language?: string | null;
   tag?: string | null;
   limit?: number;
+  discoverOnly?: boolean;
 }) {
+  if (isOfflineMode()) {
+    return mockGetPublishedContentsWithRelations(options);
+  }
+
   const contents = await getPublishedContents(options);
   if (contents.length === 0) {
     return [];
@@ -1038,6 +1138,10 @@ export async function getPublishedContentsWithRelations(options?: {
 }
 
 export async function getPublishedContentByIdentifier(identifier: string, language?: string | null) {
+  if (isOfflineMode()) {
+    return mockGetPublishedContentByIdentifier(identifier, language);
+  }
+
   const normalizedIdentifier = identifier.trim();
   const normalizedLanguage = normalizeLanguage(language);
   const rows = (await sql`
@@ -1055,6 +1159,18 @@ export async function getPublishedContentByIdentifier(identifier: string, langua
   return hydrateContent(content, relations);
 }
 
+/** Published Discover post (video / article / cartoon) with full relations. */
+export async function getPublishedDiscoverContentByIdentifier(
+  identifier: string,
+  language?: string | null,
+) {
+  const content = await getPublishedContentByIdentifier(identifier, language);
+  if (!content || !isDiscoverContentType(content.content_type)) {
+    return null;
+  }
+  return content;
+}
+
 /** Lightweight admin list row — no author/plan joins beyond a plan count. */
 export interface AdminContentListItem {
   id: string;
@@ -1063,17 +1179,25 @@ export interface AdminContentListItem {
   language: string;
   title: string;
   summary: string | null;
+  primary_verse_reference: string | null;
   cover_image_url: string | null;
   is_published: boolean;
   is_archived: boolean;
   metadata: Record<string, unknown>;
   updated_at: string;
   related_plan_count: number;
+  /** Populated for `content_type = message` list queries. */
+  situation_keys?: string[];
+  theme_keys?: string[];
 }
 
 type AdminContentListRow = AdminContentListItem;
 
 export async function getAdminContentsList(options?: { contentType?: string }): Promise<AdminContentListItem[]> {
+  if (isOfflineMode()) {
+    return mockGetAdminContentsList(options);
+  }
+
   const contentType = options?.contentType?.trim();
 
   const rows = contentType
@@ -1085,18 +1209,33 @@ export async function getAdminContentsList(options?: { contentType?: string }): 
           c.language,
           c.title,
           c.summary,
+          c.primary_verse_reference,
           c.cover_image_url,
           c.is_published,
           c.is_archived,
           c.metadata,
           c.updated_at,
-          coalesce(pc.related_plan_count, 0)::int as related_plan_count
+          coalesce(pc.related_plan_count, 0)::int as related_plan_count,
+          coalesce(sit.situation_keys, '{}'::text[]) as situation_keys,
+          coalesce(th.theme_keys, '{}'::text[]) as theme_keys
         from contents c
         left join (
           select content_id, count(*)::int as related_plan_count
           from content_plan_links
           group by content_id
         ) pc on pc.content_id = c.id
+        left join lateral (
+          select array_agg(t.key order by t.sort_order, t.name) as situation_keys
+          from content_tag_links ctl
+          join content_tags t on t.id = ctl.tag_id
+          where ctl.content_id = c.id and t.type = 'situation'
+        ) sit on true
+        left join lateral (
+          select array_agg(t.key order by t.sort_order, t.name) as theme_keys
+          from content_tag_links ctl
+          join content_tags t on t.id = ctl.tag_id
+          where ctl.content_id = c.id and t.type = 'theme'
+        ) th on true
         where c.content_type = ${contentType}
         order by c.updated_at desc
       `) as AdminContentListRow[])
@@ -1108,18 +1247,33 @@ export async function getAdminContentsList(options?: { contentType?: string }): 
           c.language,
           c.title,
           c.summary,
+          c.primary_verse_reference,
           c.cover_image_url,
           c.is_published,
           c.is_archived,
           c.metadata,
           c.updated_at,
-          coalesce(pc.related_plan_count, 0)::int as related_plan_count
+          coalesce(pc.related_plan_count, 0)::int as related_plan_count,
+          coalesce(sit.situation_keys, '{}'::text[]) as situation_keys,
+          coalesce(th.theme_keys, '{}'::text[]) as theme_keys
         from contents c
         left join (
           select content_id, count(*)::int as related_plan_count
           from content_plan_links
           group by content_id
         ) pc on pc.content_id = c.id
+        left join lateral (
+          select array_agg(t.key order by t.sort_order, t.name) as situation_keys
+          from content_tag_links ctl
+          join content_tags t on t.id = ctl.tag_id
+          where ctl.content_id = c.id and t.type = 'situation'
+        ) sit on true
+        left join lateral (
+          select array_agg(t.key order by t.sort_order, t.name) as theme_keys
+          from content_tag_links ctl
+          join content_tags t on t.id = ctl.tag_id
+          where ctl.content_id = c.id and t.type = 'theme'
+        ) th on true
         order by c.updated_at desc
       `) as AdminContentListRow[]);
 
@@ -1127,10 +1281,16 @@ export async function getAdminContentsList(options?: { contentType?: string }): 
     ...row,
     metadata: row.metadata ?? {},
     related_plan_count: Number(row.related_plan_count) || 0,
+    situation_keys: Array.isArray(row.situation_keys) ? row.situation_keys : [],
+    theme_keys: Array.isArray(row.theme_keys) ? row.theme_keys : [],
   }));
 }
 
 export async function getAdminContents(options?: { contentType?: string }) {
+  if (isOfflineMode()) {
+    return mockGetAdminContents(options);
+  }
+
   const contentType = options?.contentType?.trim();
   const contents = contentType
     ? ((await sql`
@@ -1160,6 +1320,10 @@ export async function getAdminContents(options?: { contentType?: string }) {
 }
 
 export async function getAdminContentById(id: string) {
+  if (isOfflineMode()) {
+    return mockGetAdminContentById(id);
+  }
+
   const rows = (await sql`
     select * from contents
     where id::text = ${id}
@@ -1172,6 +1336,10 @@ export async function getAdminContentById(id: string) {
 }
 
 export async function getAdminContentAuthors() {
+  if (isOfflineMode()) {
+    return mockGetAdminContentAuthors();
+  }
+
   return (await sql`
     select * from content_authors
     order by is_active desc, display_name asc
@@ -1180,6 +1348,15 @@ export async function getAdminContentAuthors() {
 
 export async function createAdminContent(rawInput: AdminContentInput) {
   const input = normalizeInput(rawInput);
+  if (isOfflineMode()) {
+    const { mockCreateContent } = await import('@/lib/mock/store');
+    const { isDiscoverContentType } = await import('@/lib/discover-content');
+    if (input.content_type !== 'message' && !isDiscoverContentType(input.content_type)) {
+      throw new ContentValidationError('Unsupported content type in offline mode.');
+    }
+    return mockCreateContent(rawInput);
+  }
+  assertOnlineForWrites();
   const existing = (await sql`
     select id from contents where slug = ${input.slug} limit 1
   `) as Array<{ id: string }>;
@@ -1255,6 +1432,17 @@ export async function createAdminContent(rawInput: AdminContentInput) {
 
 export async function updateAdminContent(id: string, rawInput: AdminContentInput) {
   const input = normalizeInput(rawInput);
+  if (isOfflineMode()) {
+    const { mockUpdateContent } = await import('@/lib/mock/store');
+    const { isDiscoverContentType } = await import('@/lib/discover-content');
+    if (input.content_type !== 'message' && !isDiscoverContentType(input.content_type)) {
+      throw new ContentValidationError('Unsupported content type in offline mode.');
+    }
+    const updated = mockUpdateContent(id, rawInput);
+    if (!updated) return null;
+    return updated;
+  }
+  assertOnlineForWrites();
   const duplicate = (await sql`
     select id from contents
     where slug = ${input.slug} and id::text <> ${id}
@@ -1307,6 +1495,11 @@ export async function updateAdminContent(id: string, rawInput: AdminContentInput
 }
 
 export async function deleteAdminContent(id: string) {
+  if (isOfflineMode()) {
+    const { mockDeleteContent } = await import('@/lib/mock/store');
+    return mockDeleteContent(id);
+  }
+  assertOnlineForWrites();
   const deleted = (await sql`
     delete from contents
     where id::text = ${id}

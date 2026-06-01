@@ -63,7 +63,7 @@ Next.js web/API/admin
 
 **Reading progress:** tap chapter → Drift transaction → `chapter_progress_entries` + `reading_activities` → UI refresh. 100% → `completion_ready` → confirm → `plan_completion_events`.
 
-**Today's Message:** Admin publish → Supabase RPC or `GET /api/v1/today-message` → Home (cache → fallback). Lookup: latest where `publish_date <= date`.
+**Today's Message:** Admin publish → Supabase RPC or `GET /api/v1/today-message` → Home (cache → fallback). Lookup: latest where `publish_date <= date`. **Slot links one Message Card (`content_type = message`) via `content_id`; verse/image/context/hint are owned by the card and hydrated onto the slot.** Refactor memo: `docs/to-do/CONTENT_REFACTOR_MEMO.md`.
 
 **Discover:** Admin content → Supabase RPC or `GET /api/v1/content` → online-only list/detail sheet.
 

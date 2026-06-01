@@ -1,5 +1,5 @@
-import AdminContentEditor from '@/components/admin/AdminContentEditor';
+import AdminMessageCardEditor from '@/components/admin/AdminMessageCardEditor';
 
 export default function NewMessageCardPage() {
-  return <AdminContentEditor />;
+  return <AdminMessageCardEditor />;
 }

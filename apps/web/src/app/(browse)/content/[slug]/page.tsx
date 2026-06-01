@@ -1,9 +1,15 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 
 import { ContentDetail, ContentNotFound } from "@/components/browse/ContentDetail";
-import { getPublishedContentByIdentifier } from "@/lib/content";
+import {
+  getPublishedContentByIdentifier,
+  getPublishedDiscoverContentByIdentifier,
+} from "@/lib/content";
+import { isDiscoverContentType } from "@/lib/discover-content";
+import { discoverContentDescription } from "@/lib/discover-content-display";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 300;
 
 interface PageProps {
   params: Promise<{ slug: string }>;
@@ -11,19 +17,15 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  const content = await getPublishedContentByIdentifier(slug, "en");
+  const content = await getPublishedDiscoverContentByIdentifier(slug, "en");
   if (!content) {
     return {
-      title: "Content",
+      title: "Discover",
       alternates: { canonical: `/content/${slug}` },
     };
   }
 
-  const description =
-    content.summary ||
-    content.subtitle ||
-    content.body?.slice(0, 160) ||
-    "Explore Scripture with Hunny Bible Tracker.";
+  const description = discoverContentDescription(content);
 
   return {
     title: content.title,
@@ -49,6 +51,14 @@ export default async function ContentPage({ params }: PageProps) {
   const content = await getPublishedContentByIdentifier(slug, "en");
 
   if (!content) {
+    return <ContentNotFound />;
+  }
+
+  if (content.content_type === "message") {
+    redirect(`/messages/${content.slug}`);
+  }
+
+  if (!isDiscoverContentType(content.content_type)) {
     return <ContentNotFound />;
   }
 

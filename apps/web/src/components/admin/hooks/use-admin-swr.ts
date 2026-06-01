@@ -6,6 +6,7 @@ import type { AdminOverview } from '@/lib/admin/overview';
 import { adminSwrFetcher } from '@/lib/admin/swr-fetcher';
 import { ADMIN_SWR_KEYS } from '@/lib/admin/swr-keys';
 import type { AdminContentListItem, ContentWithRelations } from '@/lib/content';
+import type { AdminDiscoverListItem } from '@/lib/discover-content';
 import type { PlanTemplateBase } from '@/lib/plans';
 import type { TodayMessageBase } from '@/lib/today-messages';
 
@@ -50,6 +51,14 @@ export function useAdminPlans() {
 export function useAdminContent() {
   return useSWR<{ contents: ContentWithRelations[] }>(
     ADMIN_SWR_KEYS.content,
+    adminSwrFetcher,
+    adminListConfig,
+  );
+}
+
+export function useAdminDiscover() {
+  return useSWR<{ items: AdminDiscoverListItem[] }>(
+    ADMIN_SWR_KEYS.discover,
     adminSwrFetcher,
     adminListConfig,
   );

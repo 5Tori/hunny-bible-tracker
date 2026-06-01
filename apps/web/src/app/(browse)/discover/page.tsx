@@ -7,14 +7,14 @@ import {
 } from "@/components/browse/DiscoverFilters";
 import { MarketingContainer } from "@/components/marketing/ui/MarketingContainer";
 import { MarketingSection } from "@/components/marketing/ui/MarketingSection";
-import { getPublishedContentsForBrowse } from "@/lib/content";
+import { getPublishedDiscoverContentsForBrowse } from "@/lib/content";
 
 export const revalidate = 300;
 
 export const metadata: Metadata = {
   title: "Discover",
   description:
-    "Videos, essays, cartoons, and messages to explore Scripture with Hunny Bible Tracker.",
+    "Videos, articles, and cartoons to explore Scripture with Hunny Bible Tracker.",
   alternates: { canonical: "/discover" },
 };
 
@@ -26,7 +26,7 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
   const params = await searchParams;
   const typeFilter = parseDiscoverType(params.type);
 
-  const contents = await getPublishedContentsForBrowse({
+  const contents = await getPublishedDiscoverContentsForBrowse({
     language: "en",
     type: typeFilter === "all" ? undefined : typeFilter,
     sort: "featured",
@@ -39,7 +39,7 @@ export default async function DiscoverPage({ searchParams }: PageProps) {
         <p className="mkt-kicker">Discover</p>
         <h1 className="mkt-heading mt-3">Explore Scripture</h1>
         <p className="mkt-lead mt-4 max-w-2xl">
-          Videos, essays, cartoons, and short messages curated for gentle reading.
+          Videos, articles, and cartoons curated for gentle reading.
         </p>
 
         <div className="mt-8">

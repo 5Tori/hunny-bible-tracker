@@ -1,5 +1,5 @@
-import AdminContentEditor from '@/components/admin/AdminContentEditor';
+import { redirect } from 'next/navigation';
 
-export default function NewContentPage() {
-  return <AdminContentEditor />;
+export default function LegacyNewAdminContentPage() {
+  redirect('/admin/discover/new');
 }

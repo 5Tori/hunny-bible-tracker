@@ -9,6 +9,7 @@ import { RowActionsMenu, type RowAction } from '../ui/RowActionsMenu';
 type PlanCatalogRowActionsProps = {
   plan: PlanTemplateBase;
   busy: boolean;
+  showEditLink?: boolean;
   onPublish: () => void;
   onUnpublish: () => void;
   onArchive: () => void;
@@ -19,6 +20,7 @@ type PlanCatalogRowActionsProps = {
 export function PlanCatalogRowActions({
   plan,
   busy,
+  showEditLink = true,
   onPublish,
   onUnpublish,
   onArchive,
@@ -50,11 +52,13 @@ export function PlanCatalogRowActions({
   });
 
   return (
-    <span className="admin-table-actions">
-      <Link href={`/admin/plans/${plan.id}`} className="admin-btn admin-btn-link">
-        Edit
-      </Link>
+    <>
+      {showEditLink ? (
+        <Link href={`/admin/plans/${plan.id}`} className="admin-btn admin-btn-link">
+          Edit
+        </Link>
+      ) : null}
       <RowActionsMenu actions={menuActions} />
-    </span>
+    </>
   );
 }

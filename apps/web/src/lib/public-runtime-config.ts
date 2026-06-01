@@ -2,12 +2,21 @@ export type PublicRuntimeConfig = {
   supabaseUrl: string;
   supabaseAnonKey: string;
   cloudinaryCloudName: string;
+  offlineMode: boolean;
 };
 
 declare global {
   interface Window {
     __HUNNY_PUBLIC_CONFIG__?: PublicRuntimeConfig;
   }
+}
+
+function readOfflineModeFlag(): boolean {
+  const flag =
+    process.env.HUNNY_OFFLINE_MODE?.trim().toLowerCase() ??
+    process.env.NEXT_PUBLIC_HUNNY_OFFLINE_MODE?.trim().toLowerCase() ??
+    '';
+  return flag === '1' || flag === 'true' || flag === 'yes';
 }
 
 function fromProcessEnv(): PublicRuntimeConfig {
@@ -21,6 +30,7 @@ function fromProcessEnv(): PublicRuntimeConfig {
       process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME?.trim() ||
       process.env.CLOUDINARY_CLOUD_NAME?.trim() ||
       '',
+    offlineMode: readOfflineModeFlag(),
   };
 }
 

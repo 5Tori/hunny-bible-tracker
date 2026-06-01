@@ -4,38 +4,21 @@ import type { ReactNode } from "react";
 import { MarketingContainer } from "@/components/marketing/ui/MarketingContainer";
 import { MarketingProse } from "@/components/marketing/ui/MarketingProse";
 import { BrandLogo } from "@/components/public/BrandLogo";
-import { AndroidTesterCta } from "@/components/public/AndroidTesterCta";
+import { SiteHeaderNav } from "@/components/public/SiteHeaderNav";
 import { siteConfig } from "@/lib/site-config";
-
-const navLinkClass =
-  "rounded-lg px-3 py-2 text-neutral-600 transition hover:text-neutral-900";
 
 export function SiteHeader() {
   return (
-    <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/95">
+    <header className="sticky top-0 z-40 border-b border-neutral-200 bg-white/95 backdrop-blur-sm">
       <MarketingContainer>
-        <div className="flex h-16 items-center justify-between">
-          <Link href="/" className="flex items-center gap-2.5">
+        <div className="flex h-16 items-center justify-between gap-3">
+          <Link href="/" className="flex min-w-0 items-center gap-2.5">
             <BrandLogo className="h-7 w-auto shrink-0" priority />
-            <span className="text-base font-semibold tracking-tight text-neutral-900">
+            <span className="hidden truncate text-base font-semibold tracking-tight text-neutral-900 md:inline">
               {siteConfig.name}
             </span>
           </Link>
-          <nav className="flex items-center gap-0.5 text-sm">
-            <Link href="/today" className={navLinkClass}>
-              Today
-            </Link>
-            <Link href="/messages" className={navLinkClass}>
-              Messages
-            </Link>
-            <Link href="/discover" className={navLinkClass}>
-              Discover
-            </Link>
-            <Link href="/support" className={`${navLinkClass} hidden sm:inline-flex`}>
-              Support
-            </Link>
-            <AndroidTesterCta variant="header" />
-          </nav>
+          <SiteHeaderNav />
         </div>
       </MarketingContainer>
     </header>
@@ -65,6 +48,7 @@ export function SiteFooter() {
               <FooterLink href="/today">Today</FooterLink>
               <FooterLink href="/messages">Messages</FooterLink>
               <FooterLink href="/discover">Discover</FooterLink>
+              <FooterLink href="/plans">Plans</FooterLink>
               <FooterLink href="/support">Support</FooterLink>
             </FooterCol>
             <FooterCol title="Legal">

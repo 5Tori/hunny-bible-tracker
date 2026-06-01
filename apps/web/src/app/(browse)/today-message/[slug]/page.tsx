@@ -30,7 +30,8 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   const description =
     message.hint_summary ||
     message.verse_text ||
-    message.linked_content?.summary ||
+    message.context ||
+    message.linked_content?.context ||
     "A daily Bible message from Hunny Bible Tracker.";
   const previewImage = message.share_image_url || message.image_url;
 

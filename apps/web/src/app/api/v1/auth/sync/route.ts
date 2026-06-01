@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 
 import { upsertSupabaseAuthUser } from '@/lib/auth/auth-user-sync';
+import {
+  OFFLINE_MOCK_USER,
+  isOfflineMockAuthToken,
+} from '@/lib/auth/offline-mock-auth';
 import { verifySupabaseBearerToken } from '@/lib/auth/verify-supabase-token';
+import { isOfflineMode } from '@/lib/mock/mode';
 
 export async function POST(req: Request) {
   const auth = req.headers.get('authorization');
@@ -11,6 +16,10 @@ export async function POST(req: Request) {
   const token = auth.slice(7).trim();
   if (!token) {
     return NextResponse.json({ error: 'missing_token' }, { status: 401 });
+  }
+
+  if (isOfflineMode() && isOfflineMockAuthToken(token)) {
+    return NextResponse.json({ user: OFFLINE_MOCK_USER });
   }
 
   let user;

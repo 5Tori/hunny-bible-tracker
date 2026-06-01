@@ -58,7 +58,7 @@ from (
       'NIV',
       'Therefore do not worry about tomorrow, for tomorrow will worry about itself.',
       10,
-      '{"primaryCategory":"anxiety_worry","shortReflection":"God does not ask you to carry tomorrow before it arrives. Take the next small step with Him today.","prayerText":"Lord, help me trust You with what I cannot control today. Give me peace for the next step. Amen.","cardTemplateKey":"classic","shareIntents":["for_self","night_share"],"isTodayEligible":true,"searchAliases":["future","tomorrow","uncertain","worried"],"seed":true}'
+      '{"primaryCategory":"peace_anxiety","shortReflection":"God does not ask you to carry tomorrow before it arrives. Take the next small step with Him today.","prayerText":"Lord, help me trust You with what I cannot control today. Give me peace for the next step. Amen.","cardTemplateKey":"classic","shareIntents":["for_self","night_share"],"isTodayEligible":true,"searchAliases":["future","tomorrow","uncertain","worried"],"seed":true}'
     ),
     (
       'when-you-feel-behind',
@@ -70,7 +70,7 @@ from (
       'NIV',
       'I praise you because I am fearfully and wonderfully made.',
       20,
-      '{"primaryCategory":"anxiety_worry","shortReflection":"Comparison can make any season feel like failure. Your worth is not measured by someone else''s timeline.","prayerText":"Father, quiet the voice that says I am behind. Help me trust Your pace for my life. Amen.","cardTemplateKey":"classic","shareIntents":["for_self","send_encouragement"],"isTodayEligible":true,"searchAliases":["behind","comparison","late"],"seed":true}'
+      '{"primaryCategory":"peace_anxiety","shortReflection":"Comparison can make any season feel like failure. Your worth is not measured by someone else''s timeline.","prayerText":"Father, quiet the voice that says I am behind. Help me trust Your pace for my life. Amen.","cardTemplateKey":"classic","shareIntents":["for_self","send_encouragement"],"isTodayEligible":true,"searchAliases":["behind","comparison","late"],"seed":true}'
     ),
     (
       'before-you-fall-asleep',
@@ -82,7 +82,7 @@ from (
       'NIV',
       'In peace I will lie down and sleep, for you alone, Lord, make me dwell in safety.',
       30,
-      '{"primaryCategory":"peace_rest","shortReflection":"The day can end without every question answered. You may rest in the care of God who does not sleep.","prayerText":"Lord, release what I cannot fix tonight. Guard my rest. Amen.","cardTemplateKey":"classic","shareIntents":["for_self","night_share"],"isTodayEligible":true,"searchAliases":["sleep","rest","night","bedtime"],"seed":true}'
+      '{"primaryCategory":"peace_anxiety","shortReflection":"The day can end without every question answered. You may rest in the care of God who does not sleep.","prayerText":"Lord, release what I cannot fix tonight. Guard my rest. Amen.","cardTemplateKey":"classic","shareIntents":["for_self","night_share"],"isTodayEligible":true,"searchAliases":["sleep","rest","night","bedtime"],"seed":true}'
     ),
     (
       'when-waiting-feels-long',
@@ -130,7 +130,7 @@ from (
       'NIV',
       'The Lord is close to the brokenhearted and saves those who are crushed in spirit.',
       70,
-      '{"primaryCategory":"loneliness_belonging","shortReflection":"Loneliness can make you feel invisible, but it does not erase your worth. God draws near to the quiet and the weary.","prayerText":"Lord, in my loneliness, remind me I am not forgotten. Amen.","cardTemplateKey":"classic","shareIntents":["for_self","send_comfort"],"isTodayEligible":true,"searchAliases":["alone","lonely","comfort"],"seed":true}'
+      '{"primaryCategory":"love_belonging","shortReflection":"Loneliness can make you feel invisible, but it does not erase your worth. God draws near to the quiet and the weary.","prayerText":"Lord, in my loneliness, remind me I am not forgotten. Amen.","cardTemplateKey":"classic","shareIntents":["for_self","send_comfort"],"isTodayEligible":true,"searchAliases":["alone","lonely","comfort"],"seed":true}'
     ),
     (
       'when-you-need-to-start-again',
@@ -142,7 +142,7 @@ from (
       'NIV',
       'Because of the Lord''s great love we are not consumed, for his compassions never fail. They are new every morning.',
       80,
-      '{"primaryCategory":"forgiveness_grace","shortReflection":"Failure is not the final word on your story. Grace opens a door you thought was closed.","prayerText":"Lord, I come back to You again. Make me new where I feel broken. Amen.","cardTemplateKey":"classic","shareIntents":["for_self","send_comfort"],"isTodayEligible":true,"searchAliases":["start again","grace","mercy"],"seed":true}'
+      '{"primaryCategory":"grace_forgiveness","shortReflection":"Failure is not the final word on your story. Grace opens a door you thought was closed.","prayerText":"Lord, I come back to You again. Make me new where I feel broken. Amen.","cardTemplateKey":"classic","shareIntents":["for_self","send_comfort"],"isTodayEligible":true,"searchAliases":["start again","grace","mercy"],"seed":true}'
     ),
     (
       'a-quiet-morning-gratitude',
@@ -154,7 +154,7 @@ from (
       'NIV',
       'This is the day the Lord has made; let us rejoice and be glad in it.',
       90,
-      '{"primaryCategory":"gratitude_joy","shortReflection":"Before the list of tasks begins, pause to notice what is already given. Gratitude can soften even a heavy morning.","prayerText":"Thank You, Lord, for this day. Teach my heart to notice Your gifts. Amen.","cardTemplateKey":"classic","shareIntents":["for_self","morning_share","thank_you"],"isTodayEligible":true,"searchAliases":["morning","gratitude","thanks"],"seed":true}'
+      '{"primaryCategory":"joy_gratitude","shortReflection":"Before the list of tasks begins, pause to notice what is already given. Gratitude can soften even a heavy morning.","prayerText":"Thank You, Lord, for this day. Teach my heart to notice Your gifts. Amen.","cardTemplateKey":"classic","shareIntents":["for_self","morning_share","thank_you"],"isTodayEligible":true,"searchAliases":["morning","gratitude","thanks"],"seed":true}'
     ),
     (
       'when-your-mind-feels-crowded',
@@ -166,7 +166,7 @@ from (
       'NIV',
       'Be still, and know that I am God.',
       100,
-      '{"primaryCategory":"peace_rest","shortReflection":"A crowded mind does not mean a crowded soul. Stillness can begin with one slow breath and one honest prayer.","prayerText":"Lord, quiet the noise inside me. Help me rest in You. Amen.","cardTemplateKey":"classic","shareIntents":["for_self","night_share"],"isTodayEligible":true,"searchAliases":["overwhelmed","busy","stillness"],"seed":true}'
+      '{"primaryCategory":"peace_anxiety","shortReflection":"A crowded mind does not mean a crowded soul. Stillness can begin with one slow breath and one honest prayer.","prayerText":"Lord, quiet the noise inside me. Help me rest in You. Amen.","cardTemplateKey":"classic","shareIntents":["for_self","night_share"],"isTodayEligible":true,"searchAliases":["feeling_overwhelmed","busy","stillness"],"seed":true}'
     )
 ) as seed(
   slug,
@@ -220,21 +220,21 @@ select c.id, t.id, now()
 from contents c
 join (
   values
-    ('when-tomorrow-feels-heavy', 'category', 'anxiety_worry'),
+    ('when-tomorrow-feels-heavy', 'category', 'peace_anxiety'),
     ('when-tomorrow-feels-heavy', 'situation', 'future_uncertainty'),
     ('when-tomorrow-feels-heavy', 'theme', 'trust'),
     ('when-tomorrow-feels-heavy', 'theme', 'peace'),
     ('when-tomorrow-feels-heavy', 'theme', 'prayer'),
     ('when-tomorrow-feels-heavy', 'tone', 'comfort'),
     ('when-tomorrow-feels-heavy', 'bible_context', 'jesus_words'),
-    ('when-you-feel-behind', 'category', 'anxiety_worry'),
-    ('when-you-feel-behind', 'situation', 'feeling_behind'),
+    ('when-you-feel-behind', 'category', 'peace_anxiety'),
+    ('when-you-feel-behind', 'situation', 'feeling_overwhelmed'),
     ('when-you-feel-behind', 'theme', 'identity'),
     ('when-you-feel-behind', 'theme', 'trust'),
     ('when-you-feel-behind', 'theme', 'hope'),
     ('when-you-feel-behind', 'tone', 'assurance'),
-    ('before-you-fall-asleep', 'category', 'peace_rest'),
-    ('before-you-fall-asleep', 'situation', 'before_sleep'),
+    ('before-you-fall-asleep', 'category', 'peace_anxiety'),
+    ('before-you-fall-asleep', 'situation', 'morning_reset'),
     ('before-you-fall-asleep', 'theme', 'peace'),
     ('before-you-fall-asleep', 'theme', 'rest'),
     ('before-you-fall-asleep', 'theme', 'prayer'),
@@ -254,31 +254,31 @@ join (
     ('courage-for-the-next-step', 'theme', 'guidance'),
     ('courage-for-the-next-step', 'tone', 'encouragement'),
     ('when-you-need-wisdom', 'category', 'wisdom_guidance'),
-    ('when-you-need-wisdom', 'situation', 'big_decision'),
+    ('when-you-need-wisdom', 'situation', 'major_decision'),
     ('when-you-need-wisdom', 'theme', 'wisdom'),
     ('when-you-need-wisdom', 'theme', 'guidance'),
     ('when-you-need-wisdom', 'theme', 'prayer'),
     ('when-you-need-wisdom', 'tone', 'reflection'),
-    ('for-the-moment-you-feel-alone', 'category', 'loneliness_belonging'),
-    ('for-the-moment-you-feel-alone', 'situation', 'feeling_alone'),
+    ('for-the-moment-you-feel-alone', 'category', 'love_belonging'),
+    ('for-the-moment-you-feel-alone', 'situation', 'feeling_lonely'),
     ('for-the-moment-you-feel-alone', 'theme', 'comfort'),
     ('for-the-moment-you-feel-alone', 'theme', 'faith'),
     ('for-the-moment-you-feel-alone', 'tone', 'comfort'),
     ('for-the-moment-you-feel-alone', 'bible_context', 'psalms'),
-    ('when-you-need-to-start-again', 'category', 'forgiveness_grace'),
-    ('when-you-need-to-start-again', 'situation', 'starting_over'),
+    ('when-you-need-to-start-again', 'category', 'grace_forgiveness'),
+    ('when-you-need-to-start-again', 'situation', 'new_beginning'),
     ('when-you-need-to-start-again', 'theme', 'grace'),
     ('when-you-need-to-start-again', 'theme', 'forgiveness'),
     ('when-you-need-to-start-again', 'tone', 'assurance'),
-    ('a-quiet-morning-gratitude', 'category', 'gratitude_joy'),
-    ('a-quiet-morning-gratitude', 'situation', 'morning_gratitude'),
+    ('a-quiet-morning-gratitude', 'category', 'joy_gratitude'),
+    ('a-quiet-morning-gratitude', 'situation', 'morning_reset'),
     ('a-quiet-morning-gratitude', 'theme', 'gratitude'),
     ('a-quiet-morning-gratitude', 'theme', 'joy'),
     ('a-quiet-morning-gratitude', 'theme', 'praise'),
     ('a-quiet-morning-gratitude', 'tone', 'gratitude'),
     ('a-quiet-morning-gratitude', 'share_intent', 'morning_share'),
-    ('when-your-mind-feels-crowded', 'category', 'peace_rest'),
-    ('when-your-mind-feels-crowded', 'situation', 'overwhelmed'),
+    ('when-your-mind-feels-crowded', 'category', 'peace_anxiety'),
+    ('when-your-mind-feels-crowded', 'situation', 'feeling_overwhelmed'),
     ('when-your-mind-feels-crowded', 'theme', 'peace'),
     ('when-your-mind-feels-crowded', 'theme', 'rest'),
     ('when-your-mind-feels-crowded', 'theme', 'prayer'),

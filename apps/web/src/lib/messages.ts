@@ -7,13 +7,20 @@ import {
   parseContentLimit,
 } from '@/lib/content';
 import { sql } from '@/lib/db/postgres';
+import { isOfflineMode } from '@/lib/mock/mode';
+import {
+  mockGetPublishedMessageBySlug,
+  mockGetPublishedMessages,
+} from '@/lib/mock/readers';
 import {
   getCategoryLabel,
   getMessageTaxonomyPayload,
   resolveTagLabel,
   type MessageTagType,
 } from '@/lib/message-taxonomy';
-import { parseMessageMetadata } from '@/lib/message-metadata';
+import { parseMessageEngagement } from '@/lib/message-engagement';
+import { resolveMessageCardImages } from '@/lib/message-images';
+import { parseMessageMetadata, resolveMessageDisplayContext } from '@/lib/message-metadata';
 
 export interface PublicMessageRelatedPlan {
   id: string;
@@ -29,11 +36,14 @@ export interface PublicMessageCard {
   slug: string;
   title: string;
   subtitle: string | null;
-  summary: string | null;
   verseReference: string | null;
   verseText: string | null;
   translation: string | null;
+  context: string | null;
+  hint: string | null;
+  /** @deprecated Use `context`. */
   shortReflection: string | null;
+  /** @deprecated Use `hint`. */
   prayerText: string | null;
   primaryCategory: string;
   primaryCategoryLabel: string;
@@ -47,8 +57,16 @@ export interface PublicMessageCard {
   shareIntents: string[];
   cardTemplateKey: string;
   shareImageUrl: string | null;
+  /** Base background image (live text overlay in UI). */
   coverImageUrl: string | null;
-  isTodayEligible: boolean;
+  /** Optional pre-rendered image with verse text baked in. */
+  compositeImageUrl: string | null;
+  /** Composite when set, otherwise `coverImageUrl`. */
+  displayImageUrl: string | null;
+  hasCompositeImage: boolean;
+  heartCount: number;
+  shareCount: number;
+  saveCount: number;
   relatedPlans: PublicMessageRelatedPlan[];
   messagesUrl: string;
 }
@@ -115,18 +133,26 @@ export function mapContentToPublicMessage(content: ContentWithRelations): Public
   const themeTags = grouped.theme ?? [];
   const bibleContextTags = grouped.bible_context ?? [];
   const tone = grouped.tone?.[0] ?? null;
+  const context = resolveMessageDisplayContext(content.metadata);
+  const hint = metadata.hint ?? metadata.prayerText ?? null;
+  const engagement = parseMessageEngagement(content.metadata);
+  const images = resolveMessageCardImages({
+    coverImageUrl: content.cover_image_url,
+    compositeImageUrl: metadata.compositeImageUrl,
+  });
 
   return {
     id: content.id,
     slug: content.slug,
     title: content.title,
     subtitle: content.subtitle,
-    summary: content.summary,
     verseReference: content.primary_verse_reference,
     verseText: content.verse_text,
     translation: content.bible_version,
-    shortReflection: metadata.shortReflection ?? content.summary,
-    prayerText: metadata.prayerText ?? null,
+    context,
+    hint,
+    shortReflection: context,
+    prayerText: hint,
     primaryCategory,
     primaryCategoryLabel: getCategoryLabel(primaryCategory),
     situations,
@@ -138,9 +164,14 @@ export function mapContentToPublicMessage(content: ContentWithRelations): Public
     toneLabel: tone ? resolveTagLabel('tone', tone) : null,
     shareIntents: metadata.shareIntents,
     cardTemplateKey: metadata.cardTemplateKey,
-    shareImageUrl: content.cover_image_url,
-    coverImageUrl: content.cover_image_url,
-    isTodayEligible: metadata.isTodayEligible,
+    shareImageUrl: images.displayImageUrl ?? content.cover_image_url,
+    coverImageUrl: images.coverImageUrl,
+    compositeImageUrl: images.compositeImageUrl,
+    displayImageUrl: images.displayImageUrl,
+    hasCompositeImage: images.hasCompositeImage,
+    heartCount: engagement.heartCount,
+    shareCount: engagement.shareCount,
+    saveCount: engagement.saveCount,
     relatedPlans: content.related_plans.map((plan) => ({
       id: plan.id,
       templateKey: plan.template_key,
@@ -154,6 +185,10 @@ export function mapContentToPublicMessage(content: ContentWithRelations): Public
 }
 
 export async function getPublishedMessages(options?: GetPublishedMessagesOptions) {
+  if (isOfflineMode()) {
+    return mockGetPublishedMessages(options);
+  }
+
   const rows = (await sql`
     select mobile_message_list(
       ${normalizeLanguage(options?.language)}::text,
@@ -178,6 +213,10 @@ export async function getPublishedMessages(options?: GetPublishedMessagesOptions
 }
 
 export async function getPublishedMessageBySlug(slug: string, language?: string | null) {
+  if (isOfflineMode()) {
+    return mockGetPublishedMessageBySlug(slug, language);
+  }
+
   const rows = (await sql`
     select mobile_message_detail(
       ${slug.trim()}::text,

@@ -5,6 +5,7 @@ export const ADMIN_SWR_KEYS = {
   todayMessages: '/api/v1/admin/today-messages',
   plans: '/api/v1/admin/plans',
   content: '/api/v1/admin/content',
+  discover: '/api/v1/admin/discover',
 } as const;
 
 export type AdminSwrKey = (typeof ADMIN_SWR_KEYS)[keyof typeof ADMIN_SWR_KEYS];

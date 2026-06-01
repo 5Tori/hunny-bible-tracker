@@ -1,11 +1,12 @@
 import { sql } from '@/lib/db/postgres';
-import { MESSAGE_CATEGORIES } from '@/lib/message-taxonomy';
+import { MESSAGE_PRIMARY_CATEGORIES } from '@/lib/message-taxonomy';
+import { isOfflineMode } from '@/lib/mock/mode';
+import { mockGetAdminOverview } from '@/lib/mock/readers';
 
 export interface AdminOverviewMessageCounts {
   total: number;
   published: number;
   draft: number;
-  todayEligible: number;
   archived: number;
 }
 
@@ -13,6 +14,8 @@ export interface AdminOverviewPlanCounts {
   total: number;
   active: number;
   published: number;
+  browseVisible: number;
+  draft: number;
   archived: number;
 }
 
@@ -56,7 +59,12 @@ function toNumber(value: unknown) {
 }
 
 function buildTodaySchedule(
-  rows: Array<{ id: string; publish_date: string; verse_reference: string; is_published: boolean }>,
+  rows: Array<{
+    id: string;
+    publish_date: string;
+    verse_reference: string;
+    content_is_published: boolean | null;
+  }>,
 ) {
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
@@ -74,11 +82,11 @@ function buildTodaySchedule(
       return { date, status: 'gap' };
     }
 
-    const published = matches.find((item) => item.is_published);
+    const published = matches.find((item) => item.content_is_published === true);
     const chosen = published ?? matches[0];
     return {
       date,
-      status: chosen.is_published ? 'published' : 'draft',
+      status: chosen.content_is_published ? 'published' : 'draft',
       messageId: chosen.id,
       verseReference: chosen.verse_reference,
     };
@@ -96,6 +104,10 @@ function buildTodaySchedule(
 }
 
 export async function getAdminOverview(): Promise<AdminOverview> {
+  if (isOfflineMode()) {
+    return mockGetAdminOverview();
+  }
+
   const today = new Date();
   today.setUTCHours(0, 0, 0, 0);
   const rangeStart = formatDate(today);
@@ -111,37 +123,51 @@ export async function getAdminOverview(): Promise<AdminOverview> {
         count(*) filter (
           where content_type = 'message' and is_published = false and is_archived = false
         )::int as draft,
-        count(*) filter (
-          where content_type = 'message'
-            and is_archived = false
-            and coalesce((metadata->>'isTodayEligible')::boolean, true) = true
-        )::int as today_eligible,
         count(*) filter (where content_type = 'message' and is_archived = true)::int as archived
       from contents
     `,
     sql`
-      select
-        metadata->>'primaryCategory' as key,
-        count(*)::int as count
-      from contents
-      where content_type = 'message'
-        and is_published = true
-        and is_archived = false
-        and coalesce(metadata->>'primaryCategory', '') <> ''
-      group by metadata->>'primaryCategory'
+      select category_key as key, count(distinct content_id)::int as count
+      from (
+        select
+          c.id as content_id,
+          coalesce(
+            nullif(trim(c.metadata->>'primaryCategory'), ''),
+            cat_tag.key
+          ) as category_key
+        from contents c
+        left join lateral (
+          select ct.key
+          from content_tag_links ctl
+          join content_tags ct on ct.id = ctl.tag_id and ct.type = 'category'
+          where ctl.content_id = c.id
+          order by ctl.created_at
+          limit 1
+        ) cat_tag on true
+        where c.content_type = 'message'
+          and c.is_published = true
+          and c.is_archived = false
+      ) published_messages
+      where category_key is not null and category_key <> ''
+      group by category_key
     `,
     sql`
-      select id, publish_date, verse_reference, is_published
-      from today_messages
-      where publish_date >= ${rangeStart}
-        and publish_date <= ${rangeEnd}
-      order by publish_date asc, updated_at desc
+      select tm.id, tm.publish_date, tm.verse_reference, c.is_published as content_is_published
+      from today_messages tm
+      left join contents c on c.id = tm.content_id
+      where tm.publish_date >= ${rangeStart}
+        and tm.publish_date <= ${rangeEnd}
+      order by tm.publish_date asc, tm.updated_at desc
     `,
     sql`
       select
         count(*)::int as total,
         count(*) filter (where is_archived = false)::int as active,
         count(*) filter (where is_published = true and is_archived = false)::int as published,
+        count(*) filter (
+          where is_published = true and is_archived = false and browse_visible = true
+        )::int as browse_visible,
+        count(*) filter (where is_published = false and is_archived = false)::int as draft,
         count(*) filter (where is_archived = true)::int as archived
       from plan_templates
     `,
@@ -160,19 +186,25 @@ export async function getAdminOverview(): Promise<AdminOverview> {
       total: toNumber(messageStats?.total),
       published: toNumber(messageStats?.published),
       draft: toNumber(messageStats?.draft),
-      todayEligible: toNumber(messageStats?.today_eligible),
       archived: toNumber(messageStats?.archived),
     },
     planCounts: {
       total: toNumber(planStats?.total),
       active: toNumber(planStats?.active),
       published: toNumber(planStats?.published),
+      browseVisible: toNumber(planStats?.browse_visible),
+      draft: toNumber(planStats?.draft),
       archived: toNumber(planStats?.archived),
     },
     todaySchedule: buildTodaySchedule(
-      todayRows as Array<{ id: string; publish_date: string; verse_reference: string; is_published: boolean }>,
+      todayRows as Array<{
+        id: string;
+        publish_date: string;
+        verse_reference: string;
+        content_is_published: boolean | null;
+      }>,
     ),
-    categoryCoverage: MESSAGE_CATEGORIES.map((category) => ({
+    categoryCoverage: MESSAGE_PRIMARY_CATEGORIES.map((category) => ({
       key: category.key,
       label: category.label,
       publishedCount: countsByCategory.get(category.key) ?? 0,

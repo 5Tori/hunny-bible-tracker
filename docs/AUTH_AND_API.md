@@ -35,8 +35,8 @@ Content seed (optional): `supabase/seeds/content_test_seed.sql`
 
 | Env | Site URL | Redirect URLs |
 | --- | --- | --- |
-| Production | `https://hunnybibletracker.com` | `https://hunnybibletracker.com/admin/login` |
-| Local | `http://127.0.0.1:3000` | `http://127.0.0.1:3000/admin/login`, `http://localhost:3000/admin/login` |
+| Production | `https://hunnybibletracker.com` | `https://hunnybibletracker.com/admin/login`, `https://hunnybibletracker.com/login` |
+| Local | `http://127.0.0.1:3000` | `http://127.0.0.1:3000/admin/login`, `http://127.0.0.1:3000/login`, `http://localhost:3000/admin/login`, `http://localhost:3000/login` |
 | Mobile (optional) | — | `com.hunnybibletracker.app://login-callback/` (브라우저 OAuth 시; 현재 앱은 native Google ID token) |
 
 **Google Cloud:** Web client → Supabase callback URI · iOS/Android → native sign-in · Web client ID → `GOOGLE_WEB_CLIENT_ID`
@@ -64,6 +64,16 @@ Local API: iOS `http://127.0.0.1:3000` · Android emulator `http://10.0.2.2:3000
 `apps/web/.env.local` — see `.env.example`:
 
 `DATABASE_URL`, `SUPABASE_*`, `ADMIN_EMAILS`, `CLOUDINARY_*`, `NEXT_PUBLIC_*`
+
+## Public web sign-in
+
+Routes: `/login` (Google OAuth) · `/account` (signed-in profile)
+
+Uses the same Supabase project as mobile. After OAuth, the browser calls `POST /api/v1/auth/sync` and `GET /api/v1/me`.
+
+**Offline dev (`HUNNY_OFFLINE_MODE=1`):** `/login` offers **Continue as demo account** (mock bearer + `/api/v1/me`). Messages and catalog still use fixtures. Message save-to-account is not wired yet.
+
+Header shows **Sign in** / **Account** + **Sign out** when Supabase is configured or offline mode is on.
 
 ## API routes
 

@@ -1,19 +1,38 @@
 import { describe, expect, it } from 'vitest';
 
-import { calculatePlanEstimatedMinutes } from '@/lib/plan-estimates';
+import {
+  calculatePlanEstimatedMinutes,
+  estimatedMinutesPerChapterFromTotal,
+  resolveEstimatedMinutesForSave,
+} from '@/lib/plan-estimates';
 
-describe('calculatePlanEstimatedMinutes', () => {
-  it('returns 4 for Joseph plan (Genesis 37–50)', () => {
-    const minutes = calculatePlanEstimatedMinutes([
-      {
-        items: [{ book_key: 'genesis', start_chapter: 37, end_chapter: 50 }],
-      },
-    ]);
-    expect(minutes).toBe(4);
+const sampleSections = [
+  {
+    items: [{ book_key: 'genesis', start_chapter: 1, end_chapter: 2 }],
+  },
+];
+
+describe('plan-estimates', () => {
+  it('estimatedMinutesPerChapterFromTotal', () => {
+    expect(estimatedMinutesPerChapterFromTotal(3716, 929)).toBe(4);
+    expect(estimatedMinutesPerChapterFromTotal(56, 14)).toBe(4);
   });
 
-  it('returns null when there are no items', () => {
-    expect(calculatePlanEstimatedMinutes([])).toBeNull();
-    expect(calculatePlanEstimatedMinutes([{ items: [] }])).toBeNull();
+  it('resolveEstimatedMinutesForSave uses total override when set', () => {
+    expect(resolveEstimatedMinutesForSave(56, sampleSections, 14)).toBe(4);
+    expect(resolveEstimatedMinutesForSave(3716, sampleSections, 929)).toBe(4);
+  });
+
+  it('resolveEstimatedMinutesForSave auto-calculates when total blank', () => {
+    const chapters = 2;
+    expect(resolveEstimatedMinutesForSave(null, sampleSections, chapters)).toBe(
+      calculatePlanEstimatedMinutes(sampleSections),
+    );
+    expect(resolveEstimatedMinutesForSave(undefined, sampleSections, chapters)).toBe(
+      calculatePlanEstimatedMinutes(sampleSections),
+    );
+    expect(resolveEstimatedMinutesForSave(0, sampleSections, chapters)).toBe(
+      calculatePlanEstimatedMinutes(sampleSections),
+    );
   });
 });

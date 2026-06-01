@@ -59,8 +59,10 @@ Runtime secrets: `SUPABASE_SERVICE_ROLE_KEY`, `CLOUDINARY_*` · Hyperdrive → `
 검증:
 
 ```bash
-curl -s https://hunnybibletracker.com/api/health          # db: true
+curl -s "https://hunnybibletracker.com/api/health?db=1"   # db: true (infra; use ?db=1)
 curl -s -o /dev/null -w "%{http_code}\n" https://hunnybibletracker.com/api/v1/sync/bootstrap  # 401 = route alive
+pnpm --dir apps/web infra:verify
+pnpm --dir apps/web infra:sync-hyperdrive   # dry-run; add --apply via script after password change
 ```
 
 ## Analytics & SEO (설정 완료)

@@ -8,6 +8,8 @@ import { PageHeader } from '@/components/admin/ui/PageHeader';
 
 import { PlanBasicsSection } from './PlanBasicsSection';
 import { PlanCatalogSection } from './PlanCatalogSection';
+import { PlanCoverImagesSection } from './PlanCoverImagesSection';
+import { PlanEditorReadingStats } from './PlanEditorReadingStats';
 import { PlanSectionsEditor } from './PlanSectionsEditor';
 import { usePlanEditor } from './use-plan-editor';
 
@@ -23,7 +25,7 @@ export default function PlanEditor({ planId }: { planId?: string }) {
     <>
       <PageHeader
         title={planId ? 'Edit plan' : 'New plan'}
-        description="Manage plan content, sections, chapters, tags, and publish state."
+        description="Template content for /plans — cover, taxonomy, sections, and catalog visibility. Total reading time auto-calculates on save unless you set it."
         actions={<ButtonLink href="/admin/plans" variant="secondary">Back to list</ButtonLink>}
       />
 
@@ -32,13 +34,18 @@ export default function PlanEditor({ planId }: { planId?: string }) {
 
       <div className="admin-editor-layout">
         <div className="admin-editor-main">
+          <PlanCoverImagesSection
+            coverImageUrl={editor.plan.cover_image_url}
+            title={editor.plan.title}
+            uploading={editor.uploading}
+            onUpload={(file) => void editor.handleUpload(file)}
+            onClear={editor.clearCover}
+          />
           <PlanBasicsSection
             plan={editor.plan}
             tagsString={editor.tagsString}
-            uploading={editor.uploading}
             onPlanChange={editor.setPlan}
             onTagsChange={editor.setTagsString}
-            onUpload={(file) => void editor.handleUpload(file)}
           />
           <PlanSectionsEditor
             plan={editor.plan}
@@ -51,9 +58,14 @@ export default function PlanEditor({ planId }: { planId?: string }) {
           />
         </div>
         <aside className="admin-editor-aside">
+          <PlanEditorReadingStats
+            sections={editor.plan.sections}
+            totalChapters={editor.calculatedTotalChapters}
+            estimatedTotalMinutes={editor.estimatedTotalMinutes}
+            onEstimatedTotalChange={editor.setEstimatedTotalMinutes}
+          />
           <PlanCatalogSection plan={editor.plan} onPlanChange={editor.setPlan} />
           <div className="admin-sticky-actions">
-            <p className="admin-muted">Total chapters: {editor.calculatedTotalChapters}</p>
             <Button variant="primary" loading={editor.saving} onClick={() => void editor.submit()}>
               {planId ? 'Save changes' : 'Create plan'}
             </Button>

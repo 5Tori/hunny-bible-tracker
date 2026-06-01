@@ -1,5 +1,6 @@
--- Test content seed for Discover.
--- Run after content catalog migrations are applied.
+-- Discover content seed (6 items: video / essay / cartoon × 2).
+-- Message cards live in message_cards_pilot_seed.sql — not here.
+-- Run after plan catalog migrations and message taxonomy (optional tags).
 
 insert into content_authors (slug, display_name, bio, is_verified, is_active, created_at, updated_at)
 values (
@@ -18,20 +19,6 @@ on conflict (slug) do update set
   is_active = true,
   updated_at = now();
 
-insert into content_tags (type, key, name, sort_order, is_active, created_at, updated_at)
-values
-  ('topic', 'peace', 'Peace', 10, true, now(), now()),
-  ('topic', 'prayer', 'Prayer', 20, true, now(), now()),
-  ('situation', 'anxiety-fear', 'Anxiety & Fear', 10, true, now(), now()),
-  ('person', 'jesus', 'Jesus', 10, true, now(), now()),
-  ('book', 'mark', 'Mark', 10, true, now(), now()),
-  ('format', 'quick', 'Quick', 10, true, now(), now())
-on conflict (type, key) do update set
-  name = excluded.name,
-  sort_order = excluded.sort_order,
-  is_active = true,
-  updated_at = now();
-
 insert into contents (
   slug,
   content_type,
@@ -41,11 +28,9 @@ insert into contents (
   summary,
   body,
   author_id,
-  primary_verse_reference,
-  bible_version,
-  verse_text,
   duration_seconds,
   external_url,
+  cover_image_url,
   is_published,
   is_archived,
   published_at,
@@ -62,82 +47,86 @@ select
   seed.title,
   seed.subtitle,
   seed.summary,
-  seed.body,
+  null,
   author.id,
-  seed.primary_verse_reference,
-  seed.bible_version,
-  seed.verse_text,
   seed.duration_seconds,
   seed.external_url,
+  seed.cover_image_url,
   true,
   false,
   now(),
   seed.featured_rank,
   true,
-  seed.metadata::jsonb,
+  '{"seed":true}'::jsonb,
   now(),
   now()
 from (
   values
     (
-      'peace-when-you-feel-rushed',
-      'message',
-      'A short pause for a rushed day',
-      'Peace is often received one small pause at a time.',
-      'Take one minute to slow down and return to God with your whole attention.',
-      'Start with one honest breath. You do not need to solve the whole day before you pray.',
-      'Psalm 46:10',
-      'KJV',
-      'Be still, and know that I am God.',
-      90,
-      null,
-      10,
-      '{"seed":true}'
-    ),
-    (
-      'how-to-start-the-gospel-of-mark',
+      'sabbath-rest-explained',
       'video',
-      'How to start Mark',
-      'A simple entry point into the life of Jesus.',
-      'A short video-style guide for beginning the Gospel of Mark without pressure.',
-      'Mark moves quickly. Read it like a series of vivid scenes: Jesus acts, people respond, and the question becomes personal.',
-      'Mark 1:1',
-      null,
-      null,
-      360,
-      'https://www.youtube.com/watch?v=jNQXAC9IVRw',
-      20,
-      '{"seed":true}'
+      'What Sabbath rest actually means',
+      'A short teaching on rhythm and trust',
+      'Why weekly rest is not laziness but trust — and how Jesus reframes the Sabbath for weary hearts.',
+      612,
+      'https://www.youtube.com/watch?v=7Y06NGtuOXc',
+      '/plans/covers/bible.webp',
+      1
     ),
     (
-      'when-prayer-feels-small',
+      'lectio-divina-basics',
+      'video',
+      'Lectio Divina in ten minutes',
+      'Read, reflect, respond, rest',
+      'A guided introduction to slow Scripture reading — video walkthrough plus a printable rhythm you can repeat daily.',
+      540,
+      'https://www.youtube.com/watch?v=9TEvW9y0n5s',
+      '/messages/sample-card.webp',
+      2
+    ),
+    (
+      'psalms-for-anxious-nights',
       'essay',
-      'When prayer feels small',
-      'Small prayers are still real prayers.',
-      'An essay for days when your words feel too thin or tired.',
-      'Prayer does not become faithful because it is long. Sometimes the honest sentence is the doorway back to God.',
-      'Romans 8:26',
+      'When worry keeps you awake',
+      'Reading Psalms at night',
+      'Night anxiety is common. These three postures — breathe, pray, receive — open space for God''s comfort without fixing everything at once.',
       null,
       null,
-      480,
-      null,
-      30,
-      '{"seed":true}'
+      '/plans/covers/ot.webp',
+      3
     ),
     (
-      'jonah-running-from-mercy',
+      'jonah-reflection',
+      'essay',
+      'Running from mercy',
+      'Notes on Jonah 1–2',
+      'Jonah''s story is not only about a fish. It is about how hard it is to accept that God''s compassion might include people we would avoid.',
+      null,
+      null,
+      '/plans/covers/nt.webp',
+      4
+    ),
+    (
+      'parable-of-sower-cartoon',
       'cartoon',
-      'Jonah: running from mercy',
-      'A three-panel visual story starter.',
-      'A cartoon-style introduction to Jonah and the surprising wideness of mercy.',
-      'Jonah is not only a story about running away. It is a story about God pursuing both the prophet and the city.',
-      'Jonah 1:3',
+      'The sower''s four soils',
+      'Visual walkthrough',
+      'A slide gallery of the parable in Mark 4 — swipe through each soil and one question per panel.',
       null,
       null,
-      240,
+      '/plans/covers/bible.webp',
+      5
+    ),
+    (
+      'david-and-goliath-slides',
+      'cartoon',
+      'David & Goliath — five frames',
+      'Courage is not the absence of fear',
+      'A simple five-panel retelling for families or small groups, with discussion prompts in the captions.',
       null,
-      40,
-      '{"seed":true,"slides":3}'
+      null,
+      '/messages/sample-card.webp',
+      6
     )
 ) as seed(
   slug,
@@ -145,14 +134,10 @@ from (
   title,
   subtitle,
   summary,
-  body,
-  primary_verse_reference,
-  bible_version,
-  verse_text,
   duration_seconds,
   external_url,
-  featured_rank,
-  metadata
+  cover_image_url,
+  featured_rank
 )
 join content_authors author on author.slug = 'hunny-team'
 on conflict (slug) do update set
@@ -160,41 +145,31 @@ on conflict (slug) do update set
   title = excluded.title,
   subtitle = excluded.subtitle,
   summary = excluded.summary,
-  body = excluded.body,
+  body = null,
   author_id = excluded.author_id,
-  primary_verse_reference = excluded.primary_verse_reference,
-  bible_version = excluded.bible_version,
-  verse_text = excluded.verse_text,
   duration_seconds = excluded.duration_seconds,
   external_url = excluded.external_url,
+  cover_image_url = excluded.cover_image_url,
   is_published = true,
   is_archived = false,
-  published_at = excluded.published_at,
+  published_at = coalesce(contents.published_at, now()),
   featured_rank = excluded.featured_rank,
   browse_visible = true,
   metadata = excluded.metadata,
   updated_at = now();
 
-insert into content_tag_links (content_id, tag_id, created_at)
-select c.id, t.id, now()
-from contents c
-join (
-  values
-    ('peace-when-you-feel-rushed', 'topic', 'peace'),
-    ('peace-when-you-feel-rushed', 'situation', 'anxiety-fear'),
-    ('peace-when-you-feel-rushed', 'format', 'quick'),
-    ('how-to-start-the-gospel-of-mark', 'person', 'jesus'),
-    ('how-to-start-the-gospel-of-mark', 'book', 'mark'),
-    ('when-prayer-feels-small', 'topic', 'prayer'),
-    ('when-prayer-feels-small', 'format', 'quick'),
-    ('jonah-running-from-mercy', 'topic', 'peace')
-) as map(content_slug, tag_type, tag_key) on map.content_slug = c.slug
-join content_tags t on t.type = map.tag_type and t.key = map.tag_key
-on conflict (content_id, tag_id) do nothing;
-
+-- Sections (block_type in metadata)
 delete from content_sections
 where content_id in (
-  select id from contents where slug = 'when-prayer-feels-small'
+  select id from contents
+  where slug in (
+    'sabbath-rest-explained',
+    'lectio-divina-basics',
+    'psalms-for-anxious-nights',
+    'jonah-reflection',
+    'parable-of-sower-cartoon',
+    'david-and-goliath-slides'
+  )
 );
 
 insert into content_sections (
@@ -209,39 +184,98 @@ insert into content_sections (
   created_at,
   updated_at
 )
-select
-  c.id,
-  section.order_index,
-  section.title,
-  section.body,
-  section.image_url,
-  section.image_alt_text,
-  section.image_caption,
-  '{"seed":true}'::jsonb,
-  now(),
-  now()
+select c.id, s.order_index, s.title, s.body, s.image_url, s.image_alt_text, s.image_caption,
+  jsonb_build_object('block_type', s.block_type, 'seed', true),
+  now(), now()
 from contents c
 join (
   values
-    (
-      0,
-      'Start with honesty',
-      'Prayer does not become faithful because it is long. Sometimes the honest sentence is the doorway back to God.',
-      null,
-      null,
-      null
-    ),
-    (
-      1,
-      'Let weakness be named',
-      'When your words feel thin, you can still come as you are. God is not measuring your eloquence.',
-      'https://placehold.co/1200x800/fff8df/111111.png?text=Small+prayers',
-      'Simple placeholder image for a quiet prayer moment.',
-      'Small prayers are still real prayers.'
-    )
-) as section(order_index, title, body, image_url, image_alt_text, image_caption)
-  on c.slug = 'when-prayer-feels-small';
+    ('sabbath-rest-explained', 0, 'paragraph', null,
+      'In this session we look at Exodus 20, Mark 2, and one practical habit for protecting a weekly pause.' || E'\n\n' ||
+      'You can read along with the Psalms for Anxious Nights plan if you want a gentle next step.',
+      null, null, null),
+    ('sabbath-rest-explained', 1, 'heading', 'Three questions to journal', null, null, null, null),
+    ('sabbath-rest-explained', 2, 'paragraph', null,
+      'Where am I striving beyond my limits?' || E'\n\n' ||
+      'What would I stop if I believed God is enough?' || E'\n\n' ||
+      'Who needs my presence more than my productivity this week?',
+      null, null, null),
+    ('sabbath-rest-explained', 3, 'image', null, null,
+      '/messages/backgrounds/message-card-bg-honey.webp',
+      'Warm abstract background', 'Pause before you plan the week.'),
+    ('lectio-divina-basics', 0, 'paragraph', null,
+      'We practice four movements with Psalm 23. No special tools required; just your Bible and five quiet minutes.',
+      null, null, null),
+    ('psalms-for-anxious-nights', 0, 'paragraph', null,
+      'The Psalms do not pretend life is easy. They give us words when ours run out.' || E'\n\n' ||
+      'Start with one short psalm. Read it twice. Notice a phrase that catches your attention. Tell God why it matters tonight.',
+      null, null, null),
+    ('psalms-for-anxious-nights', 1, 'heading', 'Psalm 4 — Lie down in peace', null, null, null, null),
+    ('psalms-for-anxious-nights', 2, 'paragraph', null,
+      'David ends the psalm with “You alone, O Lord, make me dwell in safety.” That is not a command to feel calm; it is an invitation to entrust the night.',
+      null, null, null),
+    ('psalms-for-anxious-nights', 3, 'image', null, null,
+      '/messages/backgrounds/message-card-bg-space.webp',
+      'Calm night sky texture', null),
+    ('psalms-for-anxious-nights', 4, 'heading', 'A two-minute night prayer', null, null, null, null),
+    ('psalms-for-anxious-nights', 5, 'paragraph', null,
+      'Lord, I bring you what I cannot solve before morning. Guard my mind while I sleep. Amen.',
+      null, null, null),
+    ('jonah-reflection', 0, 'paragraph', null,
+      'Jonah flees, sleeps, and is thrown into chaos. God saves him anyway.' || E'\n\n' ||
+      'The plant that shades him — and withers — shows how quickly we attach to comfort instead of mission.',
+      null, null, null),
+    ('jonah-reflection', 1, 'heading', 'Chapter 1 — The storm', null, null, null, null),
+    ('jonah-reflection', 2, 'paragraph', null,
+      'Sailors pray; Jonah admits fault. Sometimes confession comes only when our escape routes fail.',
+      null, null, null),
+    ('parable-of-sower-cartoon', 0, 'paragraph', null,
+      'Use the arrows to move panel by panel. After the gallery, pick one soil that feels most like your season and talk to God about it.',
+      null, null, null),
+    ('david-and-goliath-slides', 0, 'paragraph', null,
+      'After the slides, ask: What giant are you facing? Whose armor are you tempted to wear?',
+      null, null, null)
+) as s(slug, order_index, block_type, title, body, image_url, image_alt_text, image_caption)
+  on c.slug = s.slug;
 
+-- Cartoon slides
+delete from content_assets
+where content_id in (
+  select id from contents
+  where slug in ('parable-of-sower-cartoon', 'david-and-goliath-slides')
+);
+
+insert into content_assets (
+  content_id,
+  asset_type,
+  asset_role,
+  order_index,
+  caption,
+  alt_text,
+  url,
+  mime_type,
+  metadata,
+  created_at,
+  updated_at
+)
+select c.id, 'image', 'slide', s.order_index, s.caption, s.alt_text, s.url, 'image/webp',
+  '{"seed":true}'::jsonb, now(), now()
+from contents c
+join (
+  values
+    ('parable-of-sower-cartoon', 0, 'The sower goes out to sow.', 'Sower scattering seed', '/plans/covers/bible.webp'),
+    ('parable-of-sower-cartoon', 1, 'Path — seed snatched away.', 'Hard path soil', '/plans/covers/ot.webp'),
+    ('parable-of-sower-cartoon', 2, 'Rocky ground — quick sprout, shallow roots.', 'Rocky soil', '/plans/covers/nt.webp'),
+    ('parable-of-sower-cartoon', 3, 'Good soil — fruit that lasts.', 'Healthy soil', '/messages/backgrounds/message-card-bg-honey.webp'),
+    ('david-and-goliath-slides', 0, '1. The army freezes. Goliath taunts daily.', 'Army and giant', '/messages/sample-card.webp'),
+    ('david-and-goliath-slides', 1, '2. David arrives with bread for his brothers.', 'David arrives', '/plans/covers/ot.webp'),
+    ('david-and-goliath-slides', 2, '3. “The battle is the Lord’s.”', 'David speaks', '/plans/covers/bible.webp'),
+    ('david-and-goliath-slides', 3, '4. One stone. One faithful step.', 'Stone and sling', '/messages/backgrounds/message-card-bg-space.webp'),
+    ('david-and-goliath-slides', 4, '5. God saves — not our bravado alone.', 'Victory', '/messages/backgrounds/message-card-bg-honey.webp')
+) as s(slug, order_index, caption, alt_text, url)
+  on c.slug = s.slug;
+
+-- Related plans
 insert into content_plan_links (
   content_id,
   plan_template_id,
@@ -250,76 +284,18 @@ insert into content_plan_links (
   cta_label,
   created_at
 )
-select c.id, p.id, 'related', map.display_order, 'Start plan', now()
+select c.id, p.id, 'related', 0, map.cta_label, now()
 from contents c
 join (
   values
-    ('how-to-start-the-gospel-of-mark', 'gospel_of_mark', 0),
-    ('peace-when-you-feel-rushed', 'psalms_for_anxiety', 0),
-    ('jonah-running-from-mercy', 'jonah', 0)
-) as map(content_slug, template_key, display_order) on map.content_slug = c.slug
+    ('sabbath-rest-explained', 'psalms_for_anxiety', 'Try the Psalms plan'),
+    ('lectio-divina-basics', 'bible_in_a_year', 'Bible in a Year'),
+    ('psalms-for-anxious-nights', 'psalms_for_anxiety', null),
+    ('jonah-reflection', 'jonah', 'Read Jonah in 4 days'),
+    ('parable-of-sower-cartoon', 'gospel_of_mark', null),
+    ('david-and-goliath-slides', 'life_of_david', 'Life of David plan')
+) as map(content_slug, template_key, cta_label) on map.content_slug = c.slug
 join plan_templates p on p.template_key = map.template_key
 on conflict (content_id, plan_template_id, relationship_type) do update set
-  display_order = excluded.display_order,
-  cta_label = excluded.cta_label;
-
-delete from content_assets
-where content_id in (
-  select id from contents where slug = 'jonah-running-from-mercy'
-);
-
-insert into content_assets (
-  content_id,
-  asset_type,
-  asset_role,
-  order_index,
-  title,
-  caption,
-  alt_text,
-  url,
-  provider,
-  mime_type,
-  metadata,
-  created_at,
-  updated_at
-)
-select
-  c.id,
-  'image',
-  'slide',
-  slide.order_index,
-  slide.title,
-  slide.caption,
-  slide.alt_text,
-  slide.url,
-  'external',
-  'image/png',
-  '{"seed":true}'::jsonb,
-  now(),
-  now()
-from contents c
-join (
-  values
-    (
-      0,
-      'Jonah runs',
-      'The prophet heads away from Nineveh.',
-      'Simple placeholder slide for Jonah running away.',
-      'https://placehold.co/900x900/fff8df/111111.png?text=Jonah+runs'
-    ),
-    (
-      1,
-      'A storm rises',
-      'The sea interrupts the escape.',
-      'Simple placeholder slide for the storm.',
-      'https://placehold.co/900x900/e7e2d8/111111.png?text=A+storm+rises'
-    ),
-    (
-      2,
-      'Mercy waits',
-      'God still moves toward the city.',
-      'Simple placeholder slide for mercy waiting.',
-      'https://placehold.co/900x900/ffd500/111111.png?text=Mercy+waits'
-    )
-) as slide(order_index, title, caption, alt_text, url)
-  on c.slug = 'jonah-running-from-mercy';
+  cta_label = excluded.cta_label,
+  display_order = excluded.display_order;

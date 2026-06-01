@@ -1,62 +1,95 @@
 'use client';
 
-import type { AdminContentInput } from '@/lib/content';
 import {
-  MESSAGE_BIBLE_CONTEXT_TAGS,
-  MESSAGE_CATEGORIES,
+  MESSAGE_BIBLE_CONTEXTS,
+  MESSAGE_PRIMARY_CATEGORIES,
   MESSAGE_SHARE_INTENTS,
-  MESSAGE_THEME_TAGS,
+  MESSAGE_TAXONOMY_LIMITS,
+  MESSAGE_THEMES,
   MESSAGE_TONES,
-  getSituationsForCategory,
+  getAllSituations,
+  getSuggestedSituationsForCategory,
   type MessageEditorState,
 } from '@/lib/message-admin';
 
 interface MessageCardEditorSectionProps {
-  content: AdminContentInput;
   messageState: MessageEditorState;
   onMessageStateChange: (next: MessageEditorState) => void;
 }
 
-function toggleValue(list: string[], value: string, checked: boolean) {
-  if (checked) return list.includes(value) ? list : [...list, value];
+function toggleValue(list: string[], value: string, checked: boolean, max?: number) {
+  if (checked) {
+    if (list.includes(value)) return list;
+    if (max != null && list.length >= max) return list;
+    return [...list, value];
+  }
   return list.filter((item) => item !== value);
 }
 
+function sortSituationsForEditor(primaryCategory: string) {
+  const all = getAllSituations();
+  if (!primaryCategory) return all;
+
+  const suggestedKeys = new Set(
+    getSuggestedSituationsForCategory(primaryCategory).map((entry) => entry.key),
+  );
+
+  return [...all].sort((a, b) => {
+    const aSuggested = suggestedKeys.has(a.key) ? 0 : 1;
+    const bSuggested = suggestedKeys.has(b.key) ? 0 : 1;
+    if (aSuggested !== bSuggested) return aSuggested - bSuggested;
+    return (a.sortOrder ?? 0) - (b.sortOrder ?? 0);
+  });
+}
+
 export function MessageCardEditorSection({
-  content,
   messageState,
   onMessageStateChange,
 }: MessageCardEditorSectionProps) {
-  const situations = messageState.primaryCategory
-    ? getSituationsForCategory(messageState.primaryCategory)
-    : [];
+  const situations = sortSituationsForEditor(messageState.primaryCategory);
+  const suggestedSituationKeys = new Set(
+    messageState.primaryCategory
+      ? getSuggestedSituationsForCategory(messageState.primaryCategory).map((entry) => entry.key)
+      : [],
+  );
 
   const update = (patch: Partial<MessageEditorState>) => {
     onMessageStateChange({ ...messageState, ...patch });
   };
 
+  const onPrimaryCategoryChange = (primaryCategory: string) => {
+    onMessageStateChange({
+      ...messageState,
+      primaryCategory,
+    });
+  };
+
   return (
     <>
       <section className="admin-form-section">
-        <h2>Message card content</h2>
+        <h2>Card copy</h2>
+        <p className="admin-muted">
+          Short reflection and optional prayer — shown on the public message detail page, not on the
+          card image overlay.
+        </p>
         <div className="admin-field">
-          <label htmlFor="short_reflection">Short reflection</label>
+          <label htmlFor="message_context">Short reflection</label>
           <textarea
-            id="short_reflection"
-            value={messageState.shortReflection}
-            onChange={(event) => update({ shortReflection: event.target.value })}
+            id="message_context"
+            value={messageState.context}
+            onChange={(event) => update({ context: event.target.value })}
             rows={3}
-            placeholder="A gentle, short reflection for the card."
+            placeholder="A gentle line that helps the verse land."
           />
         </div>
         <div className="admin-field">
-          <label htmlFor="prayer_text">Prayer text</label>
+          <label htmlFor="message_hint">Prayer / hint</label>
           <textarea
-            id="prayer_text"
-            value={messageState.prayerText}
-            onChange={(event) => update({ prayerText: event.target.value })}
+            id="message_hint"
+            value={messageState.hint}
+            onChange={(event) => update({ hint: event.target.value })}
             rows={3}
-            placeholder="Optional short prayer."
+            placeholder="Optional one-line prayer or prompt."
           />
         </div>
         <div className="admin-field admin-form-grid-2">
@@ -82,21 +115,21 @@ export function MessageCardEditorSection({
       </section>
 
       <section className="admin-form-section">
-        <h2>Classification</h2>
+        <h2>Public classification</h2>
+        <p className="admin-muted">
+          Matches <code>/messages</code> filters: one primary category, up to{' '}
+          {MESSAGE_TAXONOMY_LIMITS.situations} situations, up to {MESSAGE_TAXONOMY_LIMITS.themes}{' '}
+          themes. Required to publish.
+        </p>
         <div className="admin-field">
           <label htmlFor="primary_category">Primary category</label>
           <select
             id="primary_category"
             value={messageState.primaryCategory}
-            onChange={(event) =>
-              update({
-                primaryCategory: event.target.value,
-                situations: [],
-              })
-            }
+            onChange={(event) => onPrimaryCategoryChange(event.target.value)}
           >
             <option value="">Select category</option>
-            {MESSAGE_CATEGORIES.map((category) => (
+            {MESSAGE_PRIMARY_CATEGORIES.map((category) => (
               <option key={category.key} value={category.key}>
                 {category.label}
               </option>
@@ -104,12 +137,18 @@ export function MessageCardEditorSection({
           </select>
         </div>
 
-        {situations.length > 0 ? (
-          <div className="admin-field">
-            <p className="admin-muted">Situations</p>
-            <div className="content-plan-options">
-              {situations.map((situation) => (
-                <label key={situation.key} className="content-plan-option">
+        <div className="admin-field">
+          <p className="admin-muted">
+            Situations {messageState.primaryCategory ? '(suggested for this category first)' : ''}
+          </p>
+          <div className="content-plan-options">
+            {situations.map((situation) => {
+              const isSuggested = suggestedSituationKeys.has(situation.key);
+              return (
+                <label
+                  key={situation.key}
+                  className={`content-plan-option${isSuggested ? ' content-plan-option-suggested' : ''}`}
+                >
                   <input
                     type="checkbox"
                     checked={messageState.situations.includes(situation.key)}
@@ -119,27 +158,42 @@ export function MessageCardEditorSection({
                           messageState.situations,
                           situation.key,
                           event.target.checked,
+                          MESSAGE_TAXONOMY_LIMITS.situations,
                         ),
                       })
                     }
                   />
-                  <span>{situation.label}</span>
+                  <span>
+                    {situation.label}
+                    {isSuggested ? (
+                      <span className="admin-taxonomy-suggested-mark">Suggested</span>
+                    ) : null}
+                  </span>
                 </label>
-              ))}
-            </div>
+              );
+            })}
           </div>
-        ) : null}
+        </div>
 
         <TaxonomyCheckboxGroup
-          title="Theme tags"
-          options={MESSAGE_THEME_TAGS}
+          title="Themes"
+          options={MESSAGE_THEMES}
           selected={messageState.themeTags}
+          maxSelected={MESSAGE_TAXONOMY_LIMITS.themes}
           onChange={(themeTags) => update({ themeTags })}
         />
+      </section>
+
+      <section className="admin-form-section">
+        <h2>Internal metadata</h2>
+        <p className="admin-muted">
+          Curation and share presets — not shown as primary chips on the public message page.
+        </p>
         <TaxonomyCheckboxGroup
           title="Bible context"
-          options={MESSAGE_BIBLE_CONTEXT_TAGS}
+          options={MESSAGE_BIBLE_CONTEXTS}
           selected={messageState.bibleContextTags}
+          maxSelected={MESSAGE_TAXONOMY_LIMITS.bibleContexts}
           onChange={(bibleContextTags) => update({ bibleContextTags })}
         />
 
@@ -163,37 +217,9 @@ export function MessageCardEditorSection({
           title="Share intent"
           options={MESSAGE_SHARE_INTENTS}
           selected={messageState.shareIntents}
+          maxSelected={MESSAGE_TAXONOMY_LIMITS.shareIntents}
           onChange={(shareIntents) => update({ shareIntents })}
         />
-
-        <div className="admin-checkbox-row">
-          <label htmlFor="is_today_eligible">Eligible for Today&apos;s Message</label>
-          <input
-            id="is_today_eligible"
-            type="checkbox"
-            checked={messageState.isTodayEligible}
-            onChange={(event) => update({ isTodayEligible: event.target.checked })}
-          />
-        </div>
-      </section>
-
-      <section className="admin-form-section">
-        <h2>Card preview</h2>
-        <div className="message-card-preview">
-          {content.cover_image_url ? (
-            <img src={content.cover_image_url} alt="" className="admin-cover-preview" />
-          ) : null}
-          <p className="message-card-preview-title">{content.title || 'Message title'}</p>
-          {content.primary_verse_reference ? (
-            <p className="message-card-preview-verse">{content.primary_verse_reference}</p>
-          ) : null}
-          {content.verse_text ? (
-            <blockquote className="message-card-preview-quote">{content.verse_text}</blockquote>
-          ) : null}
-          {messageState.shortReflection ? (
-            <p className="message-card-preview-reflection">{messageState.shortReflection}</p>
-          ) : null}
-        </div>
       </section>
     </>
   );
@@ -203,11 +229,13 @@ function TaxonomyCheckboxGroup({
   title,
   options,
   selected,
+  maxSelected,
   onChange,
 }: {
   title: string;
   options: Array<{ key: string; label: string }>;
   selected: string[];
+  maxSelected?: number;
   onChange: (next: string[]) => void;
 }) {
   return (
@@ -220,7 +248,7 @@ function TaxonomyCheckboxGroup({
               type="checkbox"
               checked={selected.includes(option.key)}
               onChange={(event) =>
-                onChange(toggleValue(selected, option.key, event.target.checked))
+                onChange(toggleValue(selected, option.key, event.target.checked, maxSelected))
               }
             />
             <span>{option.label}</span>

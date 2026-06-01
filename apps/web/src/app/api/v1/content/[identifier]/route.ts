@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 
 import { getPublishedContentByIdentifier } from '@/lib/content';
+import { jsonWithPublicCache } from '@/lib/http/public-cache';
 import { withApiTiming } from '@/lib/perf/api-timing';
 
 export const GET = withApiTiming(
@@ -14,6 +15,6 @@ export const GET = withApiTiming(
       return NextResponse.json({ error: 'not_found' }, { status: 404 });
     }
 
-    return NextResponse.json({ content });
+    return jsonWithPublicCache({ content });
   },
 );
