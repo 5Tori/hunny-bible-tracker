@@ -43,11 +43,34 @@ Hot restart: `R` (env·native 변경 후)
 | Area | Verify |
 | --- | --- |
 | Home | Today's Message, progress, **heart (one-way)**, **save toggle**, share, More |
+| Home More | `context` reflection copy · message card → **Open message card** (web) · discover → detail sheet |
 | Home offline | cache or Proverbs fallback |
-| Discover | list, search, filters, detail sheet |
+| Discover | **6 items** (video/essay/cartoon only), search, filters, **tap → full detail** (body/sections/slides) |
 | Discover offline | offline message |
 | Read / Plans | start plan, chapter persist, completion |
 | Settings | sign-in, **Sync now**, **Restore**, feedback |
+
+### Step 6 E2E (cold / warm)
+
+**Cold start** (앱 kill 후 재실행):
+
+1. Home — Today's Message loads (`supabase_rpc` log)
+2. Discover tab — 6 cards, no message type filter chip
+3. Tap essay → loading → detail with body/sections
+4. Tap cartoon → slides render
+5. Home More → linked message card opens web `/messages/...`
+
+**Warm** (탭 재방문):
+
+- Discover list 재진입 — acceptable repeat RPC (session OK)
+- Detail tap — `mobile_content_detail` 1회
+
+**Automated prod gate** (업로드 전):
+
+```bash
+pnpm mobile:smoke-prod
+# optional: SUPABASE_ANON_KEY=... HUNNY_API_BASE_URL=https://hunnybibletracker.com
+```
 
 API sanity:
 

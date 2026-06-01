@@ -15,6 +15,7 @@
     "plan-estimates:write": "node scripts/update-plan-seed-estimates.mjs --write",
     "plan-estimates:write-migration": "node scripts/update-plan-seed-estimates.mjs --write-migration",
     "plan-estimates:sync-db": "node scripts/sync-plan-estimates-to-db.mjs",
-    "plan-estimates:sync-db:write": "node scripts/sync-plan-estimates-to-db.mjs --write"
+    "plan-estimates:sync-db:write": "node scripts/sync-plan-estimates-to-db.mjs --write",
+    "mobile:smoke-prod": "node apps/mobile/scripts/smoke-prod-read.mjs"
   }
 }

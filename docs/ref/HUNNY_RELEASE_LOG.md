@@ -63,6 +63,44 @@ Short English release notes for Google Play.
 
 ---
 
+## v0.5.0+10 — Android / iOS Closed Testing
+
+- **Date:** 2026-06-01
+- **Platform:** Both
+- **Track:** Closed testing
+- **Release name:** `v0.5.0+10 - Closed testing`
+- **Build artifact:** `app-release.aab` / TestFlight `.ipa`
+- **Package / Bundle ID:** `com.hunnybibletracker.app`
+
+#### Summary
+
+다섯 번째 클로즈 테스트용 릴리즈. Discover/Message 분리 모델 정합, Discover detail lazy fetch, Today Message `context`/`messages_url` DTO, 웹 public catalog Supabase RPC perf fix를 포함한다.
+
+#### Included
+
+- **Web:** public catalog reads → Supabase HTTP RPC (summary APIs ~130–230ms prod)
+- **Mobile Discover:** 6-item discover-only feed · tap → `mobile_content_detail` · message cards excluded
+- **Mobile Today:** `context` reflection copy · linked message card opens web `/messages/[slug]`
+- **Infra:** Hyperdrive warmup for admin SQL only; `pnpm mobile:smoke-prod` prod gate
+- Seeds: 6 Discover · 10 Message cards · Today → Message Card link
+
+#### Notes
+
+- Mobile read path: `HUNNY_REMOTE_READ_MODE=supabase_rpc` + `HUNNY_API_BASE_URL=https://hunnybibletracker.com`
+- Automated gate: `pnpm mobile:smoke-prod` (RPC 6 discover · plans ≥5 · today linked card)
+- Manual E2E: `docs/MOBILE_TESTING.md` Step 6 cold/warm checklist
+- API `GET /api/v1/content?discoverOnly=1` may show CDN stale count briefly after deploy (`s-maxage=300`); mobile RPC is source of truth
+
+#### Play Console Release Notes
+
+```text
+Closed testing update for Hunny Bible Tracker.
+
+Discover content loads faster with full detail on tap, Today’s Message links to message cards, and general stability improvements for reading plans and catalog browsing.
+```
+
+---
+
 ## v0.5.0+9 — Android / iOS Closed Testing
 
 - **Date:** 2026-05-30
@@ -224,7 +262,7 @@ Includes offline-first Bible reading progress tracking, reading plans, chapter c
 ### Release name
 
 ```text
-v0.5.0+9 - Closed testing
+v0.5.0+10 - Closed testing
 ```
 
 ### Release notes
@@ -232,5 +270,5 @@ v0.5.0+9 - Closed testing
 ```text
 Closed testing update for Hunny Bible Tracker.
 
-Includes backup and restore improvements, daily reading goals, reading activity tracking, estimated reading time, Home engagement updates, and general stability fixes for reading plans and Discover content.
+Discover content loads faster with full detail on tap, Today’s Message links to message cards, and general stability improvements for reading plans and catalog browsing.
 ```

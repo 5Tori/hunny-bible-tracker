@@ -678,7 +678,7 @@ class SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 24),
           Center(
             child: Text(
-              'v0.5.0 · Bible Tracker',
+              'v0.5.0+10 · Bible Tracker',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.mutedInk,
                   ),
