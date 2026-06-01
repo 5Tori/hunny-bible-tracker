@@ -28,6 +28,7 @@ let hyperdriveConfigKey: string | null = null;
 let hyperdriveClientCreatedAt = 0;
 
 const HYPERDRIVE_CLIENT_MAX_AGE_MS = 5 * 60_000;
+const HYPERDRIVE_QUERY_TIMEOUT_MS = 8_000;
 
 function isPlaceholderDatabaseUrl(url: string): boolean {
   return url.includes('REPLACE_');
@@ -100,9 +101,28 @@ function isConnectionError(error: unknown): boolean {
     message.includes('Connection terminated') ||
     message.includes('connection timeout') ||
     message.includes('CONNECT_TIMEOUT') ||
+    message.includes('query_timeout') ||
     message.includes('ECONNRESET') ||
     message.includes('ECONNREFUSED')
   );
+}
+
+async function withQueryTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+  label = 'query_timeout',
+): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<T>((_, reject) => {
+        timer = setTimeout(() => reject(new Error(label)), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 function getLocalClient(config: DatabaseConfig) {
@@ -159,9 +179,12 @@ async function runQuery<T>(
     const queryStarted = performance.now();
     try {
       const client = await getClient(config);
-      const result = (await client(strings, ...(values as never[]))) as T;
+      const query = client(strings, ...(values as never[])) as Promise<T>;
+      const result = config.viaHyperdrive
+        ? await withQueryTimeout(query, HYPERDRIVE_QUERY_TIMEOUT_MS)
+        : await query;
       recordDbQuery(performance.now() - queryStarted, strings);
-      return result;
+      return result as T;
     } catch (error) {
       recordDbQuery(performance.now() - queryStarted, strings);
       if (attempt === 0 && config.viaHyperdrive && isConnectionError(error)) {
