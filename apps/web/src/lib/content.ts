@@ -1,6 +1,11 @@
 import crypto from 'crypto';
 
 import { normalizeVerseReferenceString } from '@/lib/bible-verse-reference';
+import {
+  fetchContentDetailRpc,
+  fetchDiscoverContentListRpc,
+  isCatalogRpcAvailable,
+} from '@/lib/catalog-rpc';
 import { sql, queryByUuidIds, type SqlLike } from '@/lib/db/postgres';
 import { messageEditorStateFromTags } from '@/lib/message-admin';
 import { validateMessageCardInput } from '@/lib/message-content-validation';
@@ -1064,6 +1069,17 @@ export async function getPublishedContentsForBrowse(options?: {
     return mockGetPublishedContentsForBrowse(options);
   }
 
+  if (isCatalogRpcAvailable()) {
+    const rows = await fetchDiscoverContentListRpc(options);
+    return rows.map((content) => ({
+      ...content,
+      assets: [],
+      sections: [],
+      tags: [],
+      related_plans: [],
+    }));
+  }
+
   const contents = await getPublishedContents(options);
   if (contents.length === 0) {
     return [];
@@ -1140,6 +1156,10 @@ export async function getPublishedContentsWithRelations(options?: {
 export async function getPublishedContentByIdentifier(identifier: string, language?: string | null) {
   if (isOfflineMode()) {
     return mockGetPublishedContentByIdentifier(identifier, language);
+  }
+
+  if (isCatalogRpcAvailable()) {
+    return fetchContentDetailRpc(identifier, language);
   }
 
   const normalizedIdentifier = identifier.trim();

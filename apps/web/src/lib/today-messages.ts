@@ -1,6 +1,7 @@
 import crypto from 'crypto';
 
 import { buildTodayMessageShareImageUrl } from '@/lib/cloudinary-share-url';
+import { fetchTodayMessageLatestRpc, isCatalogRpcAvailable } from '@/lib/catalog-rpc';
 import { sql } from '@/lib/db/postgres';
 import { getPublishedMessageBySlug } from '@/lib/messages';
 import { parseMessageMetadata, resolveMessageDisplayContext } from '@/lib/message-metadata';
@@ -371,6 +372,61 @@ async function loadLinkedContentSummary(
   return baseSummary;
 }
 
+function mapRpcTodayMessagePayload(payload: Record<string, unknown>): PublicTodayMessage {
+  const linkedRaw = payload.linked_content;
+  let linked_content: TodayMessageLinkedContentSummary | null = null;
+
+  if (linkedRaw && typeof linkedRaw === 'object' && !Array.isArray(linkedRaw)) {
+    const linked = linkedRaw as Record<string, unknown>;
+    linked_content = {
+      id: linked.id as string,
+      slug: linked.slug as string,
+      content_type: linked.content_type as string,
+      title: linked.title as string,
+      summary: (linked.summary as string | null) ?? null,
+      context: (linked.context as string | null) ?? null,
+      cover_image_url: (linked.cover_image_url as string | null) ?? null,
+      messages_url: (linked.messages_url as string | null) ?? null,
+      related_plans: Array.isArray(linked.related_plans)
+        ? linked.related_plans.map((plan) => {
+            const row = plan as Record<string, unknown>;
+            return {
+              id: row.id as string,
+              template_key: row.template_key as string,
+              title: row.title as string,
+              total_chapters: (row.total_chapters as number | null) ?? null,
+              estimated_minutes: (row.estimated_minutes as number | null) ?? null,
+              cta_label: (row.cta_label as string | null) ?? null,
+            };
+          })
+        : [],
+    };
+  }
+
+  return {
+    id: payload.id as string,
+    content_id: (payload.content_id as string | null) ?? null,
+    publish_date: payload.publish_date as string,
+    language: payload.language as string,
+    verse_reference: payload.verse_reference as string,
+    bible_version: (payload.bible_version as string | null) ?? null,
+    verse_text: (payload.verse_text as string | null) ?? null,
+    image_url: (payload.image_url as string | null) ?? null,
+    image_public_id: (payload.image_public_id as string | null) ?? null,
+    share_image_url: (payload.share_image_url as string | null) ?? null,
+    share_image_public_id: (payload.share_image_public_id as string | null) ?? null,
+    hint_title: (payload.hint_title as string | null) ?? null,
+    hint_summary: (payload.hint_summary as string | null) ?? null,
+    is_published: Boolean(payload.is_published),
+    heart_count: typeof payload.heart_count === 'number' ? payload.heart_count : 0,
+    share_count: typeof payload.share_count === 'number' ? payload.share_count : 0,
+    created_at: payload.created_at as string,
+    updated_at: payload.updated_at as string,
+    context: (payload.context as string | null) ?? null,
+    linked_content,
+  };
+}
+
 export async function toPublicTodayMessage(
   message: TodayMessageBase,
   options?: { shareUrl?: string },
@@ -610,6 +666,12 @@ export async function getPublishedTodayMessage(options?: { date?: string; langua
   const language = normalizeLanguage(options?.language);
   const rawDate = options?.date?.trim();
   const date = rawDate ? normalizeDate(rawDate) : new Date().toISOString().slice(0, 10);
+
+  if (isCatalogRpcAvailable()) {
+    const payload = await fetchTodayMessageLatestRpc({ date, language });
+    if (!payload) return null;
+    return mapRpcTodayMessagePayload(payload);
+  }
 
   const rows = (await sql`
     select tm.*

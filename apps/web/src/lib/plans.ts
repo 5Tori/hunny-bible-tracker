@@ -1,5 +1,6 @@
 import crypto from 'crypto';
 
+import { fetchPlanCatalogRpc, isCatalogRpcAvailable } from '@/lib/catalog-rpc';
 import { resolveEstimatedMinutesForSave } from '@/lib/plan-estimates';
 import { sql, queryByUuidIds, type SqlLike } from '@/lib/db/postgres';
 import { assertOnlineForWrites, isOfflineMode } from '@/lib/mock/mode';
@@ -407,6 +408,10 @@ export function parsePublishedPlanSort(value: string | null | undefined): Publis
 export async function getPublishedPlans(sort: PublishedPlanSortMode = 'featured') {
   if (isOfflineMode()) {
     return mockGetPublishedPlans(sort);
+  }
+
+  if (isCatalogRpcAvailable()) {
+    return fetchPlanCatalogRpc(sort);
   }
 
   if (sort === 'new') {

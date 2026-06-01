@@ -6,6 +6,11 @@ import {
   type ContentWithRelations,
   parseContentLimit,
 } from '@/lib/content';
+import {
+  fetchMessageDetailRpc,
+  fetchMessageListRpc,
+  isCatalogRpcAvailable,
+} from '@/lib/catalog-rpc';
 import { sql } from '@/lib/db/postgres';
 import { isOfflineMode } from '@/lib/mock/mode';
 import {
@@ -189,19 +194,30 @@ export async function getPublishedMessages(options?: GetPublishedMessagesOptions
     return mockGetPublishedMessages(options);
   }
 
-  const rows = (await sql`
-    select mobile_message_list(
-      ${normalizeLanguage(options?.language)}::text,
-      ${normalizeKey(options?.category)}::text,
-      ${normalizeKey(options?.situation)}::text,
-      ${normalizeKey(options?.tag)}::text,
-      ${normalizeKey(options?.tone)}::text,
-      ${options?.q?.trim() || null}::text,
-      ${options?.limit ?? parseContentLimit(null)}::int
-    ) as payload
-  `) as Array<{ payload: unknown }>;
+  const payload = isCatalogRpcAvailable()
+    ? await fetchMessageListRpc({
+        language: options?.language,
+        category: options?.category,
+        situation: options?.situation,
+        tag: options?.tag,
+        tone: options?.tone,
+        q: options?.q,
+        limit: options?.limit ?? parseContentLimit(null),
+      })
+    : ((
+        await sql`
+          select mobile_message_list(
+            ${normalizeLanguage(options?.language)}::text,
+            ${normalizeKey(options?.category)}::text,
+            ${normalizeKey(options?.situation)}::text,
+            ${normalizeKey(options?.tag)}::text,
+            ${normalizeKey(options?.tone)}::text,
+            ${options?.q?.trim() || null}::text,
+            ${options?.limit ?? parseContentLimit(null)}::int
+          ) as payload
+        `
+      ) as Array<{ payload: unknown }>)[0]?.payload;
 
-  const payload = rows[0]?.payload;
   if (!Array.isArray(payload)) {
     return [];
   }
@@ -217,14 +233,18 @@ export async function getPublishedMessageBySlug(slug: string, language?: string 
     return mockGetPublishedMessageBySlug(slug, language);
   }
 
-  const rows = (await sql`
-    select mobile_message_detail(
-      ${slug.trim()}::text,
-      ${normalizeLanguage(language)}::text
-    ) as payload
-  `) as Array<{ payload: unknown }>;
+  const rpcPayload = isCatalogRpcAvailable()
+    ? await fetchMessageDetailRpc(slug, language)
+    : ((
+        await sql`
+          select mobile_message_detail(
+            ${slug.trim()}::text,
+            ${normalizeLanguage(language)}::text
+          ) as payload
+        `
+      ) as Array<{ payload: unknown }>)[0]?.payload;
 
-  const content = parseRpcMessageContent(rows[0]?.payload);
+  const content = parseRpcMessageContent(rpcPayload);
   if (!content || content.content_type !== 'message') {
     return null;
   }

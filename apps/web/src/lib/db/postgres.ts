@@ -28,7 +28,6 @@ let hyperdriveConfigKey: string | null = null;
 let hyperdriveClientCreatedAt = 0;
 
 const HYPERDRIVE_CLIENT_MAX_AGE_MS = 5 * 60_000;
-const HYPERDRIVE_QUERY_TIMEOUT_MS = 8_000;
 
 function isPlaceholderDatabaseUrl(url: string): boolean {
   return url.includes('REPLACE_');
@@ -80,9 +79,9 @@ function createPostgresClient(url: string, viaHyperdrive: boolean) {
     max: 1,
     fetch_types: false,
     prepare: false,
-    connect_timeout: 5,
-    idle_timeout: viaHyperdrive ? 10 : 20,
-    max_lifetime: viaHyperdrive ? 300 : 60 * 30,
+    connect_timeout: viaHyperdrive ? 4 : 5,
+    idle_timeout: viaHyperdrive ? 120 : 20,
+    max_lifetime: viaHyperdrive ? 600 : 60 * 30,
     ...(viaHyperdrive ? {} : { ssl: 'require' as const }),
   });
 }
@@ -101,28 +100,13 @@ function isConnectionError(error: unknown): boolean {
     message.includes('Connection terminated') ||
     message.includes('connection timeout') ||
     message.includes('CONNECT_TIMEOUT') ||
-    message.includes('query_timeout') ||
     message.includes('ECONNRESET') ||
     message.includes('ECONNREFUSED')
   );
 }
 
-async function withQueryTimeout<T>(
-  promise: Promise<T>,
-  timeoutMs: number,
-  label = 'query_timeout',
-): Promise<T> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      promise,
-      new Promise<T>((_, reject) => {
-        timer = setTimeout(() => reject(new Error(label)), timeoutMs);
-      }),
-    ]);
-  } finally {
-    if (timer) clearTimeout(timer);
-  }
+async function warmHyperdriveClient(client: ReturnType<typeof postgres>) {
+  await client`select 1 as ok`;
 }
 
 function getLocalClient(config: DatabaseConfig) {
@@ -147,7 +131,14 @@ async function getHyperdriveClient(config: DatabaseConfig) {
 
   if (clientExpired) {
     resetHyperdriveClient();
-    hyperdriveSqlClient = createPostgresClient(url, true);
+    const client = createPostgresClient(url, true);
+    try {
+      await warmHyperdriveClient(client);
+    } catch (error) {
+      client.end({ timeout: 1 }).catch(() => {});
+      throw error;
+    }
+    hyperdriveSqlClient = client;
     hyperdriveConfigKey = configKey;
     hyperdriveClientCreatedAt = Date.now();
   }
@@ -179,12 +170,9 @@ async function runQuery<T>(
     const queryStarted = performance.now();
     try {
       const client = await getClient(config);
-      const query = client(strings, ...(values as never[])) as unknown as Promise<T>;
-      const result = config.viaHyperdrive
-        ? await withQueryTimeout(query, HYPERDRIVE_QUERY_TIMEOUT_MS)
-        : await query;
+      const result = (await client(strings, ...(values as never[]))) as T;
       recordDbQuery(performance.now() - queryStarted, strings);
-      return result as T;
+      return result;
     } catch (error) {
       recordDbQuery(performance.now() - queryStarted, strings);
       if (attempt === 0 && config.viaHyperdrive && isConnectionError(error)) {
