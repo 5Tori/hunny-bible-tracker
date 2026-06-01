@@ -41,7 +41,7 @@ if (!rawUrl) {
   process.exit(1);
 }
 
-const connectionString = normalizePoolerUrl(rawUrl);
+const connectionString = normalizePoolerUrl(rawUrl).replace(':6543/', ':5432/').replace(/[?&]pgbouncer=true/g, '');
 const apply = process.argv.includes('--apply');
 
 console.log(`Hyperdrive config: ${hyperdriveId}`);
@@ -57,7 +57,7 @@ if (!apply) {
 
 const result = spawnSync(
   'pnpm',
-  ['exec', 'wrangler', 'hyperdrive', 'update', hyperdriveId, '--connection-string', connectionString],
+  ['exec', 'wrangler', 'hyperdrive', 'update', hyperdriveId, '--connection-string', connectionString, '--sslmode', 'require'],
   { cwd: path.resolve(__dirname, '..'), stdio: 'inherit' },
 );
 

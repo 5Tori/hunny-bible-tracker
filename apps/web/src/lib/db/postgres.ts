@@ -179,7 +179,7 @@ async function runQuery<T>(
     const queryStarted = performance.now();
     try {
       const client = await getClient(config);
-      const query = client(strings, ...(values as never[])) as Promise<T>;
+      const query = client(strings, ...(values as never[])) as unknown as Promise<T>;
       const result = config.viaHyperdrive
         ? await withQueryTimeout(query, HYPERDRIVE_QUERY_TIMEOUT_MS)
         : await query;
