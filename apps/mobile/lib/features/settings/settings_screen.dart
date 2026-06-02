@@ -9,16 +9,20 @@ import '../../core/theme/app_theme.dart';
 import '../plans/plans_screen.dart';
 import '../read/data/read_repository.dart';
 import '../read/domain/read_models.dart';
+import '../stats/data/reading_stats_repository.dart';
+import '../stats/domain/reading_stats_models.dart';
 import 'data/feedback_api_client.dart';
 import 'widgets/auth_sheet.dart';
 import 'widgets/post_auth_backup_dialog.dart';
 import 'widgets/reading_activity_panel.dart';
+import 'widgets/reading_stats_summary_panel.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({
     super.key,
     required this.authRepository,
     required this.readRepository,
+    required this.readingStatsRepository,
     this.onReadingDataRestored,
     this.onNavigateToRead,
     this.onPreferencesChanged,
@@ -26,6 +30,7 @@ class SettingsScreen extends StatefulWidget {
 
   final AuthRepository authRepository;
   final ReadRepository readRepository;
+  final ReadingStatsRepository readingStatsRepository;
   final VoidCallback? onReadingDataRestored;
   final VoidCallback? onNavigateToRead;
   final VoidCallback? onPreferencesChanged;
@@ -46,18 +51,22 @@ class SettingsScreenState extends State<SettingsScreen> {
   BibleComVersion _bibleVersion = BibleComVersion.defaultVersion;
   int _dailyReadingGoalMinutes = 0;
   AccountReadingStats? _readingStats;
+  ReadingTrackerStats? _trackerStats;
 
-  /// Reload account + sync status (e.g. when the Settings tab is opened).
-  Future<void> reload() => _load();
+  /// Refresh account + sync (tab focus). Pass [includeStats] after reading changes.
+  Future<void> reload({bool includeStats = false}) =>
+      _load(includeStats: includeStats);
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _load(initial: true);
   }
 
-  Future<void> _load() async {
-    setState(() => _loading = true);
+  Future<void> _load({bool initial = false, bool includeStats = true}) async {
+    if (initial) {
+      setState(() => _loading = true);
+    }
     AuthSession? session;
     LocalUserProfile? profile;
     DateTime? lastSyncedAt;
@@ -94,11 +103,21 @@ class SettingsScreenState extends State<SettingsScreen> {
     final bibleVersion = await widget.readRepository.getBibleComVersion();
     final dailyReadingGoalMinutes =
         await widget.readRepository.getDailyReadingGoalMinutes();
-    AccountReadingStats? readingStats;
-    try {
-      readingStats = await widget.readRepository.getAccountReadingStats();
-    } catch (_) {
-      readingStats = null;
+    AccountReadingStats? readingStats = _readingStats;
+    ReadingTrackerStats? trackerStats = _trackerStats;
+    if (includeStats) {
+      try {
+        readingStats =
+            await widget.readingStatsRepository.getAccountReadingStats();
+      } catch (_) {
+        readingStats = null;
+      }
+      try {
+        trackerStats =
+            await widget.readingStatsRepository.getReadingTrackerStats();
+      } catch (_) {
+        trackerStats = null;
+      }
     }
     if (!mounted) return;
     setState(() {
@@ -109,8 +128,11 @@ class SettingsScreenState extends State<SettingsScreen> {
       _hasPendingChanges = hasPendingChanges;
       _bibleVersion = bibleVersion;
       _dailyReadingGoalMinutes = dailyReadingGoalMinutes;
-      _readingStats = readingStats;
-      _loading = false;
+      if (includeStats) {
+        _readingStats = readingStats;
+        _trackerStats = trackerStats;
+      }
+      if (initial) _loading = false;
     });
   }
 
@@ -408,9 +430,12 @@ class SettingsScreenState extends State<SettingsScreen> {
     const guestSubtitle = 'Sign in to save your data.';
 
     return SafeArea(
-      child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
-        children: [
+      child: RefreshIndicator(
+        onRefresh: () => _load(includeStats: true),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 16, 20, 28),
+          children: [
           Text('Settings', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 24),
 
@@ -483,21 +508,12 @@ class SettingsScreenState extends State<SettingsScreen> {
                   ),
                 ),
                 const SizedBox(width: 14),
-                if (_loading)
-                  const Padding(
-                    padding: EdgeInsets.only(left: 8),
-                    child: SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                  )
-                else if (signedIn)
+                if (signedIn)
                   FilledButton.icon(
                     onPressed: () async {
                       await widget.authRepository.signOut();
                       if (!mounted) return;
-                      await _load();
+                      await _load(includeStats: true);
                     },
                     icon: const Icon(Icons.logout, size: 16),
                     label: const Text('Sign out'),
@@ -526,7 +542,7 @@ class SettingsScreenState extends State<SettingsScreen> {
                               authRepository: widget.authRepository,
                               onAuthSuccess: (
                                   {required createdNewAccount}) async {
-                                await _load();
+                                await _load(includeStats: true);
                                 if (!context.mounted) return;
                                 if (createdNewAccount) {
                                   await showPostAuthBackupPromptIfNeeded(
@@ -641,7 +657,7 @@ class SettingsScreenState extends State<SettingsScreen> {
 
           _SectionLabel(title: 'READING ACTIVITY'),
           const SizedBox(height: 12),
-          if (_loading)
+          if (_loading && _trackerStats == null && _readingStats == null)
             Container(
               padding: const EdgeInsets.all(18),
               decoration: BoxDecoration(
@@ -657,34 +673,41 @@ class SettingsScreenState extends State<SettingsScreen> {
                 ),
               ),
             )
-          else if (_readingStats != null)
-            ReadingActivityPanel(stats: _readingStats!)
-          else
-            Container(
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(3),
-                border: Border.all(color: AppTheme.border),
+          else ...[
+            if (_trackerStats != null) ...[
+              ReadingStatsSummaryPanel(stats: _trackerStats!),
+              const SizedBox(height: 12),
+            ],
+            if (_readingStats != null)
+              ReadingActivityPanel(stats: _readingStats!)
+            else
+              Container(
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(3),
+                  border: Border.all(color: AppTheme.border),
+                ),
+                child: Text(
+                  'Reading activity will appear here after you mark chapters as read.',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: AppTheme.mutedInk,
+                        height: 1.35,
+                      ),
+                ),
               ),
-              child: Text(
-                'Reading activity will appear here after you mark chapters as read.',
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: AppTheme.mutedInk,
-                      height: 1.35,
-                    ),
-              ),
-            ),
+          ],
           const SizedBox(height: 24),
           Center(
             child: Text(
-              'v0.5.0+10 · Bible Tracker',
+              'v0.5.0+11 · Bible Tracker',
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
                     color: AppTheme.mutedInk,
                   ),
             ),
           ),
         ],
+        ),
       ),
     );
   }

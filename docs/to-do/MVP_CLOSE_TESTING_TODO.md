@@ -4,7 +4,7 @@
 
 ## Done / Do Not Re-open
 
-Read flow QA · Discover enabled · Saved/List hidden · Home Today's Message · content admin/API · Plans(full-screen, archive/restore) · feedback API · **sync push/bootstrap (Android + iOS E2E)** · offline Home/Read · Discover offline message · launch/icon assets · **Supabase RPC read layer** · **heart/share/save UX** · **Discover plan CTA (Continue + Read navigation)** · Documentation 정리 · **Web catalog RPC perf (Step 4)** · **Mobile Discover detail + Today DTO (Step 5)**
+Read flow QA · Discover enabled · Saved/List hidden · Home Today's Message · content admin/API · Plans(full-screen, archive/restore) · feedback API · **sync push/bootstrap (Android + iOS E2E)** · offline Home/Read · Discover offline message · launch/icon assets · **Supabase RPC read layer** · **heart/share/save UX** · **Discover plan CTA (Continue + Read navigation)** · Documentation 정리 · **Web catalog RPC perf (Step 4)** · **Mobile Discover detail + Today DTO (Step 5)** · **Home plan hero + weekly footer** · **Settings background refresh** · **Web admin plan REST + Hyperdrive fix**
 
 ### Android manual QA (2026-05-29) ✓
 
@@ -21,7 +21,7 @@ Read flow QA · Discover enabled · Saved/List hidden · Home Today's Message ·
 
 ### Step 6 manual QA (2026-06-01 — in progress)
 
-- [ ] **v0.5.0+10** cold/warm E2E (`docs/MOBILE_TESTING.md` Step 6)
+- [ ] **v0.5.0+11** cold/warm E2E (`docs/MOBILE_TESTING.md` Step 6)
 - [ ] Discover 6건 · detail lazy load · message card More CTA
 - [ ] Play / TestFlight upload after simulator pass
 
@@ -41,7 +41,7 @@ Read flow QA · Discover enabled · Saved/List hidden · Home Today's Message ·
 - [x] `pnpm mobile:smoke-prod` (API + Supabase RPC prod gate)
 - [x] `pnpm --dir apps/web bench:api` on production (<800ms summary routes)
 - [ ] `flutter analyze` · `flutter test` (full suite — widget test slow; Today DTO tests pass)
-- [x] `pubspec.yaml` `version` / `+versionCode` bump (current: **`0.5.0+10`**)
+- [x] `pubspec.yaml` `version` / `+versionCode` bump (current: **`0.5.0+11`**)
 
 **Production API / RPC**
 

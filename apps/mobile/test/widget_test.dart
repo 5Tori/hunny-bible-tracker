@@ -4,13 +4,16 @@ import 'package:hunny_bible_tracker/app/app.dart';
 import 'package:hunny_bible_tracker/core/auth/auth_repository.dart';
 import 'package:hunny_bible_tracker/core/auth/supabase_auth_config.dart';
 import 'package:hunny_bible_tracker/core/database/app_database.dart';
-import 'package:hunny_bible_tracker/features/read/data/read_repository.dart';
+import 'package:hunny_bible_tracker/features/stats/data/reading_stats_repository.dart';
 
+import 'support/test_repositories.dart';
+
+@Tags(['slow'])
 void main() {
   testWidgets('HunnyBibleApp renders the main shell', (tester) async {
     final database = AppDatabase.forTesting(NativeDatabase.memory());
-    final readRepository = ReadRepository(database);
-    await readRepository.initializeLocalData();
+    final (readRepository, readingStatsRepository) =
+        await createTestRepositories(database: database);
     await readRepository.completeOnboarding('beginner');
     final authRepository = AuthRepository(
       supabaseConfig: const SupabaseAuthConfig(
@@ -25,6 +28,7 @@ void main() {
       HunnyBibleApp(
         database: database,
         readRepository: readRepository,
+        readingStatsRepository: readingStatsRepository,
         authRepository: authRepository,
       ),
     );

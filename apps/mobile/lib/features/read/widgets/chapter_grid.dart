@@ -10,11 +10,15 @@ class ChapterGrid extends StatelessWidget {
     required this.chapters,
     required this.onChapterTap,
     this.animateEntrance = false,
+    this.scrollTargetChapterNumber,
+    this.scrollTargetKey,
   });
 
   final List<ChapterProgressView> chapters;
   final ValueChanged<ChapterProgressView> onChapterTap;
   final bool animateEntrance;
+  final int? scrollTargetChapterNumber;
+  final GlobalKey? scrollTargetKey;
 
   @override
   Widget build(BuildContext context) {
@@ -38,9 +42,15 @@ class ChapterGrid extends StatelessWidget {
           chapter: chapter,
           onTap: () => onChapterTap(chapter),
         );
+        final isScrollTarget = scrollTargetChapterNumber != null &&
+            scrollTargetChapterNumber == chapter.chapterNumber &&
+            scrollTargetKey != null;
+        final wrapped = isScrollTarget
+            ? KeyedSubtree(key: scrollTargetKey, child: cell)
+            : cell;
 
         if (animateEntrance) {
-          return cell
+          return wrapped
               .animate(delay: (index * 8).ms)
               .fadeIn(
                 duration: 140.ms,
@@ -60,7 +70,7 @@ class ChapterGrid extends StatelessWidget {
               );
         }
 
-        return cell;
+        return wrapped;
       },
     );
   }

@@ -10,7 +10,7 @@ Post-MVP 방향 정리: **content-led Bible reading + habit tracking**.
 
 1. ~~Android closed-test QA~~ ✓ (2026-05-29)
 2. ~~iOS closed-test QA~~ ✓
-3. Play/TestFlight 빌드 (`versionCode` bump)
+3. **v0.5.0+11** Play/TestFlight upload (`app-release.aab` / `.ipa`)
 4. ~~Real plan/content seed~~ ✓
 5. ~~Habit layer — Settings activity grid~~ ✓
 6. ~~Message Card Library (web Phase 0–4)~~ ✓
@@ -23,6 +23,10 @@ Post-MVP 방향 정리: **content-led Bible reading + habit tracking**.
 - **Supabase-first hybrid** — mobile RPC read + API write (`HUNNY_REMOTE_READ_MODE=supabase_rpc`)
 - **Sync/restore E2E** — Settings SYNC, Supabase Admin REST storage
 - **Home engagement** — heart (one-way), save (toggle), share
+- **Home plan hero (v0.5.0+11)** — Current plan · progress ring · chapters read · tap → Read + last-read scroll · weekly/last-read footer
+- **ReadingStatsRepository** — progress vs activity stats split; Settings summary + activity grid
+- **Settings tab UX** — background refresh (no Sign out flicker) · pull-to-refresh for stats
+- **Web admin** — plan list/detail via Supabase Admin REST; Hyperdrive per-query client (admin 500 fix)
 - **Infra** — Hyperdrive password align, `/api/health` `db: true`, deploy via `pnpm run deploy`
 
 ## Implementation sequence
@@ -32,14 +36,15 @@ Post-MVP 방향 정리: **content-led Bible reading + habit tracking**.
 3. ~~`bible_chapters` + estimated reading time (mobile UI)~~ ✓
 4. ~~Admin/seed `estimated_minutes` reconcile~~ ✓
 5. ~~Daily reading goal + today read minutes~~ ✓
-6. ~~Reading stats / streak / calendar~~ ✓ (Settings bottom panel)
+6. ~~Reading stats / streak / calendar~~ ✓ (Settings bottom panel + `ReadingStatsRepository`)
 7. ~~Message Card Library (web)~~ ✓ — `/messages`, Admin, API, Today link — **관계 정리:** `docs/to-do/CONTENT_REFACTOR_MEMO.md`
-8. Plan Detail
-9. Story Card / Content Detail
-10. Home featured content
-11. Saved (List tab)
-12. Push notifications
-13. Visual explainers · video/animation
+8. ~~Home plan hero + weekly footer (mobile)~~ ✓ (v0.5.0+11)
+9. Plan Detail
+10. Story Card / Content Detail
+11. Home featured content
+12. Saved (List tab)
+13. Push notifications
+14. Visual explainers · video/animation
 
 ## Not Now
 

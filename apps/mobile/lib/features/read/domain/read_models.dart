@@ -92,6 +92,23 @@ class ReadingPlanView {
   final String? lastOpenedBookKey;
 }
 
+/// Most recently completed chapter in a plan run (for Home “last read”).
+class LastReadPosition {
+  const LastReadPosition({
+    required this.bookKey,
+    required this.bookDisplayName,
+    required this.chapterNumber,
+  });
+
+  final String bookKey;
+  final String bookDisplayName;
+  final int chapterNumber;
+
+  String get label => chapterNumber > 0
+      ? '$bookDisplayName $chapterNumber'
+      : bookDisplayName;
+}
+
 class ReadingPlanSummary {
   const ReadingPlanSummary({
     required this.plan,

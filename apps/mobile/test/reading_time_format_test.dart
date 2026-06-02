@@ -66,5 +66,10 @@ void main() {
         '40 mins left · 1 hr 40 mins',
       );
     });
+
+    test('formatHomeWeeklyChapterCount', () {
+      expect(formatHomeWeeklyChapterCount(1), '1 Ch.');
+      expect(formatHomeWeeklyChapterCount(129), '129 Ch.');
+    });
   });
 }

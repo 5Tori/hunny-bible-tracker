@@ -8,12 +8,17 @@ import '../core/auth/supabase_auth_config.dart';
 import 'app/app.dart';
 import 'core/database/app_database.dart';
 import 'features/read/data/read_repository.dart';
+import 'features/stats/data/reading_stats_repository.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   final database = AppDatabase();
-  final readRepository = ReadRepository(database);
+  final readingStatsRepository = ReadingStatsRepository(database);
+  final readRepository = ReadRepository(
+    database,
+    statsRepository: readingStatsRepository,
+  );
   await readRepository.initializeLocalData();
 
   final supabaseConfig = SupabaseAuthConfig.fromEnvironment();
@@ -43,6 +48,7 @@ Future<void> main() async {
     HunnyBibleApp(
       database: database,
       readRepository: readRepository,
+      readingStatsRepository: readingStatsRepository,
       authRepository: authRepository,
     ),
   );

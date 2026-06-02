@@ -14,15 +14,23 @@ import 'widgets/plan_completion_celebration.dart';
 import 'widgets/section_header.dart';
 
 class ReadScreen extends StatefulWidget {
-  const ReadScreen({super.key, required this.readRepository});
+  const ReadScreen({
+    super.key,
+    required this.readRepository,
+    this.scrollToLastReadOnOpen = false,
+  });
 
   final ReadRepository readRepository;
+  final bool scrollToLastReadOnOpen;
 
   @override
   State<ReadScreen> createState() => _ReadScreenState();
 }
 
 class _ReadScreenState extends State<ReadScreen> {
+  final ScrollController _scrollController = ScrollController();
+  final GlobalKey _lastReadScrollTargetKey = GlobalKey();
+
   ReadingPlanView? _plan;
   List<PlanSectionProgress> _sections = const [];
   List<ChapterProgressView> _chapters = const [];
@@ -32,7 +40,14 @@ class _ReadScreenState extends State<ReadScreen> {
   bool _loading = true;
   bool _loadingChapters = false;
   String? _chapterEntranceKey;
+  int? _scrollToChapterNumber;
   BibleComVersion _bibleVersion = BibleComVersion.defaultVersion;
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   void initState() {
@@ -79,6 +94,22 @@ class _ReadScreenState extends State<ReadScreen> {
 
     var selectedSectionId = plan.lastOpenedSectionId;
     var selectedBookKey = plan.lastOpenedBookKey;
+    int? scrollToChapterNumber;
+
+    if (widget.scrollToLastReadOnOpen) {
+      final lastRead = await widget.readRepository.getLastReadPosition(plan.id);
+      if (lastRead != null) {
+        final lastReadBook = _findBookByKey(sections, lastRead.bookKey);
+        if (lastReadBook != null) {
+          selectedSectionId = lastReadBook.sectionId;
+          selectedBookKey = lastReadBook.bookKey;
+          if (lastRead.chapterNumber > 0) {
+            scrollToChapterNumber = lastRead.chapterNumber;
+          }
+        }
+      }
+    }
+
     var selectedBook = _findBook(
       sections: sections,
       sectionId: selectedSectionId,
@@ -102,6 +133,28 @@ class _ReadScreenState extends State<ReadScreen> {
       _readingOverview = overview;
       _bibleVersion = bibleVersion;
       _loading = false;
+      _scrollToChapterNumber = scrollToChapterNumber;
+    });
+
+    if (scrollToChapterNumber != null) {
+      _scheduleScrollToLastRead();
+    }
+  }
+
+  void _scheduleScrollToLastRead() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      Future<void>.delayed(const Duration(milliseconds: 280), () {
+        if (!mounted) return;
+        final targetContext = _lastReadScrollTargetKey.currentContext;
+        if (targetContext == null || !targetContext.mounted) return;
+        Scrollable.ensureVisible(
+          targetContext,
+          alignment: 0.5,
+          duration: const Duration(milliseconds: 420),
+          curve: Curves.easeOutCubic,
+        );
+      });
     });
   }
 
@@ -377,6 +430,10 @@ class _ReadScreenState extends State<ReadScreen> {
                       isExpanded && _chapterEntranceKey == expansionKey,
                   isLoading: isExpanded && _loadingChapters,
                   onEntranceComplete: _clearChapterEntrance,
+                  scrollTargetChapterNumber: isExpanded
+                      ? _scrollToChapterNumber
+                      : null,
+                  scrollTargetKey: _lastReadScrollTargetKey,
                 ),
               ],
             ),
@@ -580,6 +637,7 @@ class _ReadScreenState extends State<ReadScreen> {
                 return false;
               },
               child: CustomScrollView(
+                controller: _scrollController,
                 slivers: [
                   SliverToBoxAdapter(
                     child: Padding(
@@ -624,6 +682,18 @@ class _ReadScreenState extends State<ReadScreen> {
         ],
       ),
     );
+  }
+
+  BookProgress? _findBookByKey(
+    List<PlanSectionProgress> sections,
+    String bookKey,
+  ) {
+    for (final section in sections) {
+      for (final book in section.books) {
+        if (book.bookKey == bookKey) return book;
+      }
+    }
+    return null;
   }
 
   BookProgress? _findBook({

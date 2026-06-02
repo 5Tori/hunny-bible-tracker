@@ -96,6 +96,12 @@ RPC output shapes mirror existing mobile DTOs / API JSON. Base tables are not gr
 
 - Mobile writes local first; backup is secondary authenticated path via Next.js API
 - `reading_activities` → streak / reading calendar (habit layer)
+- **Tracker stats use `reading_activities`, not `chapter_progress_entries`.**
+  - `chapter_progress_entries` = current mutable progress (uncheck updates progress)
+  - `reading_activities` = historical reading log (uncheck does **not** remove activity)
+  - Plan / book / section progress UI → `chapter_progress_entries`
+  - Today / week / month / lifetime habit stats → `reading_activities` (+ `bible_chapters` for estimated minutes)
+  - Lifetime chapter count = **complete event count** (not unique chapters across plans)
 - **Daily reading goal** — local `app_settings.daily_reading_goal_minutes`; today progress = sum of `bible_chapters` estimates for today's `reading_activities` (`action = complete`). Backed up as `settings.dailyReadingGoalMinutes` in sync payload v1.
 - Mobile public catalog/content may use Supabase RPC; sensitive tables stay API-only
 

@@ -63,6 +63,43 @@ Short English release notes for Google Play.
 
 ---
 
+## v0.5.0+11 — Android / iOS Closed Testing
+
+- **Date:** 2026-06-01
+- **Platform:** Both
+- **Track:** Closed testing
+- **Release name:** `v0.5.0+11 - Closed testing`
+- **Build artifact:** `app-release.aab` / TestFlight `.ipa`
+- **Package / Bundle ID:** `com.hunnybibletracker.app`
+
+#### Summary
+
+여섯 번째 클로즈 테스트용 릴리즈. Home 플랜 히어로·주간 읽기 푸터 UI 개선, Home → Read 마지막 읽은 장 자동 스크롤, Settings 탭 전환 시 Sign out 깜빡임 제거, 웹 admin plan detail 500 수정을 포함한다.
+
+#### Included
+
+- **Mobile Home:** `Current plan` 라벨 · 더 큰 진행률 링 · `N chapters read`만 표시 · 전체 블록 탭 → Read 탭 + 마지막 읽은 장 중앙 스크롤
+- **Mobile Home footer:** Last 7 days (`19 Ch.` + 예상 시간) · Last read 위치 (큰 타이포)
+- **Mobile Settings:** 탭 전환 시 백그라운드 갱신(세션/동기화만) · Sign out 항상 표시 · pull-to-refresh로 읽기 통계 갱신
+- **Mobile Read:** `ReadingStatsRepository` 분리 · Read 화면 last-read 스크롤 타깃
+- **Web:** admin plan detail/list Supabase Admin REST · Hyperdrive per-query client (admin 500 fix) · local dev online auto · message card DB sync script
+
+#### Notes
+
+- Mobile read path unchanged: `HUNNY_REMOTE_READ_MODE=supabase_rpc` + `HUNNY_API_BASE_URL=https://hunnybibletracker.com`
+- 테스트 중점: Home plan 탭 → Read last-read scroll · Home footer stats · Settings 탭 왕복(Sign out 안정) · admin `/admin/plans/[id]` (web)
+- `flutter build appbundle --release --dart-define-from-file=.env.android.json`
+
+#### Play Console Release Notes
+
+```text
+Closed testing update for Hunny Bible Tracker.
+
+Refreshed Home plan and reading summary layout, smoother jump back to your last-read chapter, and Settings screen stability improvements.
+```
+
+---
+
 ## v0.5.0+10 — Android / iOS Closed Testing
 
 - **Date:** 2026-06-01
@@ -262,7 +299,7 @@ Includes offline-first Bible reading progress tracking, reading plans, chapter c
 ### Release name
 
 ```text
-v0.5.0+10 - Closed testing
+v0.5.0+11 - Closed testing
 ```
 
 ### Release notes
@@ -270,5 +307,5 @@ v0.5.0+10 - Closed testing
 ```text
 Closed testing update for Hunny Bible Tracker.
 
-Discover content loads faster with full detail on tap, Today’s Message links to message cards, and general stability improvements for reading plans and catalog browsing.
+Refreshed Home plan and reading summary layout, smoother jump back to your last-read chapter, and Settings screen stability improvements.
 ```

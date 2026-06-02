@@ -4,16 +4,19 @@ import '../../core/auth/auth_repository.dart';
 import '../../core/theme/app_theme.dart';
 import '../read/data/read_repository.dart';
 import '../root/root_shell.dart';
+import '../stats/data/reading_stats_repository.dart';
 import 'onboarding_screen.dart';
 
 class OnboardingGate extends StatefulWidget {
   const OnboardingGate({
     super.key,
     required this.readRepository,
+    required this.readingStatsRepository,
     required this.authRepository,
   });
 
   final ReadRepository readRepository;
+  final ReadingStatsRepository readingStatsRepository;
   final AuthRepository authRepository;
 
   @override
@@ -43,7 +46,7 @@ class _OnboardingGateState extends State<OnboardingGate> {
   void _finishOnboarding() {
     setState(() {
       _showOnboarding = false;
-      _initialTabIndex = 2;
+      _initialTabIndex = 1;
     });
   }
 
@@ -67,6 +70,7 @@ class _OnboardingGateState extends State<OnboardingGate> {
 
     return RootShell(
       readRepository: widget.readRepository,
+      readingStatsRepository: widget.readingStatsRepository,
       authRepository: widget.authRepository,
       initialIndex: _initialTabIndex,
     );

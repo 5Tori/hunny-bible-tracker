@@ -30,11 +30,17 @@ cp .env.example.json .env.ios.json .env.android.json  # 각각 복사 후 값 �
 
 ```bash
 pnpm install
-cp apps/web/.env.example apps/web/.env.local   # 값 입력
-pnpm web:dev
+cp apps/web/.env.example apps/web/.env.local   # DATABASE_URL + Supabase keys 입력
+pnpm web:dev   # .env.local credentials 있으면 live DB · 없으면 offline mock
 ```
 
-Admin: http://127.0.0.1:3000/admin/login
+Admin: http://127.0.0.1:3000/admin/login (Google OAuth — `ADMIN_EMAILS` 필요)
+
+Mock-only dev: `pnpm web:dev:offline` · Force live: `pnpm web:dev:online`
+
+`pnpm web:dev`는 `.env.local`에 DB + Supabase 키가 있으면 자동으로 live DB 모드(`run-dev.mjs`).
+
+Fixture → DB sync (message cards): `pnpm sync:message-cards` (dry-run) · `pnpm sync:message-cards:write`
 
 Workers preview: `cd apps/web && cp .dev.vars.example .dev.vars && pnpm preview`
 
@@ -54,7 +60,7 @@ Deploy: `cd apps/web && pnpm run deploy` (루트: `pnpm web:deploy`)
 
 Runtime secrets: `SUPABASE_SERVICE_ROLE_KEY`, `CLOUDINARY_*` · Hyperdrive → `wrangler.jsonc`
 
-**쓰기 경로 (2026-05):** 모바일 sync/auth/heart/share는 Worker에서 **Supabase Admin REST**로 저장합니다. Admin CRUD·일부 catalog SQL read는 Hyperdrive를 계속 사용합니다.
+**쓰기 경로 (2026-05):** 모바일 sync/auth/heart/share는 Worker에서 **Supabase Admin REST**로 저장합니다. Admin plan list/detail·일부 catalog SQL read는 Hyperdrive + **Supabase Admin REST** (`plans-admin-rest.ts`)를 사용합니다.
 
 검증:
 
@@ -121,7 +127,7 @@ Home 빠르게 → progress/fallback · Read chapter toggle · Discover offline 
 | `env.IMAGES binding is not defined` | `next.config.mjs` `images.unoptimized: true` (Cloudinary 직접 사용). 또는 wrangler에 `images.binding: IMAGES` 추가 |
 | `waitUntil() tasks did not complete` | Worker background task timeout — DB 연결 hang·이미지 최적화 실패 시 발생. health·Hyperdrive 먼저 확인 |
 
-현재 release target: `v0.5.0+9` — `docs/ref/HUNNY_RELEASE_LOG.md`
+현재 release target: `v0.5.0+11` — `docs/ref/HUNNY_RELEASE_LOG.md`
 
 Hot reload: `r` / `R` / `q`
 

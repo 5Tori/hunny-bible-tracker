@@ -1,22 +1,27 @@
 import 'package:flutter/material.dart';
 
 import '../../core/auth/auth_repository.dart';
+import '../../core/config/dev_features.dart';
 import '../../core/theme/app_theme.dart';
-import '../find/discover_screen.dart';
+import '../dev/dev_screen.dart';
 import '../home/home_screen.dart';
 import '../read/data/read_repository.dart';
 import '../read/read_screen.dart';
 import '../settings/settings_screen.dart';
+import '../stats/data/reading_stats_repository.dart';
 
+/// Bottom tabs: Home · Read · Settings (+ Dev in debug builds only).
 class RootShell extends StatefulWidget {
   const RootShell({
     super.key,
     required this.readRepository,
+    required this.readingStatsRepository,
     required this.authRepository,
     this.initialIndex = 0,
   });
 
   final ReadRepository readRepository;
+  final ReadingStatsRepository readingStatsRepository;
   final AuthRepository authRepository;
   final int initialIndex;
 
@@ -25,31 +30,44 @@ class RootShell extends StatefulWidget {
 }
 
 class _RootShellState extends State<RootShell> {
-  late int _selectedIndex = widget.initialIndex;
+  static const _settingsTabIndex = 2;
+  static const _devTabIndex = 3;
+
+  int get _tabCount => DevFeatures.showDevTab ? 4 : 3;
+
+  late int _selectedIndex = widget.initialIndex.clamp(0, _tabCount - 1);
   late final List<bool> _visitedTabs = List.generate(
-    4,
-    (index) => index == widget.initialIndex,
+    _tabCount,
+    (index) => index == _selectedIndex,
   );
   int _readRefreshToken = 0;
+  var _readScrollToLastReadOnOpen = false;
   final _homeKey = GlobalKey<HomeScreenState>();
   final _settingsKey = GlobalKey<SettingsScreenState>();
+  final _devKey = GlobalKey<DevScreenState>();
 
   void _selectTab(int index) {
     setState(() {
       _selectedIndex = index;
       _visitedTabs[index] = true;
+      if (index == 1) {
+        _readScrollToLastReadOnOpen = false;
+      }
     });
     if (index == 0) {
       _homeKey.currentState?.refresh();
-    } else if (index == 3) {
+    } else if (index == _settingsTabIndex) {
       _settingsKey.currentState?.reload();
+    } else if (DevFeatures.showDevTab && index == _devTabIndex) {
+      _devKey.currentState?.reload();
     }
   }
 
-  void _openReadTab({bool refreshRead = true}) {
+  void _openReadTab({bool scrollToLastRead = false, bool refreshRead = true}) {
     setState(() {
-      _selectedIndex = 2;
-      _visitedTabs[2] = true;
+      _selectedIndex = 1;
+      _visitedTabs[1] = true;
+      _readScrollToLastReadOnOpen = scrollToLastRead;
       if (refreshRead) _readRefreshToken += 1;
     });
     _homeKey.currentState?.refresh();
@@ -60,7 +78,7 @@ class _RootShellState extends State<RootShell> {
     return Scaffold(
       body: IndexedStack(
         index: _selectedIndex,
-        children: List.generate(4, _buildTab),
+        children: List.generate(_tabCount, _buildTab),
       ),
       bottomNavigationBar: DecoratedBox(
         decoration: const BoxDecoration(
@@ -87,30 +105,31 @@ class _RootShellState extends State<RootShell> {
                 Expanded(
                   child: _BottomNavItem(
                     selected: _selectedIndex == 1,
-                    icon: Icons.explore_outlined,
-                    selectedIcon: Icons.explore,
-                    label: 'Discover',
+                    icon: Icons.menu_book_outlined,
+                    selectedIcon: Icons.menu_book,
+                    label: 'Read',
                     onTap: () => _selectTab(1),
                   ),
                 ),
                 Expanded(
                   child: _BottomNavItem(
-                    selected: _selectedIndex == 2,
-                    icon: Icons.menu_book_outlined,
-                    selectedIcon: Icons.menu_book,
-                    label: 'Read',
-                    onTap: () => _selectTab(2),
-                  ),
-                ),
-                Expanded(
-                  child: _BottomNavItem(
-                    selected: _selectedIndex == 3,
+                    selected: _selectedIndex == _settingsTabIndex,
                     icon: Icons.settings_outlined,
                     selectedIcon: Icons.settings,
                     label: 'Settings',
-                    onTap: () => _selectTab(3),
+                    onTap: () => _selectTab(_settingsTabIndex),
                   ),
                 ),
+                if (DevFeatures.showDevTab)
+                  Expanded(
+                    child: _BottomNavItem(
+                      selected: _selectedIndex == _devTabIndex,
+                      icon: Icons.bug_report_outlined,
+                      selectedIcon: Icons.bug_report,
+                      label: 'Dev',
+                      onTap: () => _selectTab(_devTabIndex),
+                    ),
+                  ),
               ],
             ),
           ),
@@ -126,24 +145,24 @@ class _RootShellState extends State<RootShell> {
       0 => HomeScreen(
           key: _homeKey,
           readRepository: widget.readRepository,
-          onReadTap: () => _selectTab(2),
+          readingStatsRepository: widget.readingStatsRepository,
+          onReadTap: ({bool scrollToLastRead = false}) =>
+              _openReadTab(scrollToLastRead: scrollToLastRead),
         ),
-      1 => DiscoverScreen(
-          readRepository: widget.readRepository,
-          onOpenPlan: (_) => _openReadTab(refreshRead: true),
-        ),
-      2 => ReadScreen(
+      1 => ReadScreen(
           key: ValueKey(_readRefreshToken),
           readRepository: widget.readRepository,
+          scrollToLastReadOnOpen: _readScrollToLastReadOnOpen,
         ),
-      3 => SettingsScreen(
+      _settingsTabIndex => SettingsScreen(
           key: _settingsKey,
           authRepository: widget.authRepository,
           readRepository: widget.readRepository,
+          readingStatsRepository: widget.readingStatsRepository,
           onReadingDataRestored: () {
             setState(() => _readRefreshToken += 1);
             _homeKey.currentState?.refresh();
-            _settingsKey.currentState?.reload();
+            _settingsKey.currentState?.reload(includeStats: true);
           },
           onNavigateToRead: _openReadTab,
           onPreferencesChanged: () {
@@ -151,6 +170,12 @@ class _RootShellState extends State<RootShell> {
             _homeKey.currentState?.refresh();
             _settingsKey.currentState?.reload();
           },
+        ),
+      _devTabIndex when DevFeatures.showDevTab => DevScreen(
+          key: _devKey,
+          readRepository: widget.readRepository,
+          readingStatsRepository: widget.readingStatsRepository,
+          authRepository: widget.authRepository,
         ),
       _ => const SizedBox.shrink(),
     };

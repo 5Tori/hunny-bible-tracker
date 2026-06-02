@@ -1,10 +1,11 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hunny_bible_tracker/core/database/app_database.dart';
-import 'package:hunny_bible_tracker/features/read/data/read_repository.dart';
 import 'package:hunny_bible_tracker/features/read/domain/read_models.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
+
+import 'support/test_repositories.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -12,11 +13,10 @@ void main() {
   group('getAccountReadingStats', () {
     test('returns empty streaks and year grid when no activities', () async {
       final database = AppDatabase.forTesting(NativeDatabase.memory());
-      final repository = ReadRepository(database);
-      await repository.initializeLocalData();
+      final (_, statsRepo) = await createTestRepositories(database: database);
 
       final anchor = DateTime(2026, 5, 30);
-      final stats = await repository.getAccountReadingStats(anchorDate: anchor);
+      final stats = await statsRepo.getAccountReadingStats(anchorDate: anchor);
 
       expect(stats.currentStreak, 0);
       expect(stats.longestStreak, 0);
@@ -33,10 +33,9 @@ void main() {
       const planId = 'plan-streak';
       const uuid = Uuid();
       final database = AppDatabase.forTesting(NativeDatabase.memory());
-      final repository = ReadRepository(database);
-      await repository.initializeLocalData();
+      final (readRepo, statsRepo) = await createTestRepositories(database: database);
 
-      final profile = await repository.getLocalUserProfile();
+      final profile = await readRepo.getLocalUserProfile();
       final anchor = DateTime(2026, 5, 30, 12, 0);
       final yesterday = anchor.subtract(const Duration(days: 1));
 
@@ -58,7 +57,7 @@ void main() {
       });
 
       final withoutToday =
-          await repository.getAccountReadingStats(anchorDate: anchor);
+          await statsRepo.getAccountReadingStats(anchorDate: anchor);
       expect(withoutToday.currentStreak, 0);
       expect(withoutToday.longestStreak, 1);
 
@@ -78,7 +77,7 @@ void main() {
           );
 
       final withToday =
-          await repository.getAccountReadingStats(anchorDate: anchor);
+          await statsRepo.getAccountReadingStats(anchorDate: anchor);
       expect(withToday.currentStreak, 2);
       expect(withToday.longestStreak, 2);
 
@@ -89,10 +88,9 @@ void main() {
       const planId = 'plan-longest';
       const uuid = Uuid();
       final database = AppDatabase.forTesting(NativeDatabase.memory());
-      final repository = ReadRepository(database);
-      await repository.initializeLocalData();
+      final (readRepo, statsRepo) = await createTestRepositories(database: database);
 
-      final profile = await repository.getLocalUserProfile();
+      final profile = await readRepo.getLocalUserProfile();
       final anchor = DateTime(2026, 5, 30, 12, 0);
       final day1 = anchor.subtract(const Duration(days: 3));
       final day2 = anchor.subtract(const Duration(days: 2));
@@ -118,7 +116,7 @@ void main() {
       });
 
       final stats =
-          await repository.getAccountReadingStats(anchorDate: anchor);
+          await statsRepo.getAccountReadingStats(anchorDate: anchor);
       expect(stats.currentStreak, 4);
       expect(stats.longestStreak, 4);
       expect(stats.readingDaysInRange, 4);
@@ -130,13 +128,12 @@ void main() {
       const planId = 'plan-goal';
       const uuid = Uuid();
       final database = AppDatabase.forTesting(NativeDatabase.memory());
-      final repository = ReadRepository(database);
-      await repository.initializeLocalData();
+      final (readRepo, statsRepo) = await createTestRepositories(database: database);
 
-      final profile = await repository.getLocalUserProfile();
+      final profile = await readRepo.getLocalUserProfile();
       final anchor = DateTime(2026, 5, 30, 12, 0);
 
-      await repository.setDailyReadingGoalMinutes(10);
+      await readRepo.setDailyReadingGoalMinutes(10);
       final chapters = <ReadingActivitiesCompanion>[];
       for (var chapter = 37; chapter <= 50; chapter += 1) {
         chapters.add(
@@ -159,7 +156,7 @@ void main() {
       });
 
       final stats =
-          await repository.getAccountReadingStats(anchorDate: anchor);
+          await statsRepo.getAccountReadingStats(anchorDate: anchor);
 
       expect(stats.goalMetDaysInRange, 1);
       final todaySummary = stats.activityYear.weekColumns

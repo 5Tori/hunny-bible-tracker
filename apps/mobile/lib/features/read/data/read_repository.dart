@@ -11,6 +11,7 @@ import '../../../core/bible/bible_com.dart';
 import '../../../core/database/app_database.dart';
 import '../../../core/database/local_user_id.dart';
 import '../domain/read_models.dart';
+import '../../stats/data/reading_stats_repository.dart';
 import 'plan_catalog_api_client.dart';
 import 'plan_catalog_read_client.dart';
 
@@ -18,11 +19,15 @@ class ReadRepository {
   ReadRepository(
     this.db, {
     PlanCatalogReadClient? planCatalogReadClient,
-  }) : _planCatalogReadClient = planCatalogReadClient ?? PlanCatalogReadClient();
+    ReadingStatsRepository? statsRepository,
+  })  : _planCatalogReadClient =
+            planCatalogReadClient ?? PlanCatalogReadClient(),
+        _statsRepository = statsRepository;
 
   final AppDatabase db;
   final Uuid _uuid = const Uuid();
   final PlanCatalogReadClient _planCatalogReadClient;
+  final ReadingStatsRepository? _statsRepository;
 
   /// Shown after Supabase creates a new account from Google sign-in.
   static const kAppSettingInitialBackupPromptDone =
@@ -1128,55 +1133,68 @@ class ReadRepository {
     );
   }
 
-  Future<AccountActivityStats> getAccountActivityStats() async {
-    final summaries = await _loadReadingDaySummariesByDate();
-    final readingDates = summaries.keys.toSet();
-    final currentStreak = _calculateCurrentStreak(readingDates);
-
-    return AccountActivityStats(
-      currentStreak: currentStreak,
-      readingDaysTotal: readingDates.length,
-    );
-  }
-
-  /// Streak, longest streak, and rolling-year activity grid for Settings.
-  Future<AccountReadingStats> getAccountReadingStats({DateTime? anchorDate}) async {
-    final anchor = _dateOnly(anchorDate ?? DateTime.now());
-    final summaries = await _loadReadingDaySummariesByDate();
-    final readingDates = summaries.keys.toSet();
-    final currentStreak = _calculateCurrentStreak(readingDates, anchor: anchor);
-    final longestStreak = _calculateLongestStreak(readingDates);
-    final activityYear = _buildReadingActivityYear(
-      dayMap: summaries,
-      anchorDate: anchor,
-    );
-
-    var readingDaysInRange = 0;
-    var goalMetDaysInRange = 0;
-    for (final summary in summaries.values) {
-      final day = _parseActivityDate(summary.activityDate);
-      if (day.isBefore(activityYear.rangeStart) || day.isAfter(anchor)) {
-        continue;
-      }
-      readingDaysInRange += 1;
-      if (summary.goalMet) goalMetDaysInRange += 1;
-    }
-
-    return AccountReadingStats(
-      currentStreak: currentStreak,
-      longestStreak: longestStreak,
-      readingDaysTotal: readingDates.length,
-      readingDaysInRange: readingDaysInRange,
-      goalMetDaysInRange: goalMetDaysInRange,
-      activityYear: activityYear,
-    );
-  }
-
   Future<ReadingOverview> getReadingOverview(String planId) async {
     final plan = await getPlanProgressStats(planId);
-    final account = await getAccountActivityStats();
     final daily = await getDailyReadingStats();
-    return ReadingOverview(plan: plan, account: account, daily: daily);
+    if (_statsRepository != null) {
+      final tracker = await _statsRepository.getReadingTrackerStats();
+      return ReadingOverview(
+        plan: plan,
+        account: AccountActivityStats(
+          currentStreak: tracker.currentStreak,
+          readingDaysTotal: tracker.lifetimeReadingDays,
+        ),
+        daily: daily,
+      );
+    }
+    return ReadingOverview(
+      plan: plan,
+      account: const AccountActivityStats(
+        currentStreak: 0,
+        readingDaysTotal: 0,
+      ),
+      daily: daily,
+    );
+  }
+
+  /// Latest completed chapter in this plan (by [ChapterProgressEntry.completedAt]).
+  Future<LastReadPosition?> getLastReadPosition(String planId) async {
+    final latest = await (db.select(db.chapterProgressEntries)
+          ..where(
+            (tbl) =>
+                tbl.userPlanId.equals(planId) & tbl.isCompleted.equals(true),
+          )
+          ..orderBy([(tbl) => OrderingTerm.desc(tbl.completedAt)])
+          ..limit(1))
+        .getSingleOrNull();
+    if (latest != null) {
+      final book = await (db.select(db.bibleBooks)
+            ..where((tbl) => tbl.bookKey.equals(latest.bookKey))
+            ..limit(1))
+          .getSingleOrNull();
+      return LastReadPosition(
+        bookKey: latest.bookKey,
+        bookDisplayName: book?.displayNameEn ?? latest.bookKey,
+        chapterNumber: latest.chapterNumber,
+      );
+    }
+
+    final plan = await (db.select(db.userReadingPlans)
+          ..where((tbl) => tbl.id.equals(planId))
+          ..limit(1))
+        .getSingleOrNull();
+    final bookKey = plan?.lastOpenedBookKey;
+    if (bookKey == null || bookKey.isEmpty) return null;
+
+    final book = await (db.select(db.bibleBooks)
+          ..where((tbl) => tbl.bookKey.equals(bookKey))
+          ..limit(1))
+        .getSingleOrNull();
+    return LastReadPosition(
+      bookKey: bookKey,
+      bookDisplayName: book?.displayNameEn ?? bookKey,
+      chapterNumber: 0,
+    );
   }
 
   Future<int> getDailyReadingGoalMinutes() async {
@@ -1198,10 +1216,20 @@ class ReadRepository {
   }
 
   Future<DailyReadingStats> getDailyReadingStats({DateTime? date}) async {
+    final goalMinutes = await getDailyReadingGoalMinutes();
+    if (_statsRepository != null) {
+      final tracker =
+          await _statsRepository.getReadingTrackerStats(anchorDate: date);
+      return DailyReadingStats(
+        goalMinutes: goalMinutes,
+        todayMinutes: tracker.estimatedMinutesToday,
+        chaptersToday: tracker.chaptersToday,
+      );
+    }
+
     final day = date ?? DateTime.now();
     final activityDate = DateFormat('yyyy-MM-dd').format(day);
     final localUserId = await _activeLocalUserId();
-    final goalMinutes = await getDailyReadingGoalMinutes();
 
     final activities = await (db.select(db.readingActivities)
           ..where(
@@ -2218,133 +2246,6 @@ class ReadRepository {
         );
   }
 
-  Future<Map<String, ReadingDaySummary>> _loadReadingDaySummariesByDate() async {
-    final localUserId = await _activeLocalUserId();
-    final goalMinutes = await getDailyReadingGoalMinutes();
-    final activities = await (db.select(db.readingActivities)
-          ..where(
-            (tbl) =>
-                tbl.localUserId.equals(localUserId) &
-                tbl.action.equals('complete'),
-          ))
-        .get();
-    if (activities.isEmpty) return {};
-
-    final metadata = await _getChapterMetadata();
-    final grouped = <String, _DayActivityAggregate>{};
-    for (final activity in activities) {
-      final aggregate = grouped.putIfAbsent(
-        activity.activityDate,
-        () => _DayActivityAggregate(),
-      );
-      aggregate.chapters += 1;
-      aggregate.minutes +=
-          metadata
-              .getChapter(activity.bookKey, activity.chapterNumber)
-              ?.estimatedReadingMinutes ??
-          0;
-    }
-
-    return {
-      for (final entry in grouped.entries)
-        entry.key: ReadingDaySummary(
-          activityDate: entry.key,
-          chaptersCompleted: entry.value.chapters,
-          estimatedMinutes: entry.value.minutes,
-          goalMet: goalMinutes > 0 && entry.value.minutes >= goalMinutes,
-        ),
-    };
-  }
-
-  ReadingActivityYear _buildReadingActivityYear({
-    required Map<String, ReadingDaySummary> dayMap,
-    required DateTime anchorDate,
-  }) {
-    final end = _dateOnly(anchorDate);
-    final rangeStart = end.subtract(const Duration(days: 364));
-    final gridStart = _startOfWeekSunday(rangeStart);
-    final columns = <ReadingActivityWeekColumn>[];
-
-    var weekStart = gridStart;
-    while (!weekStart.isAfter(end)) {
-      final days = <ReadingDaySummary?>[];
-      for (var offset = 0; offset < 7; offset++) {
-        final day = weekStart.add(Duration(days: offset));
-        if (day.isAfter(end) || day.isBefore(rangeStart)) {
-          days.add(null);
-        } else {
-          final key = DateFormat('yyyy-MM-dd').format(day);
-          days.add(dayMap[key] ?? ReadingDaySummary.empty(key));
-        }
-      }
-      columns.add(
-        ReadingActivityWeekColumn(weekStartDate: weekStart, days: days),
-      );
-      weekStart = weekStart.add(const Duration(days: 7));
-    }
-
-    return ReadingActivityYear(
-      weekColumns: columns,
-      rangeStart: rangeStart,
-      rangeEnd: end,
-      yearLabel: end.year,
-    );
-  }
-
-  DateTime _dateOnly(DateTime value) =>
-      DateTime(value.year, value.month, value.day);
-
-  DateTime _parseActivityDate(String activityDate) {
-    final parsed = DateTime.tryParse(activityDate);
-    if (parsed == null) return _dateOnly(DateTime.now());
-    return _dateOnly(parsed);
-  }
-
-  DateTime _startOfWeekSunday(DateTime date) {
-    final normalized = _dateOnly(date);
-    return normalized.subtract(Duration(days: normalized.weekday % 7));
-  }
-
-  int _calculateCurrentStreak(
-    Set<String> readingDates, {
-    DateTime? anchor,
-  }) {
-    if (readingDates.isEmpty) return 0;
-
-    var cursor = _dateOnly(anchor ?? DateTime.now());
-    var streak = 0;
-
-    while (true) {
-      final key = DateFormat('yyyy-MM-dd').format(cursor);
-      if (!readingDates.contains(key)) break;
-      streak += 1;
-      cursor = cursor.subtract(const Duration(days: 1));
-    }
-
-    return streak;
-  }
-
-  int _calculateLongestStreak(Set<String> readingDates) {
-    if (readingDates.isEmpty) return 0;
-
-    final sorted = readingDates.map(_parseActivityDate).toList()
-      ..sort((a, b) => a.compareTo(b));
-
-    var longest = 1;
-    var current = 1;
-    for (var index = 1; index < sorted.length; index++) {
-      final gap = sorted[index].difference(sorted[index - 1]).inDays;
-      if (gap == 1) {
-        current += 1;
-        if (current > longest) longest = current;
-      } else if (gap > 1) {
-        current = 1;
-      }
-    }
-
-    return longest;
-  }
-
   String _sectionBookKey(String sectionId, String bookKey) =>
       '$sectionId|$bookKey';
 
@@ -2645,9 +2546,4 @@ class _CompletedPlanAggregate {
   DateTime? lastCompletedAt;
   final int totalChapters;
   final int? estimatedMinutes;
-}
-
-class _DayActivityAggregate {
-  int chapters = 0;
-  int minutes = 0;
 }

@@ -15,6 +15,8 @@ class BookChapterExpansion extends StatelessWidget {
     required this.animateEntrance,
     this.isLoading = false,
     this.onEntranceComplete,
+    this.scrollTargetChapterNumber,
+    this.scrollTargetKey,
   });
 
   final bool isExpanded;
@@ -24,6 +26,8 @@ class BookChapterExpansion extends StatelessWidget {
   final bool animateEntrance;
   final bool isLoading;
   final VoidCallback? onEntranceComplete;
+  final int? scrollTargetChapterNumber;
+  final GlobalKey? scrollTargetKey;
 
   static const _openDuration = Duration(milliseconds: 200);
   static const _closeDuration = Duration(milliseconds: 140);
@@ -44,6 +48,8 @@ class BookChapterExpansion extends StatelessWidget {
               animateEntrance: animateEntrance,
               isLoading: isLoading,
               onEntranceComplete: onEntranceComplete,
+              scrollTargetChapterNumber: scrollTargetChapterNumber,
+              scrollTargetKey: scrollTargetKey,
             )
           : const SizedBox(width: double.infinity),
     );
@@ -59,6 +65,8 @@ class _ExpandedPanel extends StatefulWidget {
     required this.animateEntrance,
     required this.isLoading,
     this.onEntranceComplete,
+    this.scrollTargetChapterNumber,
+    this.scrollTargetKey,
   });
 
   final String expansionKey;
@@ -67,6 +75,8 @@ class _ExpandedPanel extends StatefulWidget {
   final bool animateEntrance;
   final bool isLoading;
   final VoidCallback? onEntranceComplete;
+  final int? scrollTargetChapterNumber;
+  final GlobalKey? scrollTargetKey;
 
   @override
   State<_ExpandedPanel> createState() => _ExpandedPanelState();
@@ -118,6 +128,8 @@ class _ExpandedPanelState extends State<_ExpandedPanel> {
             chapters: widget.chapters,
             onChapterTap: widget.onChapterTap,
             animateEntrance: widget.animateEntrance,
+            scrollTargetChapterNumber: widget.scrollTargetChapterNumber,
+            scrollTargetKey: widget.scrollTargetKey,
           );
 
     // Horizontal inset comes from the book row parent (20px); keep vertical gap only.

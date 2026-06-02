@@ -13,9 +13,10 @@ export function OfflineDevBanner() {
       <Link href="/login" className="font-medium underline underline-offset-2">
         Demo sign-in
       </Link>{" "}
-      works without Supabase. Use{" "}
-      <code className="rounded bg-amber-100 px-1.5 py-0.5 text-xs">pnpm web:dev:online</code>{" "}
-      for Google auth + database.
+      works without Supabase. Add DATABASE_URL + Supabase keys to{" "}
+      <code className="rounded bg-amber-100 px-1.5 py-0.5 text-xs">apps/web/.env.local</code>{" "}
+      for live data, or run{" "}
+      <code className="rounded bg-amber-100 px-1.5 py-0.5 text-xs">pnpm web:dev:online</code>.
     </div>
   );
 }

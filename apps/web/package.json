@@ -3,8 +3,11 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "HUNNY_OFFLINE_MODE=1 next dev",
-    "dev:online": "HUNNY_OFFLINE_MODE=0 next dev",
+    "dev": "node scripts/run-dev.mjs",
+    "dev:offline": "node scripts/run-dev.mjs --offline",
+    "dev:online": "node scripts/run-dev.mjs --online",
+    "sync:message-cards": "vitest run scripts/sync-message-cards-to-db.test.ts",
+    "sync:message-cards:write": "SYNC_MESSAGE_CARDS_WRITE=1 vitest run scripts/sync-message-cards-to-db.test.ts",
     "build": "next build",
     "start": "next start",
     "lint": "next lint",

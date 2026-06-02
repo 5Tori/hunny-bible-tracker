@@ -37,6 +37,11 @@ String formatReadingDurationRemaining(int totalMinutes) {
   return '${formatReadingDuration(totalMinutes)} left';
 }
 
+/// Home weekly footer — compact chapter count (e.g. `129 Ch.`).
+String formatHomeWeeklyChapterCount(int chapters) {
+  return '$chapters Ch.';
+}
+
 /// Catalog / content cards: `estimated_minutes` is average per chapter.
 int? estimateCatalogPlanTotalMinutes({
   required int? minutesPerChapter,

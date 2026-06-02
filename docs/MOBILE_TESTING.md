@@ -3,7 +3,8 @@
 Android/iOS 스모크 테스트·릴리스 빌드.
 
 Production API: `https://hunnybibletracker.com`  
-Production read mode (closed test): `HUNNY_REMOTE_READ_MODE=supabase_rpc`
+Production read mode (closed test): `HUNNY_REMOTE_READ_MODE=supabase_rpc`  
+**Current build:** `0.5.0+11` (`apps/mobile/pubspec.yaml`)
 
 ## Setup
 
@@ -42,13 +43,14 @@ Hot restart: `R` (env·native 변경 후)
 
 | Area | Verify |
 | --- | --- |
-| Home | Today's Message, progress, **heart (one-way)**, **save toggle**, share, More |
+| Home | Today's Message, **Current plan** (ring, chapters read, Continue reading), **Last 7 days / Last read** footer, **heart (one-way)**, **save toggle**, share, More |
+| Home plan tap | Whole plan block → Read tab · **last-read chapter centered** on screen |
 | Home More | `context` reflection copy · message card → **Open message card** (web) · discover → detail sheet |
 | Home offline | cache or Proverbs fallback |
 | Discover | **6 items** (video/essay/cartoon only), search, filters, **tap → full detail** (body/sections/slides) |
 | Discover offline | offline message |
 | Read / Plans | start plan, chapter persist, completion |
-| Settings | sign-in, **Sync now**, **Restore**, feedback |
+| Settings | sign-in, **Sign out stable on tab revisit**, **Sync now**, **Restore**, feedback, **pull-to-refresh** on reading stats |
 
 ### Step 6 E2E (cold / warm)
 

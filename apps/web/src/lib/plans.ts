@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import { fetchPlanCatalogRpc, isCatalogRpcAvailable } from '@/lib/catalog-rpc';
 import { resolveEstimatedMinutesForSave } from '@/lib/plan-estimates';
 import { sql, queryByUuidIds, type SqlLike } from '@/lib/db/postgres';
+import { fetchAdminPlanByIdViaRest, fetchAdminPlansViaRest } from '@/lib/plans-admin-rest';
 import { assertOnlineForWrites, isOfflineMode } from '@/lib/mock/mode';
 import {
   mockGetAdminPlanById,
@@ -480,10 +481,7 @@ export async function getAdminPlans() {
     return mockGetAdminPlans();
   }
 
-  return (await sql`
-    select * from plan_templates
-    order by updated_at desc
-  `) as PlanTemplateBase[];
+  return fetchAdminPlansViaRest();
 }
 
 export async function getAdminPlanById(id: string) {
@@ -491,15 +489,7 @@ export async function getAdminPlanById(id: string) {
     return mockGetAdminPlanById(id);
   }
 
-  const planRows = (await sql`
-    select * from plan_templates
-    where id::text = ${id}
-    limit 1
-  `) as PlanTemplateBase[];
-  const plan = planRows[0];
-  if (!plan) return null;
-  const { sections, items, tags } = await getPlanRelations(sql, plan.id);
-  return hydratePlan(plan, sections, items, tags);
+  return fetchAdminPlanByIdViaRest(id);
 }
 
 async function generateTemplateKey(title: string) {

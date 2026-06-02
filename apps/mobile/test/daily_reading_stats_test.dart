@@ -1,10 +1,11 @@
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:hunny_bible_tracker/core/database/app_database.dart';
-import 'package:hunny_bible_tracker/features/read/data/read_repository.dart';
 import 'package:hunny_bible_tracker/features/read/domain/read_models.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
+
+import 'support/test_repositories.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -12,8 +13,7 @@ void main() {
   group('daily reading goal', () {
     test('getDailyReadingGoalMinutes returns 0 when unset', () async {
       final database = AppDatabase.forTesting(NativeDatabase.memory());
-      final repository = ReadRepository(database);
-      await repository.initializeLocalData();
+      final (repository, _) = await createTestRepositories(database: database);
 
       expect(await repository.getDailyReadingGoalMinutes(), 0);
 
@@ -22,8 +22,7 @@ void main() {
 
     test('setDailyReadingGoalMinutes persists and clears on off', () async {
       final database = AppDatabase.forTesting(NativeDatabase.memory());
-      final repository = ReadRepository(database);
-      await repository.initializeLocalData();
+      final (repository, _) = await createTestRepositories(database: database);
 
       await repository.setDailyReadingGoalMinutes(10);
       expect(await repository.getDailyReadingGoalMinutes(), 10);
@@ -41,8 +40,7 @@ void main() {
   group('getDailyReadingStats', () {
     test('returns zero progress when goal is off', () async {
       final database = AppDatabase.forTesting(NativeDatabase.memory());
-      final repository = ReadRepository(database);
-      await repository.initializeLocalData();
+      final (repository, _) = await createTestRepositories(database: database);
 
       final stats = await repository.getDailyReadingStats();
 
@@ -60,8 +58,7 @@ void main() {
       const planId = 'plan-daily';
       const uuid = Uuid();
       final database = AppDatabase.forTesting(NativeDatabase.memory());
-      final repository = ReadRepository(database);
-      await repository.initializeLocalData();
+      final (repository, _) = await createTestRepositories(database: database);
 
       final profile = await repository.getLocalUserProfile();
       expect(profile, isNotNull);
@@ -116,8 +113,7 @@ void main() {
       const planId = 'plan-goal-met';
       const uuid = Uuid();
       final database = AppDatabase.forTesting(NativeDatabase.memory());
-      final repository = ReadRepository(database);
-      await repository.initializeLocalData();
+      final (repository, _) = await createTestRepositories(database: database);
 
       final profile = await repository.getLocalUserProfile();
       final today = DateTime(2026, 5, 30);
@@ -159,8 +155,7 @@ void main() {
       const planId = 'plan-other-day';
       const uuid = Uuid();
       final database = AppDatabase.forTesting(NativeDatabase.memory());
-      final repository = ReadRepository(database);
-      await repository.initializeLocalData();
+      final (repository, _) = await createTestRepositories(database: database);
 
       final profile = await repository.getLocalUserProfile();
       final yesterday = DateTime(2026, 5, 29, 12, 0);
@@ -213,8 +208,7 @@ void main() {
   group('exportReadingBackupSnapshot', () {
     test('includes dailyReadingGoalMinutes in settings when set', () async {
       final database = AppDatabase.forTesting(NativeDatabase.memory());
-      final repository = ReadRepository(database);
-      await repository.initializeLocalData();
+      final (repository, _) = await createTestRepositories(database: database);
 
       await repository.setDailyReadingGoalMinutes(15);
       final snapshot = await repository.exportReadingBackupSnapshot();

@@ -5,17 +5,20 @@ import '../core/database/app_database.dart';
 import '../core/theme/app_theme.dart';
 import '../features/onboarding/onboarding_gate.dart';
 import '../features/read/data/read_repository.dart';
+import '../features/stats/data/reading_stats_repository.dart';
 
 class HunnyBibleApp extends StatelessWidget {
   const HunnyBibleApp({
     super.key,
     required this.database,
     required this.readRepository,
+    required this.readingStatsRepository,
     required this.authRepository,
   });
 
   final AppDatabase database;
   final ReadRepository readRepository;
+  final ReadingStatsRepository readingStatsRepository;
   final AuthRepository authRepository;
 
   @override
@@ -26,6 +29,7 @@ class HunnyBibleApp extends StatelessWidget {
       theme: AppTheme.light(),
       home: OnboardingGate(
         readRepository: readRepository,
+        readingStatsRepository: readingStatsRepository,
         authRepository: authRepository,
       ),
     );
